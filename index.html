@@ -435,23 +435,18 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
     </div>
 
-    <!-- 01 PART -->
-    <div class="card">
-      <div class="card-hd"><div class="card-ico">🔩</div><div class="card-title">Part Information & Serial / Lot Numbers</div><div class="card-num">01</div></div>
-      <div class="card-body">
-        <div class="g3" style="margin-bottom:14px">
-          <div class="field"><label>Part Number <span class="req">*</span></label><input type="text" id="partNum" placeholder="e.g. PN-00421" oninput="updateProgress()"></div>
-          <div class="field"><label>Part Description</label><input type="text" id="partDesc" placeholder="Optional"></div>
-          <div class="field"><label>Manufacturing Date</label><input type="date" id="mfgDate"></div>
-        </div>
-        <table class="tbl">
-          <thead><tr><th style="width:50px">#</th><th>Serial Number</th><th>Lot / Batch Number</th><th style="width:42px"></th></tr></thead>
-          <tbody id="slBody"></tbody>
-        </table>
-        <button class="btn-add" onclick="addSL()">+ Add Serial / Lot Row</button>
-      </div>
+   <!-- 01 PART — keep only the top fields, remove the SL table -->
+<div class="card">
+  <div class="card-hd"><div class="card-ico">🔩</div><div class="card-title">Part Information</div><div class="card-num">01</div></div>
+  <div class="card-body">
+    <div class="g3">
+      <div class="field"><label>Part Number <span class="req">*</span></label><input type="text" id="partNum" placeholder="e.g. PN-00421" oninput="updateProgress()"></div>
+      <div class="field"><label>Part Description</label><input type="text" id="partDesc" placeholder="Optional"></div>
+      <div class="field"><label>Manufacturing Date</label><input type="date" id="mfgDate"></div>
     </div>
-
+  </div>
+</div>
+    
     <!-- 02 RESULTS -->
     <div class="card">
       <div class="card-hd"><div class="card-ico">📊</div><div class="card-title">Inspection Results</div><div class="card-num">02</div></div>
@@ -466,18 +461,34 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
     </div>
 
-    <!-- 03 DEFECTS -->
-    <div class="card">
-      <div class="card-hd"><div class="card-ico">⚠️</div><div class="card-title">Defect Breakdown</div><div class="card-num">03</div></div>
-      <div class="card-body">
-        <table class="tbl">
-          <thead><tr><th style="width:50px">#</th><th>Defect Description</th><th style="width:120px">Code</th><th style="width:90px">Qty</th><th style="width:42px"></th></tr></thead>
-          <tbody id="defBody"></tbody>
-          <tfoot><tr class="tfoot-row"><td colspan="3" style="text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase">Total Defects</td><td id="totalDef">0</td><td></td></tr></tfoot>
-        </table>
-        <button class="btn-add" onclick="addDef()">+ Add Defect Type</button>
-      </div>
-    </div>
+  <!-- 03 DEFECTS (merged with Serial/Lot) -->
+<div class="card">
+  <div class="card-hd"><div class="card-ico">⚠️</div><div class="card-title">Defect Breakdown & Serial / Lot Numbers</div><div class="card-num">03</div></div>
+  <div class="card-body">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th style="width:40px">#</th>
+          <th>Serial Number</th>
+          <th>Lot / Batch Number</th>
+          <th>Defect Description</th>
+          <th style="width:110px">Code</th>
+          <th style="width:80px">Qty Bad</th>
+          <th style="width:42px"></th>
+        </tr>
+      </thead>
+      <tbody id="defBody"></tbody>
+      <tfoot>
+        <tr class="tfoot-row">
+          <td colspan="5" style="text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase">Total Defects</td>
+          <td id="totalDef">0</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+    <button class="btn-add" onclick="addDef()">+ Add Defect Row</button>
+  </div>
+</div>
 
     <!-- 04 PERSONNEL -->
     <div class="card">
@@ -902,7 +913,20 @@ function renderSL(){
 }
 
 /* ══ DEFECTS ══ */
-function addDef(){defIds.push(++_uid);renderDef()}
+function addDef({
+  const tb=document.getElementById('defBody');
+  const i=tb.rows.length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td style="color:var(--mid);font-size:11px">${i}</td>
+    <td><input type="text" class="tbl-in" placeholder="Serial #" style="width:100%"></td>
+    <td><input type="text" class="tbl-in" placeholder="Lot / Batch #" style="width:100%"></td>
+    <td><input type="text" class="tbl-in def-desc" placeholder="e.g. Scratch" style="width:100%" oninput="calcDef()"></td>
+    <td><input type="text" class="tbl-in" placeholder="Code" style="width:100%"></td>
+    <td><input type="number" class="tbl-in def-qty" min="0" value="0" style="width:100%" oninput="calcDef()"></td>
+    <td><button class="btn-del" onclick="this.closest('tr').remove();calcDef()">✕</button></td>`;
+  tb.appendChild(tr);
+}
 function removeDef(id){defIds=defIds.filter(x=>x!==id);renderDef()}
 function renderDef(){
   const body=document.getElementById('defBody');body.innerHTML='';
@@ -986,57 +1010,34 @@ function collect(){
 }
 
 /* ══ SUBMIT ══ */
-async function submitToSheets(){
-  const d=collect();
-  if(!d.customerCode){showToast('⚠ Enter a Customer Code first.','err');return}
-  if(!d.partNumber){showToast('⚠ Enter a Part Number.','err');return}
-  document.getElementById('btnTxt').style.display='none';
-  document.getElementById('spinner').style.display='block';
-  document.getElementById('submitBtn').disabled=true;
-  try{
-    // Save to Supabase
-    await sbSaveSubmission(d);
-    // Also send to Google Sheets if configured
-    const cfg=getConfig();
-    if(cfg.url){
-      try{
-        const payload={...d};delete payload.photos;
-        await fetch(cfg.url,{method:'POST',body:JSON.stringify(payload),mode:'no-cors'});
-      }catch(e){/* sheets optional */}
-    }
-    showToast('✅ Saved to cloud!','ok');
-    // WIPE local storage — confidential data stays in cloud only
-    localStorage.clear();
-    setTimeout(()=>resetDaily(),2000);
-  }catch(e){
-    console.error(e);
-    showToast('❌ Cloud save failed: '+e.message,'err');
-  }finally{
-    document.getElementById('btnTxt').style.display='inline';
-    document.getElementById('spinner').style.display='none';
-    document.getElementById('submitBtn').disabled=false;
-  }
-}
-
-function resetDaily(){
-  ['qInspected','qApproved','qRejected','qReworked','notes','submittedBy'].forEach(id=>set(id,''));
-  document.querySelectorAll('#defBody input').forEach(i=>i.value='');
-  document.querySelectorAll('#pBody input').forEach(i=>i.value='');
-  document.getElementById('valMsg').style.display='none';
-  uploadedPhotos=[];renderPhotoGrid();
-  calcDefTotal();calcHrs();updateProgress();
-  showToast('✅ Submitted & device cleared. Ready for next entry.','ok');
-}
+// Collect merged defect + serial/lot rows
+const defects = [...document.querySelectorAll('#defBody tr')].map(r => {
+  const cells = r.querySelectorAll('input');
+  return {
+    serial : cells[0]?.value.trim() || '',
+    lot    : cells[1]?.value.trim() || '',
+    desc   : cells[2]?.value.trim() || '',
+    code   : cells[3]?.value.trim() || '',
+    qty    : parseInt(cells[4]?.value) || 0
+  };
+}).filter(d => d.desc || d.serial || d.lot);
 
 /* ══ OVERVIEW ══ */
 function loadOverview(){
   const subs=allSubmissions;
-  let tI=0,tA=0,tR=0,tRw=0,tH=0,tP=0;const defMap={};
+  let tI=0,tA=0,tR=0,tRw=0,tH=0,tP=0;
+  const defMap={};
+
   subs.forEach(s=>{
-    tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0;
-    tH+=parseFloat(s.total_hours)||0;tP+=parseInt(s.num_people)||0;
-    (s.defects||[]).forEach(d=>{defMap[d.desc]=(defMap[d.desc]||0)+d.qty});
+    tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;
+    tRw+=s.reworked||0;tH+=parseFloat(s.total_hours)||0;tP+=parseInt(s.num_people)||0;
+    (s.defects||[]).forEach(d=>{
+      const key=d.desc||'Unknown';
+      defMap[key]=(defMap[key]||0)+(d.qty||0);
+    });
   });
+
+  // ── Stat boxes ──
   document.getElementById('stInspected').textContent=tI||'—';
   document.getElementById('stApproved').textContent=tA||'—';
   document.getElementById('stRejected').textContent=tR||'—';
@@ -1044,16 +1045,102 @@ function loadOverview(){
   document.getElementById('stApprovedPct').textContent=tI?((tA/tI)*100).toFixed(1)+'% pass rate':'—';
   document.getElementById('stRejectedPct').textContent=tI?((tR/tI)*100).toFixed(1)+'% reject rate':'—';
   document.getElementById('stPeople').textContent=tP?tP+' person-days':'—';
+
+  // ── Global Defect Breakdown ──
   const defBody=document.getElementById('defectSummaryBody');
   const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
-  if(!defEntries.length){defBody.innerHTML='<div class="no-data"><div class="nd-ico">✅</div>No defects recorded yet.</div>'}
-  else{
+  if(!defEntries.length){
+    defBody.innerHTML='<div class="no-data"><div class="nd-ico">✅</div>No defects recorded yet.</div>';
+  } else {
     const totalDef=defEntries.reduce((s,[,v])=>s+v,0);
-    defBody.innerHTML=`<table class="tbl"><thead><tr><th>Defect</th><th style="width:90px">Qty</th><th style="width:120px">% of Rejected</th><th style="width:160px">Bar</th></tr></thead><tbody>${defEntries.map(([desc,qty])=>{const pct=tR?((qty/tR)*100).toFixed(1):0;return`<tr><td>${desc}</td><td>${qty}</td><td>${pct}%</td><td><div style="background:var(--line);border-radius:3px;height:8px;overflow:hidden"><div style="width:${pct}%;background:var(--red);height:100%;border-radius:3px"></div></div></td></tr>`}).join('')}<tr class="tfoot-row"><td><b>TOTAL</b></td><td><b>${totalDef}</b></td><td></td><td></td></tr></tbody></table>`;
+    defBody.innerHTML=`
+      <table class="tbl">
+        <thead><tr>
+          <th>Defect</th>
+          <th style="width:90px">Qty</th>
+          <th style="width:120px">% of Rejected</th>
+          <th style="width:160px">Bar</th>
+        </tr></thead>
+        <tbody>
+          ${defEntries.map(([desc,qty])=>{
+            const pct=tR?((qty/tR)*100).toFixed(1):0;
+            return`<tr>
+              <td>${desc}</td>
+              <td>${qty}</td>
+              <td>${pct}%</td>
+              <td><div style="background:var(--line);border-radius:3px;height:8px;overflow:hidden">
+                <div style="width:${pct}%;background:var(--red);height:100%;border-radius:3px"></div>
+              </div></td>
+            </tr>`;
+          }).join('')}
+          <tr class="tfoot-row"><td><b>TOTAL</b></td><td><b>${totalDef}</b></td><td></td><td></td></tr>
+        </tbody>
+      </table>`;
   }
+
+  // ── Submission history with Part Info + Serial/Lot/Defect detail ──
   const histBody=document.getElementById('historyBody');
-  if(!subs.length){histBody.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No submissions yet.</div>'}
-  else{histBody.innerHTML=`<table class="sub-table"><thead><tr><th>Date</th><th>Form ID</th><th>Customer</th><th>Part #</th><th>Inspected</th><th>Approved</th><th>Rejected</th><th>Hours</th><th>By</th></tr></thead><tbody>${subs.map(s=>`<tr><td>${s.submit_date||''}</td><td style="font-size:10px;color:var(--mid)">${s.form_id||''}</td><td><span class="pill pill-b">${s.customer_code||'—'}</span></td><td>${s.part_number||'—'}</td><td style="color:var(--blue);font-weight:700">${s.inspected}</td><td style="color:var(--green);font-weight:700">${s.approved}</td><td style="color:var(--red);font-weight:700">${s.rejected}</td><td>${s.total_hours}</td><td style="color:var(--mid)">${s.submitted_by||'—'}</td></tr>`).join('')}</tbody></table>`}
+  if(!subs.length){
+    histBody.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No submissions yet.</div>';
+  } else {
+    histBody.innerHTML=subs.map((s,si)=>{
+      const defects=s.defects||[];
+      const defRows=defects.length
+        ? defects.map((d,di)=>`
+            <tr style="background:${di%2===0?'rgba(255,255,255,0.02)':'transparent'}">
+              <td style="color:var(--mid);font-size:11px">${d.serial||'—'}</td>
+              <td style="color:var(--mid);font-size:11px">${d.lot||'—'}</td>
+              <td>${d.desc||'—'}</td>
+              <td style="font-size:11px;color:var(--mid)">${d.code||'—'}</td>
+              <td style="color:var(--red);font-weight:700">${d.qty||0}</td>
+            </tr>`).join('')
+        : `<tr><td colspan="5" style="color:var(--soft);font-size:11px;font-style:italic">No defects recorded.</td></tr>`;
+
+      return`
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:16px;overflow:hidden">
+
+          <!-- Submission header -->
+          <div style="background:var(--line);padding:10px 14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+            <span style="font-weight:700;font-size:12px;color:var(--fg)">#${si+1} · ${s.submit_date||''}</span>
+            <span class="pill pill-b">${s.customer_code||'—'}</span>
+            <span style="font-size:11px;color:var(--mid)">By: ${s.submitted_by||'—'}</span>
+            <span style="font-size:11px;color:var(--mid);margin-left:auto">
+              <span style="color:var(--blue)">▲ ${s.inspected||0} inspected</span> &nbsp;
+              <span style="color:var(--green)">✔ ${s.approved||0} approved</span> &nbsp;
+              <span style="color:var(--red)">✖ ${s.rejected||0} rejected</span> &nbsp;
+              <span style="color:var(--yellow)">⏱ ${s.total_hours||'—'}h</span>
+            </span>
+          </div>
+
+          <!-- Part Information -->
+          <div style="padding:10px 14px;border-bottom:1px solid var(--line)">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--mid);text-transform:uppercase;margin-bottom:6px">🔩 Part Information</div>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:12px">
+              <span><span style="color:var(--mid)">Part #:</span> <b>${s.part_number||'—'}</b></span>
+              <span><span style="color:var(--mid)">Description:</span> ${s.part_desc||'—'}</span>
+              <span><span style="color:var(--mid)">Mfg Date:</span> ${s.mfg_date||'—'}</span>
+              <span><span style="color:var(--mid)">Form ID:</span> <span style="color:var(--mid);font-size:11px">${s.form_id||'—'}</span></span>
+            </div>
+          </div>
+
+          <!-- Defect Breakdown + Serial/Lot -->
+          <div style="padding:10px 14px">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--mid);text-transform:uppercase;margin-bottom:6px">⚠️ Defect Breakdown & Serial / Lot Numbers</div>
+            <table class="tbl">
+              <thead><tr>
+                <th>Serial #</th>
+                <th>Lot / Batch #</th>
+                <th>Defect Description</th>
+                <th style="width:100px">Code</th>
+                <th style="width:80px">Qty Bad</th>
+              </tr></thead>
+              <tbody>${defRows}</tbody>
+            </table>
+          </div>
+
+        </div>`;
+    }).join('');
+  }
 }
 
 /* ══ CLIENT DIRECTORY ══ */
@@ -1393,45 +1480,182 @@ function downloadPDF(){
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const W=210,M=16,CW=W-M*2;let y=18;
   const RED=[232,55,42],SOFT=[138,143,154],LIGHT=[34,37,43],BORDER=[46,49,56];
+
+  // ── Header bar ──
   doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
   doc.text('STS SERVICES — COMPLETE REPORT',M,9);
   doc.setFontSize(7.5);doc.setFont('helvetica','normal');
   doc.text('All submissions · Generated '+new Date().toLocaleString(),M,15);
-  doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});y=28;
-  if(!subs.length){doc.setTextColor(...SOFT);doc.setFontSize(12);doc.text('No submissions found.',W/2,100,{align:'center'});doc.save('STS_Report.pdf');return}
-  let tI=0,tA=0,tR=0,tRw=0,tH=0;const defMap={};
-  subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0;tH+=parseFloat(s.total_hours)||0;(s.defects||[]).forEach(d=>{defMap[d.desc]=(defMap[d.desc]||0)+d.qty})});
-  const bw=(CW-9)/4;
-  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('TOTALS',M,y+1);y+=4;
-  [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
-    const bx=M+i*(bw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
-    doc.setFontSize(14);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
-  });y+=22;
-  const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
-  if(defEntries.length){
-    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('DEFECT BREAKDOWN',M+6,y+4.5);y+=10;
-    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('DEFECT',M+4,y+3.5);doc.text('QTY',M+120,y+3.5);doc.text('% REJECTED',M+150,y+3.5);y+=5;
-    defEntries.forEach(([desc,qty],i)=>{doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);doc.rect(M,y,CW,5,'F');doc.setTextColor(200,210,220);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(desc,M+4,y+3.5);doc.text(String(qty),M+120,y+3.5);doc.text(tR?((qty/tR)*100).toFixed(1)+'%':'—',M+150,y+3.5);y+=5});y+=6;
+  doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});
+  y=28;
+
+  if(!subs.length){
+    doc.setTextColor(...SOFT);doc.setFontSize(12);
+    doc.text('No submissions found.',W/2,100,{align:'center'});
+    doc.save('STS_Report.pdf');return;
   }
-  if(y>250){doc.addPage();y=20}
-  doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('SUBMISSIONS',M+6,y+4.5);y+=10;
-  doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
-  ['DATE','CUSTOMER','PART #','INSPECTED','APPROVED','REJECTED','HOURS','BY'].forEach((h,i)=>doc.text(h,M+2+i*22,y+3.5));y+=5;
-  subs.forEach((s,i)=>{
-    if(y>270){doc.addPage();y=20}
-    doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);doc.rect(M,y,CW,5,'F');
-    doc.setTextColor(200,210,220);doc.setFontSize(7);doc.setFont('helvetica','normal');
-    [(s.submit_date||'').split(',')[0],(s.customer_code||'').substring(0,10),(s.part_number||'').substring(0,10),s.inspected,s.approved,s.rejected,s.total_hours,(s.submitted_by||'').substring(0,12)].forEach((val,j)=>doc.text(String(val||'—'),M+2+j*22,y+3.5));y+=5;
+
+  // ── Totals ──
+  let tI=0,tA=0,tR=0,tRw=0,tH=0;
+  subs.forEach(s=>{
+    tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;
+    tRw+=s.reworked||0;tH+=parseFloat(s.total_hours)||0;
   });
-  doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  const bw=(CW-9)/4;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);
+  doc.text('TOTALS',M,y+1);y+=4;
+  [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
+    const bx=M+i*(bw+3);
+    doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+    doc.text(lbl,bx+bw/2,y+5,{align:'center'});
+    doc.setFontSize(14);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
+  });
+  y+=22;
+
+  // ══════════════════════════════════════
+  // ── Per-submission detail blocks ──
+  // ══════════════════════════════════════
+  subs.forEach((s,si)=>{
+    if(y>240){doc.addPage();y=20;}
+
+    // ── Submission separator ──
+    doc.setFillColor(...BORDER);doc.rect(M,y,CW,6,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(8);doc.setFont('helvetica','bold');
+    doc.text(`SUBMISSION #${si+1}  ·  ${s.submit_date||''}  ·  ${s.submitted_by||''}`,M+3,y+4.2);
+    y+=8;
+
+    // ── 1. Part Information & Serial / Lot Numbers ──
+    doc.setFillColor(...RED);doc.rect(M,y,3,5,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(8);doc.setFont('helvetica','bold');
+    doc.text('PART INFORMATION & SERIAL / LOT NUMBERS',M+6,y+3.5);
+    y+=7;
+
+    // Part info row
+    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);
+    doc.text('PART #',M+2,y+3);doc.text('DESCRIPTION',M+42,y+3);doc.text('MFG DATE',M+110,y+3);doc.text('CUSTOMER',M+148,y+3);
+    y+=5;
+    doc.setFillColor(34,37,43);doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(200,210,220);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text(s.part_number||'—',M+2,y+3.5);
+    doc.text((s.part_desc||'—').substring(0,28),M+42,y+3.5);
+    doc.text(s.mfg_date||'—',M+110,y+3.5);
+    doc.text(s.customer_code||'—',M+148,y+3.5);
+    y+=7;
+
+    // Serial / Lot + Defect combined table header
+    const defects=s.defects||[];
+    if(defects.length){
+      doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+      doc.text('SERIAL #',M+3,y+3.5);
+      doc.text('LOT / BATCH #',M+40,y+3.5);
+      doc.text('DEFECT DESCRIPTION',M+82,y+3.5);
+      doc.text('CODE',M+140,y+3.5);
+      doc.text('QTY BAD',M+162,y+3.5);
+      y+=5;
+
+      defects.forEach((d,di)=>{
+        if(y>272){doc.addPage();y=20;}
+        doc.setFillColor(di%2===0?34:28,di%2===0?37:30,di%2===0?43:36);
+        doc.rect(M,y,CW,5,'F');
+        doc.setTextColor(200,210,220);doc.setFontSize(7);doc.setFont('helvetica','normal');
+        doc.text((d.serial||'—').substring(0,16),M+3,y+3.5);
+        doc.text((d.lot||'—').substring(0,16),M+40,y+3.5);
+        doc.text((d.desc||'—').substring(0,28),M+82,y+3.5);
+        doc.text((d.code||'—').substring(0,10),M+140,y+3.5);
+        doc.text(String(d.qty||0),M+162,y+3.5);
+        y+=5;
+      });
+
+      // Subtotal row
+      const subTotal=defects.reduce((acc,d)=>acc+(d.qty||0),0);
+      doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(...SOFT);doc.setFontSize(doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+      doc.text('SUBTOTAL DEFECTS',M+82,y+3.5);
+      doc.text(String(subTotal),M+162,y+3.5);
+      y+=7;
+    } else {
+      doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','italic');
+      doc.text('No defects recorded for this submission.',M+3,y+3.5);
+      y+=7;
+    }
+
+    // ── 2. Inspection Counts for this submission ──
+    doc.setFillColor(...RED);doc.rect(M,y,3,5,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(8);doc.setFont('helvetica','bold');
+    doc.text('INSPECTION SUMMARY',M+6,y+3.5);
+    y+=7;
+
+    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+    doc.text('INSPECTED',M+3,y+3.5);doc.text('APPROVED',M+40,y+3.5);
+    doc.text('REJECTED',M+80,y+3.5);doc.text('REWORKED',M+120,y+3.5);
+    doc.text('HOURS',M+160,y+3.5);
+    y+=5;
+
+    doc.setFillColor(34,37,43);doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(200,210,220);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text(String(s.inspected||0),M+3,y+3.5);
+    doc.text(String(s.approved||0),M+40,y+3.5);
+    doc.text(String(s.rejected||0),M+80,y+3.5);
+    doc.text(String(s.reworked||0),M+120,y+3.5);
+    doc.text(String(s.total_hours||'—'),M+160,y+3.5);
+    y+=10;
+  });
+
+  // ══════════════════════════════════════
+  // ── Global Defect Breakdown Summary ──
+  // ══════════════════════════════════════
+  if(y>230){doc.addPage();y=20;}
+
+  // Build global defect map from new structure
+  const defMap={};
+  subs.forEach(s=>{
+    (s.defects||[]).forEach(d=>{
+      const key=d.desc||'Unknown';
+      defMap[key]=(defMap[key]||0)+(d.qty||0);
+    });
+  });
+  const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
+
+  if(defEntries.length){
+    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text('OVERALL DEFECT BREAKDOWN',M+6,y+4.5);
+    y+=10;
+
+    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text('DEFECT',M+4,y+3.5);
+    doc.text('QTY',M+120,y+3.5);
+    doc.text('% OF REJECTED',M+150,y+3.5);
+    y+=5;
+
+    defEntries.forEach(([desc,qty],i)=>{
+      if(y>272){doc.addPage();y=20;}
+      doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);
+      doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(200,210,220);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+      doc.text(desc,M+4,y+3.5);
+      doc.text(String(qty),M+120,y+3.5);
+      doc.text(tR?((qty/tR)*100).toFixed(1)+'%':'—',M+150,y+3.5);
+      y+=5;
+    });
+    y+=6;
+  }
+
+  // ── Footer ──
+  doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
   doc.text('STS Services  ·  www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W/2,289,{align:'center'});
   doc.text('Internal Report — '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
+
   doc.save('STS_Report_'+new Date().toISOString().split('T')[0]+'.pdf');
   showToast('📄 PDF downloaded!','info');
 }
-
 /* ══ PAYROLL PDF ══ */
 function downloadPayrollPDF(){
   const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
