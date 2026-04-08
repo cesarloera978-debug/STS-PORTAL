@@ -1329,22 +1329,33 @@ async function downloadClientReportPDF(clientCode, partNumber){
     doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
     doc.setFontSize(14);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
   });y+=22;
-  // Defects
-  const defMap={};
-  subs.forEach(s=>(s.defects||[]).forEach(d=>{defMap[d.desc]=(defMap[d.desc]||0)+d.qty}));
-  const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
-  if(defEntries.length){
+// Defects
+  const defects=s.defects||[];
+  if(defects.length){
     doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('DEFECT BREAKDOWN',M+6,y+4.5);y+=10;
+    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text('DEFECT BREAKDOWN',M+6,y+4.5);y+=10;
     doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
     doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
-    doc.text('DEFECT',M+4,y+3.5);doc.text('QTY',M+120,y+3.5);doc.text('% OF REJECTED',M+150,y+3.5);y+=5;
-    defEntries.forEach(([desc,qty],i)=>{
-      doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);doc.rect(M,y,CW,5,'F');
-      doc.setTextColor(200,210,220);doc.setFontSize(8);doc.setFont('helvetica','normal');
-      doc.text(desc,M+4,y+3.5);doc.text(String(qty),M+120,y+3.5);
-      doc.text(tR?((qty/tR)*100).toFixed(1)+'%':'—',M+150,y+3.5);y+=5;
-    });y+=6;
+    doc.text('PART #',M+3,y+3.5);
+    doc.text('SERIAL #',M+35,y+3.5);
+    doc.text('LOT / BATCH',M+68,y+3.5);
+    doc.text('DESCRIPTION',M+105,y+3.5);
+    doc.text('QTY',M+165,y+3.5);
+    y+=5;
+    defects.forEach((d,i)=>{
+      if(y>272){doc.addPage();y=20;}
+      doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);
+      doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(200,210,220);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+      doc.text((s.part_number||'—').substring(0,10),M+3,y+3.5);
+      doc.text((d.serial||'—').substring(0,12),M+35,y+3.5);
+      doc.text((d.lot||'—').substring(0,12),M+68,y+3.5);
+      doc.text((d.desc||'—').substring(0,26),M+105,y+3.5);
+      doc.text(String(d.qty||0),M+165,y+3.5);
+      y+=5;
+    });
+    y+=6;
   }
   // Photos
   const photosAll=subs.flatMap(s=>s.photos||[]).slice(0,8);
@@ -1429,7 +1440,6 @@ async function clearData(){
   if(error){showToast('Error: '+error.message,'err');return}
   allSubmissions=[];loadOverview();renderDirectory();loadPayroll();showToast('All data deleted.','info');
 }
-
 /* ══ PDF — MAIN REPORT ══ */
 function downloadPDF(){
   const subs=allSubmissions;const cfg=getConfig();
