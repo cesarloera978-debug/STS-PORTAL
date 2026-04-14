@@ -530,26 +530,46 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
     </div>
 
-    <!-- 03 DEFECTS merged with Serial/Lot -->
+   <!-- 03 DEFECTS merged with Serial/Lot -->
     <div class="card">
       <div class="card-hd"><div class="card-ico">⚠️</div><div class="card-title">Defect Breakdown & Serial / Lot Numbers</div><div class="card-num">03</div></div>
       <div class="card-body">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th style="width:40px">#</th>
-              <th>Serial Number</th>
-              <th>Lot / Batch #</th>
-              <th>Defect Description</th>
-              <th style="width:100px">Code</th>
-              <th style="width:80px">Qty Bad</th>
-              <th style="width:42px"></th>
-            </tr>
-          </thead>
-          <tbody id="defBody"></tbody>
-          <tfoot><tr class="tfoot-row"><td colspan="5" style="text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase">Total Defects</td><td id="totalDef">0</td><td></td></tr></tfoot>
-        </table>
-        <button class="btn-add" onclick="addDef()">+ Add Defect Row</button>
+        <div style="overflow-x:auto">
+          <table class="tbl" id="defTable">
+            <thead>
+              <tr>
+                <th style="width:36px">#</th>
+                <th style="min-width:110px">Part Number</th>
+                <th style="min-width:110px">MFG Date</th>
+                <th style="min-width:130px">Serial Number</th>
+                <th style="min-width:130px">Lot & Batch #</th>
+                <th style="min-width:160px">Defect Description</th>
+                <th style="width:70px;text-align:center">OK</th>
+                <th style="width:70px;text-align:center">NOK</th>
+                <th style="width:36px"></th>
+              </tr>
+            </thead>
+            <tbody id="defBody"></tbody>
+            <tfoot>
+              <tr class="tfoot-row">
+                <td colspan="6" style="text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase">Total NOK (Defects)</td>
+                <td id="totalOK" style="color:var(--green);font-weight:700">0</td>
+                <td id="totalDef" style="color:var(--red);font-weight:700">0</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px;background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:6px 12px">
+            <span style="font-size:12px;color:var(--mid);font-weight:600;white-space:nowrap">Add rows:</span>
+            <input type="number" id="bulkRowCount" min="1" max="500" placeholder="e.g. 10" style="width:70px;background:transparent;border:none;color:var(--pure);font-size:13px;font-weight:700;outline:none;padding:0"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();addBulkDef()}"
+              oninput="this.value=Math.min(Math.max(parseInt(this.value)||1,1),500)">
+          </div>
+          <button class="btn-add" onclick="addBulkDef()" style="margin-top:0">+ Add Rows</button>
+          <span style="font-size:11px;color:var(--soft)">Type a number and press Enter, or click + Add Rows</span>
+        </div>
       </div>
     </div>
 
@@ -630,7 +650,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
       <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
         <button class="btn-primary" onclick="downloadPDF()">📄 Download PDF Report</button>
-        <button class="btn-secondary" onclick="clearData()" style="color:var(--red);border-color:rgba(232,55,42,.4)">🗑 Clear All Data</button>
+        <button class="btn-secondary" onclick="clearData()" style="color:var(--red);border-color:rgba(232,55,42,.4)">🗑 Delete ALL Data (use with caution)</button>
       </div>
     </div>
     <div class="admin-content" id="historyTab">
@@ -670,16 +690,6 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- FULL REPORT OVERLAY (calendar drill-down) -->
-  <div class="cal-report-overlay" id="calReportOverlay">
-    <div class="cal-report-topbar">
-      <button class="cd-back" onclick="calCloseReport()">← Back to Calendar</button>
-      <span class="cal-report-heading" id="calReportHeading">—</span>
-      <span class="cal-report-fid" id="calReportFid">—</span>
-    </div>
-    <div class="cal-report-body" id="calReportBody"></div>
   </div>
 
   <!-- ══ CLIENT DIRECTORY PAGE ══ -->
@@ -794,8 +804,82 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- FULL REPORT OVERLAY (calendar drill-down) — must be at body level to avoid layout issues -->
+<div class="cal-report-overlay" id="calReportOverlay">
+  <div class="cal-report-topbar">
+    <button class="cd-back" onclick="calCloseReport()">← Back to Calendar</button>
+    <span class="cal-report-heading" id="calReportHeading">—</span>
+    <span class="cal-report-fid" id="calReportFid">—</span>
+  </div>
+  <div class="cal-report-body" id="calReportBody"></div>
+</div>
 
+<!-- EDIT REPORT MODAL — also at body level -->
+<div id="editModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;overflow-y:auto">
+  <div style="max-width:760px;margin:40px auto;padding:0 16px 40px">
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+      <div style="background:var(--card);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;gap:12px">
+        <div style="font-family:'Montserrat',sans-serif;font-size:14px;font-weight:800;color:var(--pure);flex:1">✏️ Edit Inspection Report</div>
+        <span id="editModalFid" style="font-size:10px;color:var(--mid);font-family:'Montserrat',sans-serif"></span>
+        <button onclick="closeEditModal()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:6px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600">✕ Cancel</button>
+      </div>
+      <div style="padding:20px">
+        <input type="hidden" id="editSubId">
+
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Customer & Service</div>
+        <div class="g2" style="margin-bottom:16px">
+          <div class="field"><label>Customer Code</label><input type="text" id="editCustCode"></div>
+          <div class="field"><label>Customer Name</label><input type="text" id="editCustName"></div>
+          <div class="field"><label>Service Start</label><input type="date" id="editSvcStart"></div>
+          <div class="field"><label>Service End</label><input type="date" id="editSvcEnd"></div>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Part Information</div>
+        <div class="g3" style="margin-bottom:16px">
+          <div class="field"><label>Part Number</label><input type="text" id="editPartNum"></div>
+          <div class="field"><label>Part Description</label><input type="text" id="editPartDesc"></div>
+          <div class="field"><label>Mfg Date</label><input type="date" id="editMfgDate"></div>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Inspection Results</div>
+        <div class="g4" style="margin-bottom:16px">
+          <div class="field"><label style="color:var(--blue)">Inspected</label><input type="number" id="editInspected" min="0"></div>
+          <div class="field"><label style="color:var(--green)">Approved</label><input type="number" id="editApproved" min="0"></div>
+          <div class="field"><label style="color:var(--red)">Rejected</label><input type="number" id="editRejected" min="0"></div>
+          <div class="field"><label style="color:var(--purple)">Reworked</label><input type="number" id="editReworked" min="0"></div>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Defects / Serial / Lot Numbers</div>
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:16px">
+          <table class="tbl">
+            <thead><tr><th>#</th><th>Serial #</th><th>Lot / Batch #</th><th>Defect Description</th><th>Code</th><th>Qty Bad</th><th></th></tr></thead>
+            <tbody id="editDefBody"></tbody>
+          </table>
+          <div style="padding:10px 14px">
+            <button class="btn-add" onclick="editAddDefRow()">+ Add Row</button>
+          </div>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Notes</div>
+        <div class="g2" style="margin-bottom:20px">
+          <div class="field"><label>Submitted By</label><input type="text" id="editSubmittedBy"></div>
+          <div class="field"><label>Notes</label><textarea id="editNotes" style="min-height:80px"></textarea></div>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--line)">
+          <button onclick="closeEditModal()" class="btn-secondary">Cancel</button>
+          <button onclick="saveEditedReport()" class="btn-primary">
+            <span id="editBtnTxt">💾 Save Changes</span>
+            <div class="spin" id="editSpinner"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+  
 <script>
 /* ══════════════════════════════════════════
    SUPABASE CONFIG
@@ -962,7 +1046,7 @@ async function initApp(){
   loadConfig();
   // Initialize 3 default defect/serial/lot rows
   const defBody=document.getElementById('defBody');
-  if(!defBody.rows.length){addDef();addDef();addDef();}
+  if(!defBody.rows.length){addBulkDef(3);}
   updateProgress();
   if(currentUser.role==='admin'){
     showToast('Loading data from cloud…','info');
@@ -981,6 +1065,9 @@ function showPage(id){
   if(id==='overviewPage')loadOverview();
   if(id==='directoryPage')renderDirectory();
   if(id==='payrollPage')loadPayroll();
+  // Close any open overlays when navigating
+  calCloseReport();
+  closeEditModal();
 }
 
 function switchAdminTab(id){
@@ -999,26 +1086,59 @@ function loadConfig(){const c=getConfig();if(c.url){set('cfgUrl',c.url);set('cfg
 function toggleSetup(){const p=document.getElementById('setupPanel'),b=document.getElementById('cfgToggleBtn');const h=p.style.display==='none';p.style.display=h?'block':'none';b.style.display=h?'none':'flex';}
 
 /* ══ DEFECTS + SERIAL/LOT (merged) ══ */
-function addSL(){addDef()} // legacy alias — serial/lot now inside defect rows
-function addDef(){
+function addSL(){addDef()}
+function addDef(){addBulkDef(1);}
+function addBulkDef(forceCount){
   const body=document.getElementById('defBody');
-  const i=body.rows.length+1;
-  const tr=document.createElement('tr');
-  tr.innerHTML=`<td style="color:var(--mid);font-size:11px;font-weight:700">${pad(i)}</td>
-    <td><input type="text" placeholder="e.g. SN-20240001" style="width:100%"></td>
-    <td><input type="text" placeholder="e.g. LOT-2024-B01" style="width:100%"></td>
-    <td><input type="text" placeholder="e.g. Scratch, dent…" style="width:100%"></td>
-    <td><input type="text" placeholder="Code" style="width:100%"></td>
-    <td><input type="number" placeholder="0" min="0" style="width:100%" oninput="calcDefTotal()"></td>
-    <td><button class="btn-del" onclick="this.closest('tr').remove();calcDefTotal()">✕</button></td>`;
-  body.appendChild(tr);
+  const countInput=document.getElementById('bulkRowCount');
+  const n=forceCount||Math.min(Math.max(parseInt(countInput?.value)||1,1),500);
+  const partVal=document.getElementById('partNum')?.value||'';
+  const mfgVal=document.getElementById('mfgDate')?.value||'';
+  const frag=document.createDocumentFragment();
+  for(let j=0;j<n;j++){
+    const i=body.rows.length+j+1;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="color:var(--mid);font-size:11px;font-weight:700;text-align:center">${pad(i)}</td>
+      <td><input type="text" placeholder="Part #" style="width:100%" value="${partVal}"></td>
+      <td><input type="date" style="width:100%" value="${mfgVal}"></td>
+      <td><input type="text" placeholder="e.g. SN-20240001" style="width:100%"></td>
+      <td><input type="text" placeholder="e.g. LOT-2024-B01" style="width:100%"></td>
+      <td><input type="text" placeholder="e.g. Scratch, dent…" style="width:100%"></td>
+      <td><input type="number" placeholder="0" min="0" style="width:100%;text-align:center" oninput="calcDefTotal()"></td>
+      <td><input type="number" placeholder="0" min="0" style="width:100%;text-align:center" oninput="calcDefTotal()"></td>
+      <td><button class="btn-del" onclick="deleteDefRow(this)">✕</button></td>`;
+    frag.appendChild(tr);
+  }
+  body.appendChild(frag);
+  if(countInput)countInput.value='';
+}
+function deleteDefRow(btn){
+  const tr=btn.closest('tr');
+  if(!tr)return;
+  tr.remove();
+  renumberDefRows();
+  calcDefTotal();
+}
+function renumberDefRows(){
+  const rows=document.querySelectorAll('#defBody tr');
+  rows.forEach((tr,i)=>{
+    const numCell=tr.querySelector('td:first-child');
+    if(numCell)numCell.textContent=pad(i+1);
+  });
 }
 function calcDefTotal(){
-  let t=0;
-  document.querySelectorAll('#defBody input[type=number]').forEach(i=>t+=parseFloat(i.value)||0);
-  document.getElementById('totalDef').textContent=t;
+  let ok=0,nok=0;
+  document.querySelectorAll('#defBody tr').forEach(tr=>{
+    const inputs=tr.querySelectorAll('input[type=number]');
+    ok+=parseFloat(inputs[0]?.value)||0;
+    nok+=parseFloat(inputs[1]?.value)||0;
+  });
+  const okEl=document.getElementById('totalOK');
+  const nokEl=document.getElementById('totalDef');
+  if(okEl)okEl.textContent=ok;
+  if(nokEl)nokEl.textContent=nok;
 }
-
 /* ══ PERSONNEL ══ */
 function syncPeople(){const n=Math.min(parseInt(v('numPeople'))||0,50);while(pIds.length<n)pIds.push(++_uid);pIds=pIds.slice(0,n);renderPeople()}
 function renderPeople(){
@@ -1065,14 +1185,16 @@ function updateProgress(){const fields=['custCode','svcStart','partNum','qInspec
 function collect(){
   const slRows=[];// legacy — serial/lot now captured per defect row
   const defects=[];
-  document.querySelectorAll('#defBody tr').forEach(tr=>{
+ document.querySelectorAll('#defBody tr').forEach(tr=>{
     const ins=tr.querySelectorAll('input');
-    const serial=ins[0]?.value.trim()||'';
-    const lot=ins[1]?.value.trim()||'';
-    const desc=ins[2]?.value.trim()||'';
-    const code=ins[3]?.value.trim()||'';
-    const qty=parseFloat(ins[4]?.value)||0;
-    if(desc||serial||lot)defects.push({serial,lot,desc:desc||'—',code:code||'—',qty});
+    const partNum=ins[0]?.value.trim()||'';
+    const mfgDate=ins[1]?.value.trim()||'';
+    const serial=ins[2]?.value.trim()||'';
+    const lot=ins[3]?.value.trim()||'';
+    const desc=ins[4]?.value.trim()||'';
+    const ok=parseFloat(ins[5]?.value)||0;
+    const nok=parseFloat(ins[6]?.value)||0;
+    if(desc||serial||lot||partNum)defects.push({partNum,mfgDate,serial,lot,desc:desc||'—',code:'—',qty:nok,ok,nok});
   });
   const personnel=[];
   document.querySelectorAll('#pBody tr').forEach((tr,i)=>{const ins=tr.querySelectorAll('input');personnel.push({num:i+1,name:ins[0]?.value||'—',role:ins[1]?.value||'—',hours:parseFloat(ins[2]?.value)||0})});
@@ -1133,7 +1255,7 @@ function resetDaily(){
   ['qInspected','qApproved','qRejected','qReworked','notes','submittedBy'].forEach(id=>set(id,''));
   // Clear defect/serial/lot rows and reset to 3 blank rows
   document.getElementById('defBody').innerHTML='';
-  addDef();addDef();addDef();
+  addBulkDef(3);
   document.querySelectorAll('#pBody input').forEach(i=>i.value='');
   document.getElementById('valMsg').style.display='none';
   uploadedPhotos=[];renderPhotoGrid();
@@ -1174,14 +1296,18 @@ function loadOverview(){
         :`<tr><td colspan="5" style="color:var(--soft);font-size:11px;font-style:italic">No defects recorded.</td></tr>`;
       return`<div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:16px;overflow:hidden">
         <div style="background:var(--line);padding:10px 14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-          <span style="font-weight:700;font-size:12px;color:var(--white)">#${si+1} · ${s.submit_date||''}</span>
+         <span style="font-weight:700;font-size:12px;color:var(--white)">#${si+1} · ${s.submit_date||''}</span>
           <span class="pill pill-b">${s.customer_code||'—'}</span>
           <span style="font-size:11px;color:var(--mid)">By: ${s.submitted_by||'—'}</span>
-          <span style="font-size:11px;color:var(--mid);margin-left:auto">
-            <span style="color:var(--blue)">▲ ${s.inspected||0} inspected</span> &nbsp;
-            <span style="color:var(--green)">✔ ${s.approved||0} approved</span> &nbsp;
-            <span style="color:var(--red)">✖ ${s.rejected||0} rejected</span> &nbsp;
-            <span style="color:var(--yellow)">⏱ ${s.total_hours||'—'}h</span>
+          <span style="font-size:11px;color:var(--mid);margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span>
+              <span style="color:var(--blue)">▲ ${s.inspected||0} inspected</span> &nbsp;
+              <span style="color:var(--green)">✔ ${s.approved||0} approved</span> &nbsp;
+              <span style="color:var(--red)">✖ ${s.rejected||0} rejected</span> &nbsp;
+              <span style="color:var(--yellow)">⏱ ${s.total_hours||'—'}h</span>
+            </span>
+            <button onclick="openEditModal('${s.id}')" style="background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">✏️ Edit</button>
+            <button onclick="deleteReport('${s.id}','${(s.form_id||'').replace(/'/g,'')}')" style="background:transparent;border:1px solid rgba(232,55,42,.3);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🗑 Delete</button>
           </span>
         </div>
         <div style="padding:10px 14px;border-bottom:1px solid var(--line)">
@@ -1921,6 +2047,124 @@ function downloadClientPDF(){
   doc.save('STS_Report_'+new Date().toISOString().split('T')[0]+'.pdf');
   showToast('📄 PDF downloaded!','info');
 }
+/* ══ EDIT REPORT ══ */
+function openEditModal(subId){
+  const s=allSubmissions.find(x=>x.id===subId);
+  if(!s){showToast('Report not found.','err');return;}
+  document.getElementById('editSubId').value=subId;
+  document.getElementById('editModalFid').textContent=s.form_id||'';
+  document.getElementById('editCustCode').value=s.customer_code||'';
+  document.getElementById('editCustName').value=s.customer_name||'';
+  document.getElementById('editSvcStart').value=s.service_start||'';
+  document.getElementById('editSvcEnd').value=s.service_end||'';
+  document.getElementById('editPartNum').value=s.part_number||'';
+  document.getElementById('editPartDesc').value=s.part_description||'';
+  document.getElementById('editMfgDate').value=s.mfg_date||'';
+  document.getElementById('editInspected').value=s.inspected||0;
+  document.getElementById('editApproved').value=s.approved||0;
+  document.getElementById('editRejected').value=s.rejected||0;
+  document.getElementById('editReworked').value=s.reworked||0;
+  document.getElementById('editSubmittedBy').value=s.submitted_by||'';
+  document.getElementById('editNotes').value=s.notes||'';
+  // Build defect rows
+  const body=document.getElementById('editDefBody');
+  body.innerHTML='';
+  const defects=s.defects||[];
+  if(defects.length){defects.forEach(d=>editAddDefRow(d));}
+  else{editAddDefRow();}
+  document.getElementById('editModalOverlay').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function closeEditModal(){
+  document.getElementById('editModalOverlay').style.display='none';
+  document.body.style.overflow='';
+}
+function editAddDefRow(d){
+  const body=document.getElementById('editDefBody');
+  const i=body.rows.length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td style="color:var(--mid);font-size:11px;font-weight:700">${String(i).padStart(2,'0')}</td>
+    <td><input type="text" value="${d?.serial||''}" placeholder="Serial #" style="width:100%"></td>
+    <td><input type="text" value="${d?.lot||''}" placeholder="Lot / Batch #" style="width:100%"></td>
+    <td><input type="text" value="${d?.desc||''}" placeholder="Defect description" style="width:100%"></td>
+    <td><input type="text" value="${d?.code||''}" placeholder="Code" style="width:100%"></td>
+    <td><input type="number" value="${d?.qty||0}" min="0" style="width:100%"></td>
+    <td><button class="btn-del" onclick="this.closest('tr').remove()">✕</button></td>`;
+  body.appendChild(tr);
+}
+async function saveEditedReport(){
+  const subId=document.getElementById('editSubId').value;
+  if(!subId)return;
+  document.getElementById('editBtnTxt').style.display='none';
+  document.getElementById('editSpinner').style.display='block';
+  // Collect defect rows
+  const defects=[];
+  document.querySelectorAll('#editDefBody tr').forEach(tr=>{
+    const ins=tr.querySelectorAll('input');
+    const serial=ins[0]?.value.trim()||'';
+    const lot=ins[1]?.value.trim()||'';
+    const desc=ins[2]?.value.trim()||'';
+    const code=ins[3]?.value.trim()||'';
+    const qty=parseFloat(ins[4]?.value)||0;
+    if(desc||serial||lot)defects.push({serial,lot,desc:desc||'—',code:code||'—',qty});
+  });
+  const totalDefects=defects.reduce((a,d)=>a+(d.qty||0),0);
+  const defectSummary=defects.map(d=>`${d.code}:${d.desc}(${d.qty})`).join('; ');
+  const serialNumbers=defects.map(d=>d.serial).filter(Boolean).join(' | ');
+  const lotNumbers=defects.map(d=>d.lot).filter(Boolean).join(' | ');
+  const updates={
+    customer_code:document.getElementById('editCustCode').value.trim(),
+    customer_name:document.getElementById('editCustName').value.trim(),
+    service_start:document.getElementById('editSvcStart').value,
+    service_end:document.getElementById('editSvcEnd').value,
+    part_number:document.getElementById('editPartNum').value.trim(),
+    part_description:document.getElementById('editPartDesc').value.trim(),
+    mfg_date:document.getElementById('editMfgDate').value,
+    inspected:parseInt(document.getElementById('editInspected').value)||0,
+    approved:parseInt(document.getElementById('editApproved').value)||0,
+    rejected:parseInt(document.getElementById('editRejected').value)||0,
+    reworked:parseInt(document.getElementById('editReworked').value)||0,
+    submitted_by:document.getElementById('editSubmittedBy').value.trim(),
+    notes:document.getElementById('editNotes').value.trim(),
+    defects,defect_summary:defectSummary,total_defects:totalDefects,
+    serial_numbers:serialNumbers,lot_numbers:lotNumbers
+  };
+  try{
+    const {error}=await db.from('submissions').update(updates).eq('id',subId);
+    if(error)throw error;
+    // Update local cache
+    const idx=allSubmissions.findIndex(x=>x.id===subId);
+    if(idx>-1)allSubmissions[idx]={...allSubmissions[idx],...updates};
+    showToast('✅ Report updated successfully!','ok');
+    closeEditModal();
+    loadOverview();
+    // Refresh calendar if it's visible
+    if(document.getElementById('calendarTab')?.classList.contains('active'))calRender();
+  }catch(e){
+    showToast('❌ Update failed: '+e.message,'err');
+  }finally{
+    document.getElementById('editBtnTxt').style.display='inline';
+    document.getElementById('editSpinner').style.display='none';
+  }
+}
+
+/* ══ DELETE SINGLE REPORT ══ */
+async function deleteReport(subId,formId){
+  if(!confirm(`Delete report ${formId||subId}?\n\nThis cannot be undone.`))return;
+  try{
+    const {error}=await db.from('submissions').delete().eq('id',subId);
+    if(error)throw error;
+    allSubmissions=allSubmissions.filter(x=>x.id!==subId);
+    showToast('🗑 Report deleted.','info');
+    loadOverview();
+    renderDirectory();
+    loadPayroll();
+    if(document.getElementById('calendarTab')?.classList.contains('active'))calRender();
+  }catch(e){
+    showToast('❌ Delete failed: '+e.message,'err');
+  }
+}
+
 /* ══ CALENDAR ══ */
 const CAL_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const CAL_DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1978,8 +2222,16 @@ function calSelectDay(key,subs){
         <span class="pill pill-r">${s.rejected||0} rejected</span>
         <span class="pill pill-y">${s.total_hours||'—'}h</span>
       </div>
-      <div class="cal-sub-id">${s.form_id||''}</div>
-      <div class="cal-sub-by">Submitted by ${s.submitted_by||'—'} · ${(s.submit_date||'').split(',')[1]||''}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:6px">
+        <div>
+          <div class="cal-sub-id">${s.form_id||''}</div>
+          <div class="cal-sub-by">Submitted by ${s.submitted_by||'—'} · ${(s.submit_date||'').split(',')[1]||''}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button onclick="event.stopPropagation();openEditModal('${s.id}')" style="background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer">✏️ Edit</button>
+          <button onclick="event.stopPropagation();deleteReport('${s.id}','${(s.form_id||'').replace(/'/g,'')}')" style="background:transparent;border:1px solid rgba(232,55,42,.3);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer">🗑 Delete</button>
+        </div>
+      </div>
     </div>`).join('');
 }
 function calOpenReport(formId,dateKey){
