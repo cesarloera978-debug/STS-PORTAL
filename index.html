@@ -530,7 +530,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
     </div>
 
-   <!-- 03 DEFECTS merged with Serial/Lot -->
+    <!-- 03 DEFECTS merged with Serial/Lot -->
     <div class="card">
       <div class="card-hd"><div class="card-ico">⚠️</div><div class="card-title">Defect Breakdown & Serial / Lot Numbers</div><div class="card-num">03</div></div>
       <div class="card-body">
@@ -615,6 +615,14 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
     </div>
 
+    <!-- OPERATOR MY SUBMISSIONS panel (shown after login if operator) -->
+    <div id="mySubsPanel" style="display:none;margin-bottom:16px">
+      <div class="card">
+        <div class="card-hd"><div class="card-ico">📋</div><div class="card-title">My Recent Submissions</div><div class="card-num" style="background:var(--bluebg);color:var(--blue)">My Work</div></div>
+        <div class="card-body" id="mySubsBody"><div class="no-data" style="padding:20px"><div class="nd-ico" style="font-size:28px">📋</div>No submissions yet.</div></div>
+      </div>
+    </div>
+
     <!-- SUBMIT -->
     <div class="submit-row">
       <div class="submit-info"><strong>Submit daily</strong> — each submission = one row in Google Sheets.<br><span style="font-size:11px;color:var(--soft)">Customer info stays filled. Admin can download PDF from Overview.</span></div>
@@ -634,7 +642,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
     <div class="admin-tabs">
       <button class="atab active" onclick="switchAdminTab('summaryTab')" id="atab1">📊 Summary</button>
       <button class="atab" onclick="switchAdminTab('historyTab')" id="atab2">📋 Submissions</button>
-     <button class="atab" onclick="switchAdminTab('wixTab')" id="atab3">🌐 Wix Setup</button>
+      <button class="atab" onclick="switchAdminTab('wixTab')" id="atab3">🌐 Wix Setup</button>
       <button class="atab" onclick="switchAdminTab('calendarTab')" id="atab4">📅 Calendar</button>
     </div>
     <div class="admin-content active" id="summaryTab">
@@ -650,7 +658,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
       <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
         <button class="btn-primary" onclick="downloadPDF()">📄 Download PDF Report</button>
-        <button class="btn-secondary" onclick="clearData()" style="color:var(--red);border-color:rgba(232,55,42,.4)">🗑 Delete ALL Data (use with caution)</button>
+        <button class="btn-secondary" onclick="clearData()" style="color:var(--red);border-color:rgba(232,55,42,.4)">🗑 Clear All Data</button>
       </div>
     </div>
     <div class="admin-content" id="historyTab">
@@ -669,7 +677,6 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
         </div>
       </div>
     </div>
- </div>
     <div class="admin-content" id="calendarTab">
       <div class="cal-wrap">
         <div class="cal-hdr">
@@ -686,7 +693,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
             <span class="cal-detail-hdr-title" id="calDetailTitle">Select a day to view inspections</span>
             <span class="cal-count-badge" id="calCountBadge" style="display:none"></span>
           </div>
-          <div id="calDetailBody"><div class="no-data"><div class="nd-ico">📅</div>Click any highlighted day to see submissions.</div></div>
+          <div id="calDetailBody"><div class="no-data"><div class="nd-ico">📅</div>Click any highlighted day.</div></div>
         </div>
       </div>
     </div>
@@ -740,7 +747,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
       <div style="font-size:12px;color:var(--mid);font-weight:600">Filter week:</div>
       <div class="week-filter" id="weekFilter"></div>
-      <button class="btn-secondary" onclick="downloadPayrollPDF()" style="margin-left:auto">📄 Export Payroll PDF</button>
+      <button class="btn-secondary" onclick="downloadPayrollPDF('all')" style="margin-left:auto">📄 Export All Weeks PDF</button>
     </div>
     <div id="payrollWeeks">
       <div class="no-data"><div class="nd-ico">💰</div>No payroll data yet. Submit inspection forms with personnel hours to see payroll breakdown.</div>
@@ -804,7 +811,9 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   </div>
 </div>
 
-<!-- FULL REPORT OVERLAY (calendar drill-down) — must be at body level to avoid layout issues -->
+<div class="toast" id="toast"></div>
+
+<!-- CALENDAR FULL REPORT OVERLAY -->
 <div class="cal-report-overlay" id="calReportOverlay">
   <div class="cal-report-topbar">
     <button class="cd-back" onclick="calCloseReport()">← Back to Calendar</button>
@@ -814,9 +823,9 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   <div class="cal-report-body" id="calReportBody"></div>
 </div>
 
-<!-- EDIT REPORT MODAL — also at body level -->
-<div id="editModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;overflow-y:auto">
-  <div style="max-width:760px;margin:40px auto;padding:0 16px 40px">
+<!-- EDIT REPORT MODAL -->
+<div id="editModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;overflow-y:auto">
+  <div style="max-width:780px;margin:40px auto;padding:0 16px 40px">
     <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden">
       <div style="background:var(--card);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;gap:12px">
         <div style="font-family:'Montserrat',sans-serif;font-size:14px;font-weight:800;color:var(--pure);flex:1">✏️ Edit Inspection Report</div>
@@ -825,7 +834,6 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
       <div style="padding:20px">
         <input type="hidden" id="editSubId">
-
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Customer & Service</div>
         <div class="g2" style="margin-bottom:16px">
           <div class="field"><label>Customer Code</label><input type="text" id="editCustCode"></div>
@@ -833,14 +841,12 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
           <div class="field"><label>Service Start</label><input type="date" id="editSvcStart"></div>
           <div class="field"><label>Service End</label><input type="date" id="editSvcEnd"></div>
         </div>
-
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Part Information</div>
         <div class="g3" style="margin-bottom:16px">
           <div class="field"><label>Part Number</label><input type="text" id="editPartNum"></div>
           <div class="field"><label>Part Description</label><input type="text" id="editPartDesc"></div>
           <div class="field"><label>Mfg Date</label><input type="date" id="editMfgDate"></div>
         </div>
-
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Inspection Results</div>
         <div class="g4" style="margin-bottom:16px">
           <div class="field"><label style="color:var(--blue)">Inspected</label><input type="number" id="editInspected" min="0"></div>
@@ -848,24 +854,43 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
           <div class="field"><label style="color:var(--red)">Rejected</label><input type="number" id="editRejected" min="0"></div>
           <div class="field"><label style="color:var(--purple)">Reworked</label><input type="number" id="editReworked" min="0"></div>
         </div>
-
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Defects / Serial / Lot Numbers</div>
         <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:16px">
-          <table class="tbl">
-            <thead><tr><th>#</th><th>Serial #</th><th>Lot / Batch #</th><th>Defect Description</th><th>Code</th><th>Qty Bad</th><th></th></tr></thead>
-            <tbody id="editDefBody"></tbody>
-          </table>
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead><tr><th>#</th><th>Serial #</th><th>Lot / Batch #</th><th>Defect Description</th><th>Code</th><th>Qty Bad</th><th></th></tr></thead>
+              <tbody id="editDefBody"></tbody>
+            </table>
+          </div>
           <div style="padding:10px 14px">
             <button class="btn-add" onclick="editAddDefRow()">+ Add Row</button>
           </div>
         </div>
-
+        <!-- HOURS — NEW IN V7 -->
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Personnel Hours</div>
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:16px">
+          <div class="g2">
+            <div class="field"><label>Total Hours</label><input type="number" id="editTotalHrs" min="0" step="0.5" placeholder="e.g. 8.5"></div>
+            <div class="field"><label>Submitted By</label><input type="text" id="editSubmittedBy"></div>
+          </div>
+        </div>
+        <!-- PHOTOS — NEW IN V7 -->
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Photo Evidence</div>
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:16px">
+          <p style="font-size:12px;color:var(--mid);margin-bottom:10px">Existing photos are kept. Upload new ones to add to this report.</p>
+          <div id="editExistingPhotos" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:10px"></div>
+          <div class="photo-drop" id="editPhotoDrop" style="padding:16px" ondragover="handleEditDragOver(event)" ondragleave="handleEditDragLeave(event)" ondrop="handleEditDrop(event)">
+            <input type="file" accept="image/*" multiple onchange="handleEditPhotoSelect(event)" id="editPhotoInput">
+            <div class="pd-ico" style="font-size:22px;margin-bottom:4px">📷</div>
+            <div class="pd-txt" style="font-size:11px"><b>Add photos</b> · drag &amp; drop or tap</div>
+          </div>
+          <div id="editNewPhotoGrid" class="photo-grid" style="margin-top:8px"></div>
+          <div id="editPhotoCount" style="font-size:11px;color:var(--mid);margin-top:4px"></div>
+        </div>
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Notes</div>
         <div class="g2" style="margin-bottom:20px">
-          <div class="field"><label>Submitted By</label><input type="text" id="editSubmittedBy"></div>
           <div class="field"><label>Notes</label><textarea id="editNotes" style="min-height:80px"></textarea></div>
         </div>
-
         <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid var(--line)">
           <button onclick="closeEditModal()" class="btn-secondary">Cancel</button>
           <button onclick="saveEditedReport()" class="btn-primary">
@@ -878,8 +903,6 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-  
 <script>
 /* ══════════════════════════════════════════
    SUPABASE CONFIG
@@ -1021,7 +1044,6 @@ async function doLogin(){
   document.getElementById('mobUserName').textContent=found.name;
   if(isAdmin)document.getElementById('adminMobileNav').style.display='block';
   await initApp();
-  if(!isAdmin)showPage('formPage');
 }
 
 function logout(){
@@ -1048,10 +1070,19 @@ async function initApp(){
   const defBody=document.getElementById('defBody');
   if(!defBody.rows.length){addBulkDef(3);}
   updateProgress();
+  // Load submissions for admin AND operators (operators need theirs to edit)
+  showToast('Loading…','info');
+  allSubmissions=await sbGetSubmissions();
   if(currentUser.role==='admin'){
-    showToast('Loading data from cloud…','info');
-    allSubmissions=await sbGetSubmissions();
     loadOverview();renderDirectory();loadPayroll();
+  } else {
+    // For operators, show their panel if they have submissions
+    const myName=(currentUser.name||'').toLowerCase().trim();
+    const mine=allSubmissions.filter(s=>(s.submitted_by||'').toLowerCase().trim()===myName);
+    if(mine.length){
+      document.getElementById('mySubsPanel').style.display='block';
+      loadMySubmissions();
+    }
   }
 }
 
@@ -1065,9 +1096,6 @@ function showPage(id){
   if(id==='overviewPage')loadOverview();
   if(id==='directoryPage')renderDirectory();
   if(id==='payrollPage')loadPayroll();
-  // Close any open overlays when navigating
-  calCloseReport();
-  closeEditModal();
 }
 
 function switchAdminTab(id){
@@ -1086,7 +1114,7 @@ function loadConfig(){const c=getConfig();if(c.url){set('cfgUrl',c.url);set('cfg
 function toggleSetup(){const p=document.getElementById('setupPanel'),b=document.getElementById('cfgToggleBtn');const h=p.style.display==='none';p.style.display=h?'block':'none';b.style.display=h?'none':'flex';}
 
 /* ══ DEFECTS + SERIAL/LOT (merged) ══ */
-function addSL(){addDef()}
+function addSL(){addDef();}
 function addDef(){addBulkDef(1);}
 function addBulkDef(forceCount){
   const body=document.getElementById('defBody');
@@ -1114,31 +1142,24 @@ function addBulkDef(forceCount){
   if(countInput)countInput.value='';
 }
 function deleteDefRow(btn){
-  const tr=btn.closest('tr');
-  if(!tr)return;
-  tr.remove();
-  renumberDefRows();
-  calcDefTotal();
+  const tr=btn.closest('tr');if(!tr)return;
+  tr.remove();renumberDefRows();calcDefTotal();
 }
 function renumberDefRows(){
-  const rows=document.querySelectorAll('#defBody tr');
-  rows.forEach((tr,i)=>{
-    const numCell=tr.querySelector('td:first-child');
-    if(numCell)numCell.textContent=pad(i+1);
+  document.querySelectorAll('#defBody tr').forEach((tr,i)=>{
+    const c=tr.querySelector('td:first-child');if(c)c.textContent=pad(i+1);
   });
 }
 function calcDefTotal(){
   let ok=0,nok=0;
   document.querySelectorAll('#defBody tr').forEach(tr=>{
-    const inputs=tr.querySelectorAll('input[type=number]');
-    ok+=parseFloat(inputs[0]?.value)||0;
-    nok+=parseFloat(inputs[1]?.value)||0;
+    const ins=tr.querySelectorAll('input[type=number]');
+    ok+=parseFloat(ins[0]?.value)||0;nok+=parseFloat(ins[1]?.value)||0;
   });
-  const okEl=document.getElementById('totalOK');
-  const nokEl=document.getElementById('totalDef');
-  if(okEl)okEl.textContent=ok;
-  if(nokEl)nokEl.textContent=nok;
+  const okEl=document.getElementById('totalOK');const nokEl=document.getElementById('totalDef');
+  if(okEl)okEl.textContent=ok;if(nokEl)nokEl.textContent=nok;
 }
+
 /* ══ PERSONNEL ══ */
 function syncPeople(){const n=Math.min(parseInt(v('numPeople'))||0,50);while(pIds.length<n)pIds.push(++_uid);pIds=pIds.slice(0,n);renderPeople()}
 function renderPeople(){
@@ -1183,9 +1204,9 @@ function updateProgress(){const fields=['custCode','svcStart','partNum','qInspec
 
 /* ══ COLLECT ══ */
 function collect(){
-  const slRows=[];// legacy — serial/lot now captured per defect row
+  const slRows=[];// legacy
   const defects=[];
- document.querySelectorAll('#defBody tr').forEach(tr=>{
+  document.querySelectorAll('#defBody tr').forEach(tr=>{
     const ins=tr.querySelectorAll('input');
     const partNum=ins[0]?.value.trim()||'';
     const mfgDate=ins[1]?.value.trim()||'';
@@ -1260,6 +1281,11 @@ function resetDaily(){
   document.getElementById('valMsg').style.display='none';
   uploadedPhotos=[];renderPhotoGrid();
   calcDefTotal();calcHrs();updateProgress();
+  // Reload operator's submissions panel if visible
+  if(currentUser?.role==='operator'){
+    loadMySubmissions();
+    document.getElementById('mySubsPanel').style.display='block';
+  }
   showToast('✅ Submitted & device cleared. Ready for next entry.','ok');
 }
 
@@ -1294,20 +1320,27 @@ function loadOverview(){
       const defRows=defects.length
         ?defects.map((d,di)=>`<tr style="background:${di%2===0?'rgba(255,255,255,0.02)':'transparent'}"><td style="color:var(--mid);font-size:11px">${d.serial||'—'}</td><td style="color:var(--mid);font-size:11px">${d.lot||'—'}</td><td>${d.desc||'—'}</td><td style="font-size:11px;color:var(--mid)">${d.code||'—'}</td><td style="color:var(--red);font-weight:700">${d.qty||0}</td></tr>`).join('')
         :`<tr><td colspan="5" style="color:var(--soft);font-size:11px;font-style:italic">No defects recorded.</td></tr>`;
+      const isAdmin=currentUser?.role==='admin';
+      const myName=(currentUser?.name||'').toLowerCase().trim();
+      const subBy=(s.submitted_by||'').toLowerCase().trim();
+      const canEdit=isAdmin||(currentUser?.role==='operator'&&myName===subBy);
+      const editBtns=canEdit?`<div style="display:flex;gap:6px;margin-left:8px">
+        <button onclick="openEditModal('${s.id}')" style="background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">✏️ Edit</button>
+        ${isAdmin?`<button onclick="deleteReport('${s.id}','${(s.form_id||'').replace(/'/g,'')}')" style="background:transparent;border:1px solid rgba(232,55,42,.3);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🗑 Del</button>`:''}
+      </div>`:'';
       return`<div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:16px;overflow:hidden">
         <div style="background:var(--line);padding:10px 14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-         <span style="font-weight:700;font-size:12px;color:var(--white)">#${si+1} · ${s.submit_date||''}</span>
+          <span style="font-weight:700;font-size:12px;color:var(--white)">#${si+1} · ${s.submit_date||''}</span>
           <span class="pill pill-b">${s.customer_code||'—'}</span>
           <span style="font-size:11px;color:var(--mid)">By: ${s.submitted_by||'—'}</span>
-          <span style="font-size:11px;color:var(--mid);margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--mid);margin-left:auto;display:flex;align-items:center;flex-wrap:wrap;gap:6px">
             <span>
               <span style="color:var(--blue)">▲ ${s.inspected||0} inspected</span> &nbsp;
               <span style="color:var(--green)">✔ ${s.approved||0} approved</span> &nbsp;
               <span style="color:var(--red)">✖ ${s.rejected||0} rejected</span> &nbsp;
               <span style="color:var(--yellow)">⏱ ${s.total_hours||'—'}h</span>
             </span>
-            <button onclick="openEditModal('${s.id}')" style="background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">✏️ Edit</button>
-            <button onclick="deleteReport('${s.id}','${(s.form_id||'').replace(/'/g,'')}')" style="background:transparent;border:1px solid rgba(232,55,42,.3);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🗑 Delete</button>
+            ${editBtns}
           </span>
         </div>
         <div style="padding:10px 14px;border-bottom:1px solid var(--line)">
@@ -1516,245 +1549,89 @@ async function loadClientPortal(clientCode){
   }
 }
 
-/* ══ CLIENT PDF DOWNLOAD — with per-submission detail (like admin report) ══ */
+/* ══ CLIENT PDF DOWNLOAD ══ */
 async function downloadClientReportPDF(clientCode, partNumber){
-  try{
-    showToast('Generating PDF…','info');
-
-    // fetch client-specific submissions
-    const { data: subs } = await db
-      .from('submissions')
-      .select('*')
-      .eq('customer_code', clientCode)
-      .eq('part_number', partNumber)
-      .order('created_at', { ascending: true });
-
-    if(!subs || !subs.length){
-      showToast('No data found.','err');
-      return;
-    }
-
-    const cfg = getConfig();
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-    const W = 210, M = 16, CW = W - M * 2;
-    let y = 18;
-    const RED = [232,55,42], SOFT = [138,143,154], LIGHT = [34,37,43], BORDER = [46,49,56];
-
-    const last = subs[subs.length - 1];
-
-    // Header
-    doc.setFillColor(...RED); doc.rect(0,0,W,22,'F');
-    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(13);
-    doc.text('STS SERVICES — INSPECTION REPORT', M, 9);
-    doc.setFontSize(7.5); doc.setFont('helvetica','normal');
-    doc.text(`${clientCode} · Part: ${partNumber}`, M, 15);
-    doc.text('www.stslaredo.com' + (cfg.email ? ' · ' + cfg.email : ''), W - M, 15, { align: 'right' });
-    y = 28;
-
-    // Client info box
-    doc.setFillColor(...LIGHT); doc.setDrawColor(...BORDER); doc.roundedRect(M, y, CW, 18, 2, 2, 'FD');
-    doc.setTextColor(...SOFT); doc.setFontSize(7); doc.setFont('helvetica','bold');
-    ['CLIENT CODE','CLIENT NAME','SERVICE START','SERVICE END'].forEach((lbl, i) => doc.text(lbl, M + 4 + i * (CW / 4), y + 5));
-    doc.setTextColor(240,245,247); doc.setFontSize(10); doc.setFont('helvetica','bold');
-    doc.text(clientCode, M + 4, y + 13);
-    doc.setFont('helvetica','normal'); doc.setFontSize(9);
-    doc.text(last.customer_name || '—', M + 4 + CW / 4, y + 13);
-    const dates = subs.map(s => s.service_start).filter(Boolean).sort();
-    const endDates = subs.map(s => s.service_end).filter(Boolean).sort();
-    doc.text(dates[0] || '—', M + 4 + CW / 2, y + 13);
-    doc.text(endDates[endDates.length - 1] || '—', M + 4 + 3 * CW / 4, y + 13);
-    y += 24;
-
-    // Totals
-    let tI = 0, tA = 0, tR = 0, tRw = 0, tH = 0;
-    subs.forEach(s => {
-      tI += s.inspected || 0;
-      tA += s.approved || 0;
-      tR += s.rejected || 0;
-      tRw += s.reworked || 0;
-      tH += parseFloat(s.total_hours) || 0;
-    });
-
-    const bw = (CW - 9) / 4;
-    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(...SOFT); doc.text('TOTALS', M, y + 1); y += 4;
-    [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]]
-      .forEach(([val, lbl, c], i) => {
-        const bx = M + i * (bw + 3);
-        doc.setFillColor(...c); doc.roundedRect(bx, y, bw, 16, 2, 2, 'F');
-        doc.setTextColor(255,255,255); doc.setFontSize(6.5); doc.setFont('helvetica','bold');
-        doc.text(lbl, bx + bw / 2, y + 5, { align: 'center' });
-        doc.setFontSize(14); doc.text(String(val), bx + bw / 2, y + 13, { align: 'center' });
-    });
-    y += 22;
-
-    // --- Per-submission detail (added for client) ---
-    subs.forEach((s, si) => {
-      // page break if needed
-      if(y > 240){
-        doc.addPage();
-        y = 20;
-      }
-
-      // Submission header bar
-      doc.setFillColor(...BORDER); doc.rect(M, y, CW, 6, 'F');
-      doc.setTextColor(240,245,247); doc.setFontSize(8); doc.setFont('helvetica','bold');
-      const submitDate = (s.submit_date || '').split(',')[0];
-      doc.text(`SUBMISSION #${si+1}  ·  ${submitDate}  ·  ${s.submitted_by || ''}`, M + 3, y + 4.2);
-      y += 8;
-
-      // Part info (per submission)
-      doc.setFillColor(...RED); doc.rect(M, y, 3, 5, 'F');
-      doc.setTextColor(240,245,247); doc.setFontSize(8); doc.setFont('helvetica','bold');
-      doc.text('PART INFORMATION', M + 6, y + 3.5);
-      y += 7;
-
-      doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(...SOFT);
-      doc.text('PART #', M + 2, y + 3); doc.text('DESCRIPTION', M + 42, y + 3);
-      doc.text('MFG DATE', M + 110, y + 3); doc.text('CUSTOMER', M + 148, y + 3);
-      y += 5;
-
-      doc.setFillColor(34,37,43); doc.rect(M, y, CW, 5, 'F');
-      doc.setTextColor(200,210,220); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
-      doc.text(s.part_number || '—', M + 2, y + 3.5);
-      doc.text((s.part_description || '—').substring(0, 28), M + 42, y + 3.5);
-      doc.text(s.mfg_date || '—', M + 110, y + 3.5);
-      doc.text(s.customer_code || '—', M + 148, y + 3.5);
-      y += 7;
-
-      // Defect + Serial/Lot table for this submission
-      const defects = s.defects || [];
-      if(defects.length){
-        doc.setFillColor(...BORDER); doc.rect(M, y, CW, 5, 'F');
-        doc.setTextColor(...SOFT); doc.setFontSize(6.5); doc.setFont('helvetica','bold');
-        doc.text('SERIAL #', M + 3, y + 3.5); doc.text('LOT / BATCH #', M + 40, y + 3.5);
-        doc.text('DEFECT DESCRIPTION', M + 82, y + 3.5); doc.text('CODE', M + 140, y + 3.5); doc.text('QTY BAD', M + 162, y + 3.5);
-        y += 5;
-
-        defects.forEach((d, di) => {
-          if(y > 272){
-            doc.addPage();
-            y = 20;
-          }
-          // alternating row fill
-          const fill = di % 2 === 0 ? [34,37,43] : [28,30,36];
-          doc.setFillColor(...fill); doc.rect(M, y, CW, 5, 'F');
-          doc.setTextColor(200,210,220); doc.setFontSize(7); doc.setFont('helvetica','normal');
-          doc.text((d.serial || '—').substring(0,16), M + 3, y + 3.5);
-          doc.text((d.lot || '—').substring(0,16), M + 40, y + 3.5);
-          doc.text((d.desc || '—').substring(0,28), M + 82, y + 3.5);
-          doc.text((d.code || '—').substring(0,10), M + 140, y + 3.5);
-          doc.text(String(d.qty || 0), M + 162, y + 3.5);
-          y += 5;
-        });
-
-        const subTotal = defects.reduce((acc, d) => acc + (d.qty || 0), 0);
-        doc.setFillColor(...BORDER); doc.rect(M, y, CW, 5, 'F');
-        doc.setTextColor(...SOFT); doc.setFontSize(6.5); doc.setFont('helvetica','bold');
-        doc.text('SUBTOTAL DEFECTS', M + 82, y + 3.5); doc.text(String(subTotal), M + 162, y + 3.5);
-        y += 7;
-      } else {
-        doc.setTextColor(...SOFT); doc.setFontSize(7); doc.setFont('helvetica','italic');
-        doc.text('No defects recorded for this submission.', M + 3, y + 3.5);
-        y += 7;
-      }
-
-      // Inspection summary for this submission
-      doc.setFillColor(...BORDER); doc.rect(M, y, CW, 5, 'F');
-      doc.setTextColor(...SOFT); doc.setFontSize(6.5); doc.setFont('helvetica','bold');
-      doc.text('INSPECTED', M + 3, y + 3.5); doc.text('APPROVED', M + 40, y + 3.5);
-      doc.text('REJECTED', M + 80, y + 3.5); doc.text('REWORKED', M + 120, y + 3.5); doc.text('HOURS', M + 160, y + 3.5);
-      y += 5;
-
-      doc.setFillColor(34,37,43); doc.rect(M, y, CW, 5, 'F');
-      doc.setTextColor(200,210,220); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
-      doc.text(String(s.inspected || 0), M + 3, y + 3.5);
-      doc.text(String(s.approved || 0), M + 40, y + 3.5);
-      doc.text(String(s.rejected || 0), M + 80, y + 3.5);
-      doc.text(String(s.reworked || 0), M + 120, y + 3.5);
-      doc.text(String(s.total_hours || '—'), M + 160, y + 3.5);
-      y += 10;
-    });
-    // --- End per-submission detail ---
-
-    // Overall defect breakdown (aggregated across subs)
-    if(y > 230){ doc.addPage(); y = 20; }
-    const defMap = {};
-    subs.forEach(s => (s.defects || []).forEach(d => {
-      const key = d.desc || 'Unknown';
-      defMap[key] = (defMap[key] || 0) + (d.qty || 0);
-    }));
-    const defEntries = Object.entries(defMap).sort((a,b) => b[1] - a[1]);
-
-    if(defEntries.length){
-      doc.setFillColor(...RED); doc.rect(M, y, 3, 6, 'F');
-      doc.setTextColor(240,245,247); doc.setFontSize(9); doc.setFont('helvetica','bold');
-      doc.text('DEFECT BREAKDOWN', M + 6, y + 4.5); y += 10;
-
-      doc.setFillColor(...BORDER); doc.rect(M, y, CW, 5, 'F');
-      doc.setTextColor(...SOFT); doc.setFontSize(7); doc.setFont('helvetica','bold');
-      doc.text('DEFECT', M + 4, y + 3.5); doc.text('QTY', M + 120, y + 3.5); doc.text('% OF REJECTED', M + 150, y + 3.5);
-      y += 5;
-
-      defEntries.forEach(([desc, qty], i) => {
-        if(y > 272){ doc.addPage(); y = 20; }
-        const fill = i % 2 === 0 ? [34,37,43] : [28,30,36];
-        doc.setFillColor(...fill); doc.rect(M, y, CW, 5, 'F');
-        doc.setTextColor(200,210,220); doc.setFontSize(8); doc.setFont('helvetica','normal');
-        doc.text(desc, M + 4, y + 3.5);
-        doc.text(String(qty), M + 120, y + 3.5);
-        doc.text(tR ? ((qty / tR) * 100).toFixed(1) + '%' : '—', M + 150, y + 3.5);
-        y += 5;
-      });
-      y += 6;
-    }
-
-    // Photos (client version kept)
-    const photosAll = subs.flatMap(s => s.photos || []).slice(0,8);
-    if(photosAll.length){
-      if(y > 220){ doc.addPage(); y = 20; }
-      doc.setFillColor(...RED); doc.rect(M, y, 3, 6, 'F');
-      doc.setTextColor(240,245,247); doc.setFontSize(9); doc.setFont('helvetica','bold');
-      doc.text('PHOTO EVIDENCE', M + 6, y + 4.5); y += 10;
-
-      const imgW = 40, imgH = 32, gap = 4;
-      let ix = 0;
-      for(let ph of photosAll){
-        try {
-          doc.addImage(ph.dataUrl, 'JPEG', M + (ix % 4) * (imgW + gap), y + Math.floor(ix / 4) * (imgH + gap), imgW, imgH);
-        } catch(e) {
-          // ignore bad images
-        }
-        ix++;
-      }
-      y += Math.ceil(photosAll.length / 4) * (imgH + gap) + 4;
-    }
-
-    // Official release note
-    if(y > 260){ doc.addPage(); y = 20; }
-    doc.setFillColor(...LIGHT); doc.setDrawColor(...BORDER); doc.roundedRect(M, y, CW, 16, 2, 2, 'FD');
-    doc.setTextColor(...SOFT); doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.text('OFFICIAL RELEASE', M + 4, y + 5);
-    doc.setTextColor(240,245,247); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.text('This report has been reviewed and officially released by STS Services management.', M + 4, y + 11); y += 22;
-    
-    // Footer
-    doc.setFillColor(...RED); doc.rect(0, 282, W, 15, 'F');
-    doc.setTextColor(255, 255, 255); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
-    doc.text('STS Services  ·  www.stslaredo.com' + (cfg.email ? ' · ' + cfg.email : ''), W / 2, 289, { align: 'center' });
-    doc.text('Confidential Client Report — Generated ' + new Date().toLocaleDateString(), W / 2, 293, { align: 'center' });
-
-   // Save file (sanitize filename parts)
-const safeClient = String(clientCode || 'client').replace(/[^a-z0-9_.-]/gi,'_');
-const safePN = String(partNumber || 'PN').replace(/[^a-z0-9_.-]/gi,'_');
-const fileName = `STS_Report_${safeClient}_PN${safePN}_${new Date().toISOString().split('T')[0]}.pdf`;
-
-doc.save(fileName);
-showToast('📄 Report downloaded!','info');
-} catch (err) {
-  console.error('PDF generation error:', err);
-  showToast('Failed to generate PDF. See console for details.','err');
+  showToast('Generating PDF…','info');
+  const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).eq('part_number',partNumber).order('created_at',{ascending:true});
+  if(!subs||!subs.length){showToast('No data found.','err');return}
+  const cfg=getConfig();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,M=16,CW=W-M*2;let y=18;
+  const RED=[232,55,42],SOFT=[138,143,154],LIGHT=[34,37,43],BORDER=[46,49,56];
+  const last=subs[subs.length-1];
+  // Header
+  doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
+  doc.text('STS SERVICES — INSPECTION REPORT',M,9);
+  doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  doc.text(`${clientCode} · Part: ${partNumber}`,M,15);
+  doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});y=28;
+  // Client info box
+  doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
+  doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
+  ['CLIENT CODE','CLIENT NAME','SERVICE START','SERVICE END'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
+  doc.setTextColor(240,245,247);doc.setFontSize(10);doc.setFont('helvetica','bold');
+  doc.text(clientCode,M+4,y+13);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);
+  doc.text(last.customer_name||'—',M+4+CW/4,y+13);
+  const dates=subs.map(s=>s.service_start).filter(Boolean).sort();
+  const endDates=subs.map(s=>s.service_end).filter(Boolean).sort();
+  doc.text(dates[0]||'—',M+4+CW/2,y+13);
+  doc.text(endDates[endDates.length-1]||'—',M+4+3*CW/4,y+13);
+  y+=24;
+  // Totals
+  let tI=0,tA=0,tR=0,tRw=0;
+  subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0});
+  const bw=(CW-9)/4;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('TOTALS',M,y+1);y+=4;
+  [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
+    const bx=M+i*(bw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
+    doc.setFontSize(14);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
+  });y+=22;
+  // Defects
+  const defMap={};
+  subs.forEach(s=>(s.defects||[]).forEach(d=>{defMap[d.desc]=(defMap[d.desc]||0)+d.qty}));
+  const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
+  if(defEntries.length){
+    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('DEFECT BREAKDOWN',M+6,y+4.5);y+=10;
+    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text('DEFECT',M+4,y+3.5);doc.text('QTY',M+120,y+3.5);doc.text('% OF REJECTED',M+150,y+3.5);y+=5;
+    defEntries.forEach(([desc,qty],i)=>{
+      doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(200,210,220);doc.setFontSize(8);doc.setFont('helvetica','normal');
+      doc.text(desc,M+4,y+3.5);doc.text(String(qty),M+120,y+3.5);
+      doc.text(tR?((qty/tR)*100).toFixed(1)+'%':'—',M+150,y+3.5);y+=5;
+    });y+=6;
+  }
+  // Photos
+  const photosAll=subs.flatMap(s=>s.photos||[]).slice(0,8);
+  if(photosAll.length){
+    if(y>220){doc.addPage();y=20}
+    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('PHOTO EVIDENCE',M+6,y+4.5);y+=10;
+    const imgW=40,imgH=32,gap=4;let ix=0;
+    for(let ph of photosAll){try{doc.addImage(ph.dataUrl,'JPEG',M+(ix%4)*(imgW+gap),y+Math.floor(ix/4)*(imgH+gap),imgW,imgH)}catch(e){}ix++}
+    y+=Math.ceil(photosAll.length/4)*(imgH+gap)+4;
+  }
+  // Official release note
+  if(y>260){doc.addPage();y=20}
+  doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,16,2,2,'FD');
+  doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('OFFICIAL RELEASE',M+4,y+5);
+  doc.setTextColor(240,245,247);doc.setFont('helvetica','normal');doc.setFontSize(8);
+  doc.text('This report has been reviewed and officially released by STS Services management.',M+4,y+11);y+=22;
+  // Footer
+  doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  doc.text('STS Services  ·  www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W/2,289,{align:'center'});
+  doc.text('Confidential Client Report — Generated '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
+  doc.save(`STS_Report_${clientCode}_PN${partNumber}_${new Date().toISOString().split('T')[0]}.pdf`);
+  showToast('📄 Report downloaded!','info');
 }
-}
-  
+
 /* ══ PAYROLL ══ */
 function getWeekKey(dateStr){
   const d=new Date(dateStr);const day=d.getDay();const diff=day>=5?day-5:day+2;
@@ -1795,7 +1672,10 @@ function loadPayroll(){
     return`<div class="week-card">
       <div class="week-hd" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
         <div class="week-hd-left">📅 ${weekLabel(k)}</div>
-        <div class="week-hd-right">${weekTotal.toFixed(1)} hrs · ${ops.length} operator${ops.length!==1?'s':''}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="week-hd-right">${weekTotal.toFixed(1)} hrs · ${ops.length} op${ops.length!==1?'s':''}</div>
+          <button onclick="event.stopPropagation();downloadPayrollPDF('${k}')" style="background:transparent;border:1px solid rgba(245,158,11,.4);color:var(--yellow);font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;cursor:pointer;white-space:nowrap">📄 PDF</button>
+        </div>
       </div>
       <div class="week-body">
         <div class="op-row op-header"><div>Operator</div><div style="text-align:right">Role</div><div style="text-align:right">Hours</div><div style="text-align:right">Total</div></div>
@@ -1813,6 +1693,7 @@ async function clearData(){
   if(error){showToast('Error: '+error.message,'err');return}
   allSubmissions=[];loadOverview();renderDirectory();loadPayroll();showToast('All data deleted.','info');
 }
+
 /* ══ PDF — MAIN REPORT ══ */
 function downloadPDF(){
   const subs=allSubmissions;const cfg=getConfig();
@@ -1917,19 +1798,22 @@ function downloadPDF(){
 }
 
 /* ══ PAYROLL PDF ══ */
-function downloadPayrollPDF(){
+function downloadPayrollPDF(filterWeek){
   const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
   const W=210,M=16,CW=W-M*2;let y=18;const RED=[232,55,42],SOFT=[138,143,154],BORDER=[46,49,56];
+  const isFiltered=filterWeek&&filterWeek!=='all';
   doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
   doc.text('STS SERVICES — PAYROLL REPORT',M,9);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text('Hours by Operator · Week: Friday–Thursday',M,15);doc.text('Generated: '+new Date().toLocaleString(),W-M,15,{align:'right'});y=28;
+  const weekTitle=isFiltered?weekLabel(filterWeek):'All Weeks · Friday–Thursday';
+  doc.text(weekTitle,M,15);doc.text('Generated: '+new Date().toLocaleString(),W-M,15,{align:'right'});y=28;
   const subs=allSubmissions;const weeks={};
   subs.forEach(s=>{
     const wk=getWeekKey(s.submit_date_iso||s.submit_date||new Date().toISOString());
     if(!weeks[wk])weeks[wk]={key:wk,ops:{}};
     (s.personnel||[]).forEach(p=>{const name=(p.name||'Unknown').trim();if(!name||name==='—')return;if(!weeks[wk].ops[name])weeks[wk].ops[name]={name,role:p.role||'—',hours:0};weeks[wk].ops[name].hours+=p.hours||0});
   });
-  const weekKeys=Object.keys(weeks).sort();
+  let weekKeys=Object.keys(weeks).sort();
+  if(isFiltered)weekKeys=weekKeys.filter(k=>k===filterWeek);
   if(!weekKeys.length){doc.setTextColor(...SOFT);doc.setFontSize(12);doc.text('No payroll data.',W/2,100,{align:'center'});doc.save('STS_Payroll.pdf');return}
   weekKeys.forEach(k=>{
     if(y>250){doc.addPage();y=20}
@@ -1942,387 +1826,14 @@ function downloadPayrollPDF(){
   });
   doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
   doc.text('STS Services Payroll Report · www.stslaredo.com',W/2,289,{align:'center'});
-  doc.save('STS_Payroll_'+new Date().toISOString().split('T')[0]+'.pdf');showToast('📄 Payroll PDF exported!','info');
+  const safeFn=isFiltered?'STS_Payroll_'+filterWeek:'STS_Payroll_'+new Date().toISOString().split('T')[0];
+  doc.save(safeFn+'.pdf');showToast('📄 Payroll PDF exported!','info');
 }
 
 /* ══ CLIENT DETAIL PDF ══ */
 function downloadClientPDF(){
-  const subs=allSubmissions;const cfg=getConfig();
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({unit:'mm',format:'a4'});
-  const W=210,M=16,CW=W-M*2;let y=18;
-  const RED=[232,55,42],SOFT=[138,143,154],LIGHT=[34,37,43],BORDER=[46,49,56];
-  doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
-  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
-  doc.text('STS SERVICES — COMPLETE REPORT',M,9);
-  doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text('All submissions · Generated '+new Date().toLocaleString(),M,15);
-  doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});y=28;
-  if(!subs.length){doc.setTextColor(...SOFT);doc.setFontSize(12);doc.text('No submissions found.',W/2,100,{align:'center'});doc.save('STS_Report.pdf');return}
-  let tI=0,tA=0,tR=0,tRw=0,tH=0;
-  subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0;tH+=parseFloat(s.total_hours)||0});
-  const bw=(CW-9)/4;
-  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('TOTALS',M,y+1);y+=4;
-  [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
-    const bx=M+i*(bw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
-    doc.setFontSize(14);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
-  });y+=22;
-  // Per-submission detail
-  subs.forEach((s,si)=>{
-    if(y>240){doc.addPage();y=20;}
-    doc.setFillColor(...BORDER);doc.rect(M,y,CW,6,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(8);doc.setFont('helvetica','bold');
-    doc.text(`SUBMISSION #${si+1}  ·  ${(s.submit_date||'').split(',')[0]}  ·  ${s.submitted_by||''}`,M+3,y+4.2);y+=8;
-    // Part info
-    doc.setFillColor(...RED);doc.rect(M,y,3,5,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(8);doc.setFont('helvetica','bold');
-    doc.text('PART INFORMATION',M+6,y+3.5);y+=7;
-    doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);
-    doc.text('PART #',M+2,y+3);doc.text('DESCRIPTION',M+42,y+3);doc.text('MFG DATE',M+110,y+3);doc.text('CUSTOMER',M+148,y+3);y+=5;
-    doc.setFillColor(34,37,43);doc.rect(M,y,CW,5,'F');
-    doc.setTextColor(200,210,220);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-    doc.text(s.part_number||'—',M+2,y+3.5);
-    doc.text((s.part_description||'—').substring(0,28),M+42,y+3.5);
-    doc.text(s.mfg_date||'—',M+110,y+3.5);
-    doc.text(s.customer_code||'—',M+148,y+3.5);y+=7;
-    // Defect + Serial/Lot table
-    const defects=s.defects||[];
-    if(defects.length){
-      doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
-      doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
-      doc.text('SERIAL #',M+3,y+3.5);doc.text('LOT / BATCH #',M+40,y+3.5);
-      doc.text('DEFECT DESCRIPTION',M+82,y+3.5);doc.text('CODE',M+140,y+3.5);doc.text('QTY BAD',M+162,y+3.5);y+=5;
-      defects.forEach((d,di)=>{
-        if(y>272){doc.addPage();y=20;}
-        doc.setFillColor(di%2===0?34:28,di%2===0?37:30,di%2===0?43:36);doc.rect(M,y,CW,5,'F');
-        doc.setTextColor(200,210,220);doc.setFontSize(7);doc.setFont('helvetica','normal');
-        doc.text((d.serial||'—').substring(0,16),M+3,y+3.5);
-        doc.text((d.lot||'—').substring(0,16),M+40,y+3.5);
-        doc.text((d.desc||'—').substring(0,28),M+82,y+3.5);
-        doc.text((d.code||'—').substring(0,10),M+140,y+3.5);
-        doc.text(String(d.qty||0),M+162,y+3.5);y+=5;
-      });
-      const subTotal=defects.reduce((acc,d)=>acc+(d.qty||0),0);
-      doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
-      doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
-      doc.text('SUBTOTAL DEFECTS',M+82,y+3.5);doc.text(String(subTotal),M+162,y+3.5);y+=7;
-    } else {
-      doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','italic');
-      doc.text('No defects recorded for this submission.',M+3,y+3.5);y+=7;
-    }
-    // Inspection summary
-    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
-    doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
-    doc.text('INSPECTED',M+3,y+3.5);doc.text('APPROVED',M+40,y+3.5);doc.text('REJECTED',M+80,y+3.5);doc.text('REWORKED',M+120,y+3.5);doc.text('HOURS',M+160,y+3.5);y+=5;
-    doc.setFillColor(34,37,43);doc.rect(M,y,CW,5,'F');
-    doc.setTextColor(200,210,220);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-    doc.text(String(s.inspected||0),M+3,y+3.5);doc.text(String(s.approved||0),M+40,y+3.5);
-    doc.text(String(s.rejected||0),M+80,y+3.5);doc.text(String(s.reworked||0),M+120,y+3.5);
-    doc.text(String(s.total_hours||'—'),M+160,y+3.5);y+=10;
-  });
-  // Global defect summary
-  if(y>230){doc.addPage();y=20;}
-  const defMap={};
-  subs.forEach(s=>(s.defects||[]).forEach(d=>{const key=d.desc||'Unknown';defMap[key]=(defMap[key]||0)+(d.qty||0)}));
-  const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
-  if(defEntries.length){
-    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('OVERALL DEFECT BREAKDOWN',M+6,y+4.5);y+=10;
-    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
-    doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
-    doc.text('DEFECT',M+4,y+3.5);doc.text('QTY',M+120,y+3.5);doc.text('% OF REJECTED',M+150,y+3.5);y+=5;
-    defEntries.forEach(([desc,qty],i)=>{
-      if(y>272){doc.addPage();y=20;}
-      doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);doc.rect(M,y,CW,5,'F');
-      doc.setTextColor(200,210,220);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-      doc.text(desc,M+4,y+3.5);doc.text(String(qty),M+120,y+3.5);
-      doc.text(tR?((qty/tR)*100).toFixed(1)+'%':'—',M+150,y+3.5);y+=5;
-    });y+=6;
-  }
-  doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text('STS Services  ·  www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W/2,289,{align:'center'});
-  doc.text('Internal Report — '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
-  doc.save('STS_Report_'+new Date().toISOString().split('T')[0]+'.pdf');
-  showToast('📄 PDF downloaded!','info');
-}
-/* ══ EDIT REPORT ══ */
-function openEditModal(subId){
-  const s=allSubmissions.find(x=>x.id===subId);
-  if(!s){showToast('Report not found.','err');return;}
-  document.getElementById('editSubId').value=subId;
-  document.getElementById('editModalFid').textContent=s.form_id||'';
-  document.getElementById('editCustCode').value=s.customer_code||'';
-  document.getElementById('editCustName').value=s.customer_name||'';
-  document.getElementById('editSvcStart').value=s.service_start||'';
-  document.getElementById('editSvcEnd').value=s.service_end||'';
-  document.getElementById('editPartNum').value=s.part_number||'';
-  document.getElementById('editPartDesc').value=s.part_description||'';
-  document.getElementById('editMfgDate').value=s.mfg_date||'';
-  document.getElementById('editInspected').value=s.inspected||0;
-  document.getElementById('editApproved').value=s.approved||0;
-  document.getElementById('editRejected').value=s.rejected||0;
-  document.getElementById('editReworked').value=s.reworked||0;
-  document.getElementById('editSubmittedBy').value=s.submitted_by||'';
-  document.getElementById('editNotes').value=s.notes||'';
-  // Build defect rows
-  const body=document.getElementById('editDefBody');
-  body.innerHTML='';
-  const defects=s.defects||[];
-  if(defects.length){defects.forEach(d=>editAddDefRow(d));}
-  else{editAddDefRow();}
-  document.getElementById('editModalOverlay').style.display='block';
-  document.body.style.overflow='hidden';
-}
-function closeEditModal(){
-  document.getElementById('editModalOverlay').style.display='none';
-  document.body.style.overflow='';
-}
-function editAddDefRow(d){
-  const body=document.getElementById('editDefBody');
-  const i=body.rows.length+1;
-  const tr=document.createElement('tr');
-  tr.innerHTML=`<td style="color:var(--mid);font-size:11px;font-weight:700">${String(i).padStart(2,'0')}</td>
-    <td><input type="text" value="${d?.serial||''}" placeholder="Serial #" style="width:100%"></td>
-    <td><input type="text" value="${d?.lot||''}" placeholder="Lot / Batch #" style="width:100%"></td>
-    <td><input type="text" value="${d?.desc||''}" placeholder="Defect description" style="width:100%"></td>
-    <td><input type="text" value="${d?.code||''}" placeholder="Code" style="width:100%"></td>
-    <td><input type="number" value="${d?.qty||0}" min="0" style="width:100%"></td>
-    <td><button class="btn-del" onclick="this.closest('tr').remove()">✕</button></td>`;
-  body.appendChild(tr);
-}
-async function saveEditedReport(){
-  const subId=document.getElementById('editSubId').value;
-  if(!subId)return;
-  document.getElementById('editBtnTxt').style.display='none';
-  document.getElementById('editSpinner').style.display='block';
-  // Collect defect rows
-  const defects=[];
-  document.querySelectorAll('#editDefBody tr').forEach(tr=>{
-    const ins=tr.querySelectorAll('input');
-    const serial=ins[0]?.value.trim()||'';
-    const lot=ins[1]?.value.trim()||'';
-    const desc=ins[2]?.value.trim()||'';
-    const code=ins[3]?.value.trim()||'';
-    const qty=parseFloat(ins[4]?.value)||0;
-    if(desc||serial||lot)defects.push({serial,lot,desc:desc||'—',code:code||'—',qty});
-  });
-  const totalDefects=defects.reduce((a,d)=>a+(d.qty||0),0);
-  const defectSummary=defects.map(d=>`${d.code}:${d.desc}(${d.qty})`).join('; ');
-  const serialNumbers=defects.map(d=>d.serial).filter(Boolean).join(' | ');
-  const lotNumbers=defects.map(d=>d.lot).filter(Boolean).join(' | ');
-  const updates={
-    customer_code:document.getElementById('editCustCode').value.trim(),
-    customer_name:document.getElementById('editCustName').value.trim(),
-    service_start:document.getElementById('editSvcStart').value,
-    service_end:document.getElementById('editSvcEnd').value,
-    part_number:document.getElementById('editPartNum').value.trim(),
-    part_description:document.getElementById('editPartDesc').value.trim(),
-    mfg_date:document.getElementById('editMfgDate').value,
-    inspected:parseInt(document.getElementById('editInspected').value)||0,
-    approved:parseInt(document.getElementById('editApproved').value)||0,
-    rejected:parseInt(document.getElementById('editRejected').value)||0,
-    reworked:parseInt(document.getElementById('editReworked').value)||0,
-    submitted_by:document.getElementById('editSubmittedBy').value.trim(),
-    notes:document.getElementById('editNotes').value.trim(),
-    defects,defect_summary:defectSummary,total_defects:totalDefects,
-    serial_numbers:serialNumbers,lot_numbers:lotNumbers
-  };
-  try{
-    const {error}=await db.from('submissions').update(updates).eq('id',subId);
-    if(error)throw error;
-    // Update local cache
-    const idx=allSubmissions.findIndex(x=>x.id===subId);
-    if(idx>-1)allSubmissions[idx]={...allSubmissions[idx],...updates};
-    showToast('✅ Report updated successfully!','ok');
-    closeEditModal();
-    loadOverview();
-    // Refresh calendar if it's visible
-    if(document.getElementById('calendarTab')?.classList.contains('active'))calRender();
-  }catch(e){
-    showToast('❌ Update failed: '+e.message,'err');
-  }finally{
-    document.getElementById('editBtnTxt').style.display='inline';
-    document.getElementById('editSpinner').style.display='none';
-  }
-}
-
-/* ══ DELETE SINGLE REPORT ══ */
-async function deleteReport(subId,formId){
-  if(!confirm(`Delete report ${formId||subId}?\n\nThis cannot be undone.`))return;
-  try{
-    const {error}=await db.from('submissions').delete().eq('id',subId);
-    if(error)throw error;
-    allSubmissions=allSubmissions.filter(x=>x.id!==subId);
-    showToast('🗑 Report deleted.','info');
-    loadOverview();
-    renderDirectory();
-    loadPayroll();
-    if(document.getElementById('calendarTab')?.classList.contains('active'))calRender();
-  }catch(e){
-    showToast('❌ Delete failed: '+e.message,'err');
-  }
-}
-
-/* ══ CALENDAR ══ */
-const CAL_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const CAL_DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-let calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),calSelectedDate=null;
-
-function calIsoDate(s){
-  const d=new Date(s);if(isNaN(d))return null;
-  return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
-}
-function calBuildMap(){
-  const map={};
-  allSubmissions.forEach(s=>{const k=calIsoDate(s.submit_date_iso||s.submit_date);if(!k)return;if(!map[k])map[k]=[];map[k].push(s);});
-  return map;
-}
-function calRender(){
-  const map=calBuildMap();
-  document.getElementById('calMonthLabel').textContent=CAL_MONTHS[calMonth]+' '+calYear;
-  const grid=document.getElementById('calGrid');grid.innerHTML='';
-  CAL_DAYS.forEach(d=>{const el=document.createElement('div');el.className='cal-dow';el.textContent=d;grid.appendChild(el);});
-  const firstDay=new Date(calYear,calMonth,1).getDay();
-  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
-  const todayKey=new Date().toISOString().split('T')[0];
-  for(let i=0;i<firstDay;i++){const el=document.createElement('div');el.className='cal-day cal-empty';grid.appendChild(el);}
-  for(let d=1;d<=daysInMonth;d++){
-    const key=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const subs=map[key]||[];
-    const el=document.createElement('div');
-    el.className='cal-day'+(subs.length?' cal-has-data':'')+(key===todayKey?' cal-today':'')+(key===calSelectedDate?' cal-selected':'');
-    el.innerHTML=`<div class="cal-day-num">${d}</div><div class="cal-dot"></div>${subs.length?`<div class="cal-badge">${subs.length} form${subs.length>1?'s':''}</div>`:''}`;
-    el.onclick=()=>calSelectDay(key,subs);
-    grid.appendChild(el);
-  }
-}
-function calSelectDay(key,subs){
-  calSelectedDate=key;calRender();
-  const [y,m,d]=key.split('-');
-  document.getElementById('calDetailTitle').textContent=CAL_MONTHS[parseInt(m)-1]+' '+parseInt(d)+', '+y;
-  const badge=document.getElementById('calCountBadge');
-  if(subs.length){badge.style.display='';badge.textContent=subs.length+' submission'+(subs.length>1?'s':'');}
-  else{badge.style.display='none';}
-  const body=document.getElementById('calDetailBody');
-  if(!subs.length){body.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No inspections submitted on this day.</div>';return;}
-  body.innerHTML=subs.map((s,i)=>`
-    <div class="cal-sub-card" onclick="calOpenReport('${s.form_id||i}','${key}')">
-      <div class="cal-sub-top">
-        <div>
-          <div class="cal-sub-client">${s.customer_name||s.customer_code||'—'}</div>
-          <div class="cal-sub-part">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''}</div>
-        </div>
-        <button class="cal-view-btn" onclick="event.stopPropagation();calOpenReport('${s.form_id||i}','${key}')">View full report</button>
-      </div>
-      <div class="cal-sub-stats">
-        <span class="pill pill-b">${s.inspected||0} inspected</span>
-        <span class="pill pill-g">${s.approved||0} approved</span>
-        <span class="pill pill-r">${s.rejected||0} rejected</span>
-        <span class="pill pill-y">${s.total_hours||'—'}h</span>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:6px">
-        <div>
-          <div class="cal-sub-id">${s.form_id||''}</div>
-          <div class="cal-sub-by">Submitted by ${s.submitted_by||'—'} · ${(s.submit_date||'').split(',')[1]||''}</div>
-        </div>
-        <div style="display:flex;gap:6px">
-          <button onclick="event.stopPropagation();openEditModal('${s.id}')" style="background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer">✏️ Edit</button>
-          <button onclick="event.stopPropagation();deleteReport('${s.id}','${(s.form_id||'').replace(/'/g,'')}')" style="background:transparent;border:1px solid rgba(232,55,42,.3);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer">🗑 Delete</button>
-        </div>
-      </div>
-    </div>`).join('');
-}
-function calOpenReport(formId,dateKey){
-  const map=calBuildMap();
-  const subs=map[dateKey]||[];
-  const s=subs.find(x=>x.form_id===formId)||subs[0];
-  if(!s)return;
-  document.getElementById('calReportHeading').textContent=(s.customer_name||s.customer_code||'—')+' — PN: '+(s.part_number||'—');
-  document.getElementById('calReportFid').textContent=s.form_id||'—';
-  const defects=s.defects||[];
-  const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
-  const personnel=s.personnel||[];
-  const photos=s.photos||[];
-  const totalHrs=personnel.reduce((a,p)=>a+(p.hours||0),0);
-  const defRows=defects.length
-    ?defects.map((d,i)=>`<tr style="background:${i%2===0?'rgba(255,255,255,.02)':'transparent'}"><td>${d.serial||'—'}</td><td>${d.lot||'—'}</td><td>${d.desc||'—'}</td><td style="color:var(--mid)">${d.code||'—'}</td><td style="color:var(--red);font-weight:700">${d.qty||0}</td></tr>`).join('')+
-     `<tr><td colspan="4" style="text-align:right;font-size:10px;color:var(--mid);font-weight:700;padding-top:10px">TOTAL DEFECTS</td><td style="color:var(--red);font-weight:700;padding-top:10px">${defTotal}</td></tr>`
-    :`<tr><td colspan="5" style="font-style:italic;color:var(--soft);font-size:12px">No defects recorded.</td></tr>`;
-  const personRows=personnel.length
-    ?personnel.map(p=>`<div class="cr-person-row"><div class="cr-avatar">${(p.name||'?')[0].toUpperCase()}</div><div style="flex:1"><div class="cr-person-name">${p.name||'—'}</div><div class="cr-person-role">${p.role||'—'}</div></div><div class="cr-person-hrs">${p.hours||0}h</div></div>`).join('')
-    :`<div style="font-size:12px;color:var(--soft);font-style:italic;padding:8px 0">No personnel recorded.</div>`;
-  const photoHtml=photos.length
-    ?`<div class="cr-photo-grid">${photos.map(ph=>`<div class="cr-photo-thumb"><img src="${ph.dataUrl}" alt="${ph.name}"></div>`).join('')}</div>`
-    :`<div style="font-size:12px;color:var(--soft);font-style:italic">No photos attached.</div>`;
-  document.getElementById('calReportBody').innerHTML=`
-    <div class="cr-section">
-      <div class="cr-section-lbl">Customer & service</div>
-      <div class="cr-info-card cr-grid2">
-        <div class="cr-field"><label>Customer Code</label><span>${s.customer_code||'—'}</span></div>
-        <div class="cr-field"><label>Customer Name</label><span>${s.customer_name||'—'}</span></div>
-        <div class="cr-field"><label>Service Start</label><span>${s.service_start||'—'}</span></div>
-        <div class="cr-field"><label>Service End</label><span>${s.service_end||'—'}</span></div>
-      </div>
-    </div>
-    <div class="cr-section">
-      <div class="cr-section-lbl">Part information</div>
-      <div class="cr-info-card cr-grid2">
-        <div class="cr-field"><label>Part Number</label><span>${s.part_number||'—'}</span></div>
-        <div class="cr-field"><label>Description</label><span>${s.part_description||'—'}</span></div>
-        <div class="cr-field"><label>Mfg Date</label><span>${s.mfg_date||'—'}</span></div>
-        <div class="cr-field"><label>Submitted By</label><span>${s.submitted_by||'—'}</span></div>
-      </div>
-    </div>
-    <div class="cr-section">
-      <div class="cr-section-lbl">Inspection results</div>
-      <div class="cr-qty-grid">
-        <div class="cr-qty-box cr-qb-blue"><span class="cr-qty-lbl">Inspected</span><span class="cr-qty-val">${s.inspected||0}</span></div>
-        <div class="cr-qty-box cr-qb-green"><span class="cr-qty-lbl">Approved</span><span class="cr-qty-val">${s.approved||0}</span></div>
-        <div class="cr-qty-box cr-qb-red"><span class="cr-qty-lbl">Rejected</span><span class="cr-qty-val">${s.rejected||0}</span></div>
-        <div class="cr-qty-box cr-qb-purple"><span class="cr-qty-lbl">Reworked</span><span class="cr-qty-val">${s.reworked||0}</span></div>
-      </div>
-    </div>
-    <div class="cr-section">
-      <div class="cr-section-lbl">Defect breakdown & serial / lot numbers</div>
-      <div class="cr-info-card" style="padding:0;overflow:hidden">
-        <table class="cr-def-table">
-          <thead><tr><th>Serial #</th><th>Lot / Batch #</th><th>Defect Description</th><th>Code</th><th>Qty Bad</th></tr></thead>
-          <tbody>${defRows}</tbody>
-        </table>
-      </div>
-    </div>
-    <div class="cr-section">
-      <div class="cr-section-lbl">Personnel & hours — total: ${totalHrs.toFixed(1)}h</div>
-      <div class="cr-info-card">${personRows}</div>
-    </div>
-    <div class="cr-section">
-      <div class="cr-section-lbl">Photo evidence</div>
-      ${photoHtml}
-    </div>
-    <div class="cr-section">
-      <div class="cr-section-lbl">Notes & observations</div>
-      <div class="cr-notes-box">${s.notes||'No notes recorded for this submission.'}</div>
-    </div>`;
-  document.getElementById('calReportOverlay').classList.add('open');
-}
-function calCloseReport(){
-  document.getElementById('calReportOverlay').classList.remove('open');
-}
-function calChangeMonth(dir){
-  calMonth+=dir;
-  if(calMonth>11){calMonth=0;calYear++;}
-  if(calMonth<0){calMonth=11;calYear--;}
-  calSelectedDate=null;
-  document.getElementById('calDetailTitle').textContent='Select a day to view inspections';
-  document.getElementById('calCountBadge').style.display='none';
-  document.getElementById('calDetailBody').innerHTML='<div class="no-data"><div class="nd-ico">📅</div>Click any highlighted day to see submissions.</div>';
-  calRender();
-}
-function calGoToday(){
-  const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
-  calSelectedDate=null;calRender();
+  if(!currentClientCode)return;
+  downloadClientReportPDF(currentClientCode,'ALL');
 }
 
 /* ══ MOBILE MENU ══ */
@@ -2344,6 +1855,310 @@ document.addEventListener('click',function(e){
   const menu=document.getElementById('mobileMenu');const btn=document.getElementById('hamburgerBtn');
   if(menu&&btn&&!menu.contains(e.target)&&!btn.contains(e.target)){closeMobileMenu()}
 });
+
+
+/* ══ EDIT REPORT ══ */
+let editPhotos=[]; // new photos added during edit (base64)
+let editExistingPhotos=[]; // keeps original photos
+
+function openEditModal(subId){
+  const s=allSubmissions.find(x=>x.id===subId);
+  if(!s){showToast('Report not found.','err');return;}
+  // Role check: operators can only edit their own submissions
+  if(currentUser.role==='operator'){
+    const myName=(currentUser.name||'').toLowerCase().trim();
+    const subBy=(s.submitted_by||'').toLowerCase().trim();
+    if(myName!==subBy){showToast('⚠ You can only edit submissions you submitted.','err');return;}
+  }
+  document.getElementById('editSubId').value=subId;
+  document.getElementById('editModalFid').textContent=s.form_id||'';
+  document.getElementById('editCustCode').value=s.customer_code||'';
+  document.getElementById('editCustName').value=s.customer_name||'';
+  document.getElementById('editSvcStart').value=s.service_start||'';
+  document.getElementById('editSvcEnd').value=s.service_end||'';
+  document.getElementById('editPartNum').value=s.part_number||'';
+  document.getElementById('editPartDesc').value=s.part_description||'';
+  document.getElementById('editMfgDate').value=s.mfg_date||'';
+  document.getElementById('editInspected').value=s.inspected||0;
+  document.getElementById('editApproved').value=s.approved||0;
+  document.getElementById('editRejected').value=s.rejected||0;
+  document.getElementById('editReworked').value=s.reworked||0;
+  document.getElementById('editTotalHrs').value=s.total_hours||'';
+  document.getElementById('editSubmittedBy').value=s.submitted_by||'';
+  document.getElementById('editNotes').value=s.notes||'';
+  // Build defect rows
+  const body=document.getElementById('editDefBody');body.innerHTML='';
+  const defects=s.defects||[];
+  if(defects.length){defects.forEach(d=>editAddDefRow(d));}else{editAddDefRow();}
+  // Existing photos
+  editExistingPhotos=[...(s.photos||[])];
+  editPhotos=[];
+  renderEditExistingPhotos();
+  renderEditNewPhotos();
+  document.getElementById('editModalOverlay').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function closeEditModal(){
+  document.getElementById('editModalOverlay').style.display='none';
+  document.body.style.overflow='';
+  editPhotos=[];editExistingPhotos=[];
+}
+function renderEditExistingPhotos(){
+  const el=document.getElementById('editExistingPhotos');
+  if(!el)return;
+  if(!editExistingPhotos.length){el.innerHTML='<span style="font-size:11px;color:var(--soft);font-style:italic">No existing photos.</span>';return;}
+  el.innerHTML=editExistingPhotos.map((ph,i)=>`
+    <div class="photo-thumb">
+      <img src="${ph.dataUrl}" alt="${ph.name||'photo'}">
+      <button class="ph-del" onclick="removeEditExistingPhoto(${i})">✕</button>
+      <div class="ph-cap">${ph.name||'photo'}</div>
+    </div>`).join('');
+}
+function removeEditExistingPhoto(i){editExistingPhotos.splice(i,1);renderEditExistingPhotos();}
+function renderEditNewPhotos(){
+  const grid=document.getElementById('editNewPhotoGrid');
+  const cnt=document.getElementById('editPhotoCount');
+  if(!grid)return;
+  grid.innerHTML=editPhotos.map((ph,i)=>`
+    <div class="photo-thumb">
+      <img src="${ph.dataUrl}" alt="${ph.name}">
+      <button class="ph-del" onclick="removeEditNewPhoto(${i})">✕</button>
+      <div class="ph-cap">${ph.name}</div>
+    </div>`).join('');
+  if(cnt)cnt.textContent=editPhotos.length?editPhotos.length+' new photo'+(editPhotos.length!==1?'s':'')+' to add':'';
+}
+function removeEditNewPhoto(i){editPhotos.splice(i,1);renderEditNewPhotos();}
+function handleEditDragOver(e){e.preventDefault();document.getElementById('editPhotoDrop')?.classList.add('drag-over')}
+function handleEditDragLeave(e){document.getElementById('editPhotoDrop')?.classList.remove('drag-over')}
+function handleEditDrop(e){e.preventDefault();document.getElementById('editPhotoDrop')?.classList.remove('drag-over');processEditFiles(e.dataTransfer.files)}
+function handleEditPhotoSelect(e){processEditFiles(e.target.files);e.target.value='';}
+function processEditFiles(files){
+  Array.from(files).forEach(file=>{
+    if(!file.type.startsWith('image/'))return;
+    const reader=new FileReader();
+    reader.onload=ev=>{editPhotos.push({dataUrl:ev.target.result,name:file.name});renderEditNewPhotos();};
+    reader.readAsDataURL(file);
+  });
+}
+function editAddDefRow(d){
+  const body=document.getElementById('editDefBody');
+  const i=body.rows.length+1;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td style="color:var(--mid);font-size:11px;font-weight:700">${String(i).padStart(2,'0')}</td>
+    <td><input type="text" value="${d?.serial||''}" placeholder="Serial #" style="width:100%"></td>
+    <td><input type="text" value="${d?.lot||''}" placeholder="Lot / Batch #" style="width:100%"></td>
+    <td><input type="text" value="${d?.desc&&d.desc!=='—'?d.desc:''}" placeholder="Defect description" style="width:100%"></td>
+    <td><input type="text" value="${d?.code&&d.code!=='—'?d.code:''}" placeholder="Code" style="width:100%"></td>
+    <td><input type="number" value="${d?.qty||0}" min="0" style="width:100%"></td>
+    <td><button class="btn-del" onclick="this.closest('tr').remove()">✕</button></td>`;
+  body.appendChild(tr);
+}
+async function saveEditedReport(){
+  const subId=document.getElementById('editSubId').value;
+  if(!subId)return;
+  document.getElementById('editBtnTxt').style.display='none';
+  document.getElementById('editSpinner').style.display='block';
+  const defects=[];
+  document.querySelectorAll('#editDefBody tr').forEach(tr=>{
+    const ins=tr.querySelectorAll('input');
+    const serial=ins[0]?.value.trim()||'';const lot=ins[1]?.value.trim()||'';
+    const desc=ins[2]?.value.trim()||'';const code=ins[3]?.value.trim()||'';
+    const qty=parseFloat(ins[4]?.value)||0;
+    if(desc||serial||lot)defects.push({serial,lot,desc:desc||'—',code:code||'—',qty});
+  });
+  const totalDefects=defects.reduce((a,d)=>a+(d.qty||0),0);
+  const defectSummary=defects.map(d=>`${d.code}:${d.desc}(${d.qty})`).join('; ');
+  const allPhotos=[...editExistingPhotos,...editPhotos];
+  const updates={
+    customer_code:document.getElementById('editCustCode').value.trim(),
+    customer_name:document.getElementById('editCustName').value.trim(),
+    service_start:document.getElementById('editSvcStart').value,
+    service_end:document.getElementById('editSvcEnd').value,
+    part_number:document.getElementById('editPartNum').value.trim(),
+    part_description:document.getElementById('editPartDesc').value.trim(),
+    mfg_date:document.getElementById('editMfgDate').value,
+    inspected:parseInt(document.getElementById('editInspected').value)||0,
+    approved:parseInt(document.getElementById('editApproved').value)||0,
+    rejected:parseInt(document.getElementById('editRejected').value)||0,
+    reworked:parseInt(document.getElementById('editReworked').value)||0,
+    total_hours:document.getElementById('editTotalHrs').value||'0',
+    submitted_by:document.getElementById('editSubmittedBy').value.trim(),
+    notes:document.getElementById('editNotes').value.trim(),
+    defects,defect_summary:defectSummary,total_defects:totalDefects,
+    serial_numbers:defects.map(d=>d.serial).filter(Boolean).join(' | '),
+    lot_numbers:defects.map(d=>d.lot).filter(Boolean).join(' | '),
+    photos:allPhotos
+  };
+  try{
+    const {error}=await db.from('submissions').update(updates).eq('id',subId);
+    if(error)throw error;
+    const idx=allSubmissions.findIndex(x=>x.id===subId);
+    if(idx>-1)allSubmissions[idx]={...allSubmissions[idx],...updates};
+    showToast('✅ Report updated!','ok');
+    closeEditModal();
+    loadOverview();
+    if(document.getElementById('calendarTab')?.classList.contains('active'))calRender();
+  }catch(e){showToast('❌ Update failed: '+e.message,'err');}
+  finally{
+    document.getElementById('editBtnTxt').style.display='inline';
+    document.getElementById('editSpinner').style.display='none';
+  }
+}
+
+/* ══ DELETE SINGLE REPORT ══ */
+async function deleteReport(subId,formId){
+  if(!confirm('Delete report '+formId+'?\n\nThis cannot be undone.'))return;
+  try{
+    const {error}=await db.from('submissions').delete().eq('id',subId);
+    if(error)throw error;
+    allSubmissions=allSubmissions.filter(x=>x.id!==subId);
+    showToast('🗑 Report deleted.','info');
+    loadOverview();renderDirectory();loadPayroll();
+    if(document.getElementById('calendarTab')?.classList.contains('active'))calRender();
+  }catch(e){showToast('❌ Delete failed: '+e.message,'err');}
+}
+
+/* ══ OPERATOR MY SUBMISSIONS ══ */
+async function loadMySubmissions(){
+  if(currentUser.role!=='operator')return;
+  const myName=(currentUser.name||'').toLowerCase().trim();
+  const mine=allSubmissions.filter(s=>(s.submitted_by||'').toLowerCase().trim()===myName);
+  const el=document.getElementById('mySubsBody');
+  if(!el)return;
+  if(!mine.length){el.innerHTML='<div class="no-data" style="padding:20px"><div class="nd-ico" style="font-size:28px">📋</div>No submissions yet.</div>';return;}
+  el.innerHTML=mine.slice(0,20).map(s=>`
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--pure)">${s.customer_code||'—'} · PN: ${s.part_number||'—'}</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:3px">${s.submit_date||''} · ${s.form_id||''}</div>
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <span class="pill pill-b">${s.inspected||0} inspected</span>
+          <span class="pill pill-g">${s.approved||0} approved</span>
+          <span class="pill pill-r">${s.rejected||0} rejected</span>
+        </div>
+      </div>
+      <button onclick="openEditModal('${s.id}')" style="background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);font-size:11px;font-weight:700;padding:6px 12px;border-radius:7px;cursor:pointer;white-space:nowrap;flex-shrink:0">✏️ Edit</button>
+    </div>`).join('');
+}
+
+/* ══ CALENDAR ══ */
+const CAL_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const CAL_DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),calSelectedDate=null;
+function calIsoDate(s){const d=new Date(s);if(isNaN(d))return null;return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');}
+function calBuildMap(){const map={};allSubmissions.forEach(s=>{const k=calIsoDate(s.submit_date_iso||s.submit_date);if(!k)return;if(!map[k])map[k]=[];map[k].push(s);});return map;}
+function calRender(){
+  const map=calBuildMap();
+  document.getElementById('calMonthLabel').textContent=CAL_MONTHS[calMonth]+' '+calYear;
+  const grid=document.getElementById('calGrid');grid.innerHTML='';
+  CAL_DAYS.forEach(d=>{const el=document.createElement('div');el.className='cal-dow';el.textContent=d;grid.appendChild(el);});
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const todayKey=new Date().toISOString().split('T')[0];
+  for(let i=0;i<firstDay;i++){const el=document.createElement('div');el.className='cal-day cal-empty';grid.appendChild(el);}
+  for(let d=1;d<=daysInMonth;d++){
+    const key=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const subs=map[key]||[];
+    const el=document.createElement('div');
+    el.className='cal-day'+(subs.length?' cal-has-data':'')+(key===todayKey?' cal-today':'')+(key===calSelectedDate?' cal-selected':'');
+    el.innerHTML=`<div class="cal-day-num">${d}</div><div class="cal-dot"></div>${subs.length?`<div class="cal-badge">${subs.length} form${subs.length>1?'s':''}</div>`:''}`;
+    el.onclick=()=>calSelectDay(key,subs);
+    grid.appendChild(el);
+  }
+}
+function calSelectDay(key,subs){
+  calSelectedDate=key;calRender();
+  const [yr,mo,dy]=key.split('-');
+  document.getElementById('calDetailTitle').textContent=CAL_MONTHS[parseInt(mo)-1]+' '+parseInt(dy)+', '+yr;
+  const badge=document.getElementById('calCountBadge');
+  if(subs.length){badge.style.display='';badge.textContent=subs.length+' submission'+(subs.length>1?'s':'');}else{badge.style.display='none';}
+  const body=document.getElementById('calDetailBody');
+  if(!subs.length){body.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No inspections on this day.</div>';return;}
+  body.innerHTML=subs.map((s,i)=>`
+    <div class="cal-sub-card" onclick="calOpenReport('${s.form_id||i}','${key}')">
+      <div class="cal-sub-top">
+        <div>
+          <div class="cal-sub-client">${s.customer_name||s.customer_code||'—'}</div>
+          <div class="cal-sub-part">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''}</div>
+        </div>
+        <button class="cal-view-btn" onclick="event.stopPropagation();calOpenReport('${s.form_id||i}','${key}')">View report</button>
+      </div>
+      <div class="cal-sub-stats">
+        <span class="pill pill-b">${s.inspected||0} inspected</span>
+        <span class="pill pill-g">${s.approved||0} approved</span>
+        <span class="pill pill-r">${s.rejected||0} rejected</span>
+        <span class="pill pill-y">${s.total_hours||'—'}h</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:6px">
+        <div class="cal-sub-by">By ${s.submitted_by||'—'} · <span class="cal-sub-id">${s.form_id||''}</span></div>
+        <div style="display:flex;gap:6px">
+          <button onclick="event.stopPropagation();openEditModal('${s.id}')" style="background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer">✏️ Edit</button>
+          <button onclick="event.stopPropagation();deleteReport('${s.id}','${(s.form_id||'').replace(/'/g,'')}')" style="background:transparent;border:1px solid rgba(232,55,42,.3);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer">🗑 Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function calOpenReport(formId,dateKey){
+  const map=calBuildMap();const subs=map[dateKey]||[];
+  const s=subs.find(x=>x.form_id===formId)||subs[0];if(!s)return;
+  document.getElementById('calReportHeading').textContent=(s.customer_name||s.customer_code||'—')+' — PN: '+(s.part_number||'—');
+  document.getElementById('calReportFid').textContent=s.form_id||'—';
+  const defects=s.defects||[];const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
+  const personnel=s.personnel||[];const photos=s.photos||[];
+  const totalHrs=personnel.reduce((a,p)=>a+(p.hours||0),0);
+  const defRows=defects.length
+    ?defects.map((d,i)=>`<tr style="background:${i%2===0?'rgba(255,255,255,.02)':'transparent'}"><td>${d.serial||'—'}</td><td>${d.lot||'—'}</td><td>${d.desc||'—'}</td><td style="color:var(--mid)">${d.code||'—'}</td><td style="color:var(--red);font-weight:700">${d.qty||0}</td></tr>`).join('')+`<tr><td colspan="4" style="text-align:right;font-size:10px;color:var(--mid);font-weight:700;padding-top:8px">TOTAL</td><td style="color:var(--red);font-weight:700;padding-top:8px">${defTotal}</td></tr>`
+    :`<tr><td colspan="5" style="font-style:italic;color:var(--soft);font-size:12px">No defects recorded.</td></tr>`;
+  const personRows=personnel.length
+    ?personnel.map(p=>`<div class="cr-person-row"><div class="cr-avatar">${(p.name||'?')[0].toUpperCase()}</div><div style="flex:1"><div class="cr-person-name">${p.name||'—'}</div><div class="cr-person-role">${p.role||'—'}</div></div><div class="cr-person-hrs">${p.hours||0}h</div></div>`).join('')
+    :`<div style="font-size:12px;color:var(--soft);font-style:italic;padding:8px 0">No personnel recorded.</div>`;
+  const photoHtml=photos.length
+    ?`<div class="cr-photo-grid">${photos.map(ph=>`<div class="cr-photo-thumb"><img src="${ph.dataUrl}" alt="${ph.name||''}"></div>`).join('')}</div>`
+    :`<div style="font-size:12px;color:var(--soft);font-style:italic">No photos.</div>`;
+  document.getElementById('calReportBody').innerHTML=`
+    <div class="cr-section"><div class="cr-section-lbl">Customer & service</div>
+      <div class="cr-info-card cr-grid2">
+        <div class="cr-field"><label>Customer Code</label><span>${s.customer_code||'—'}</span></div>
+        <div class="cr-field"><label>Customer Name</label><span>${s.customer_name||'—'}</span></div>
+        <div class="cr-field"><label>Service Start</label><span>${s.service_start||'—'}</span></div>
+        <div class="cr-field"><label>Service End</label><span>${s.service_end||'—'}</span></div>
+      </div></div>
+    <div class="cr-section"><div class="cr-section-lbl">Part information</div>
+      <div class="cr-info-card cr-grid2">
+        <div class="cr-field"><label>Part Number</label><span>${s.part_number||'—'}</span></div>
+        <div class="cr-field"><label>Description</label><span>${s.part_description||'—'}</span></div>
+        <div class="cr-field"><label>Mfg Date</label><span>${s.mfg_date||'—'}</span></div>
+        <div class="cr-field"><label>Submitted By</label><span>${s.submitted_by||'—'}</span></div>
+      </div></div>
+    <div class="cr-section"><div class="cr-section-lbl">Inspection results</div>
+      <div class="cr-qty-grid">
+        <div class="cr-qty-box cr-qb-blue"><span class="cr-qty-lbl">Inspected</span><span class="cr-qty-val">${s.inspected||0}</span></div>
+        <div class="cr-qty-box cr-qb-green"><span class="cr-qty-lbl">Approved</span><span class="cr-qty-val">${s.approved||0}</span></div>
+        <div class="cr-qty-box cr-qb-red"><span class="cr-qty-lbl">Rejected</span><span class="cr-qty-val">${s.rejected||0}</span></div>
+        <div class="cr-qty-box cr-qb-purple"><span class="cr-qty-lbl">Reworked</span><span class="cr-qty-val">${s.reworked||0}</span></div>
+      </div></div>
+    <div class="cr-section"><div class="cr-section-lbl">Defects & serial / lot</div>
+      <div class="cr-info-card" style="padding:0;overflow:hidden">
+        <table class="cr-def-table"><thead><tr><th>Serial #</th><th>Lot #</th><th>Defect</th><th>Code</th><th>Qty</th></tr></thead><tbody>${defRows}</tbody></table>
+      </div></div>
+    <div class="cr-section"><div class="cr-section-lbl">Personnel & hours — total: ${s.total_hours||totalHrs.toFixed(1)}h</div>
+      <div class="cr-info-card">${personRows}</div></div>
+    <div class="cr-section"><div class="cr-section-lbl">Photos</div>${photoHtml}</div>
+    <div class="cr-section"><div class="cr-section-lbl">Notes</div>
+      <div class="cr-notes-box">${s.notes||'No notes recorded.'}</div></div>`;
+  document.getElementById('calReportOverlay').classList.add('open');
+}
+function calCloseReport(){document.getElementById('calReportOverlay').classList.remove('open');}
+function calChangeMonth(dir){
+  calMonth+=dir;
+  if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}
+  calSelectedDate=null;
+  document.getElementById('calDetailTitle').textContent='Select a day to view inspections';
+  document.getElementById('calCountBadge').style.display='none';
+  document.getElementById('calDetailBody').innerHTML='<div class="no-data"><div class="nd-ico">📅</div>Click any highlighted day.</div>';
+  calRender();
+}
+function calGoToday(){const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();calSelectedDate=null;calRender();}
 
 window.onload=()=>document.getElementById('loginScreen').classList.add('active');
 </script>
