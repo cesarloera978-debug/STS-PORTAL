@@ -507,27 +507,62 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
     <!-- 01 PART -->
     <div class="card">
       <div class="card-hd"><div class="card-ico">🔩</div><div class="card-title">Part Information</div><div class="card-num">01</div></div>
-      <div class="card-body">
-        <div class="g3">
-          <div class="field"><label>Part Number <span class="req">*</span></label><input type="text" id="partNum" placeholder="e.g. PN-00421" oninput="updateProgress()"></div>
-          <div class="field"><label>Part Description</label><input type="text" id="partDesc" placeholder="Optional"></div>
-          <div class="field"><label>Manufacturing Date</label><input type="date" id="mfgDate"></div>
-        </div>
-      </div>
+     <div class="card-body">
+  <div style="overflow-x:auto">
+    <table class="tbl" id="partTable">
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th style="min-width:150px">Part Number <span style="color:var(--red)">*</span></th>
+          <th style="min-width:160px">Part Description</th>
+          <th style="min-width:160px">Defects</th>
+          <th style="width:36px"></th>
+        </tr>
+      </thead>
+      <tbody id="partBody"></tbody>
+    </table>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:6px;background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:6px 12px">
+      <span style="font-size:12px;color:var(--mid);font-weight:600;white-space:nowrap">Add rows:</span>
+      <input type="number" id="partRowCount" min="1" max="100" placeholder="1"
+        style="width:60px;background:transparent;border:none;color:var(--pure);font-size:13px;font-weight:700;outline:none;padding:0"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();addPartBulkRows()}"
+        oninput="this.value=Math.min(Math.max(parseInt(this.value)||1,1),100)">
+    </div>
+    <button class="btn-add" onclick="addPartBulkRows()" style="margin-top:0">+ Add Rows</button>
+  </div>
+</div>
     </div>
 
     <!-- 02 RESULTS -->
     <div class="card">
       <div class="card-hd"><div class="card-ico">📊</div><div class="card-title">Inspection Results</div><div class="card-num">02</div></div>
-      <div class="card-body">
-        <div class="result-grid">
-          <div class="rbox inspected"><div class="rbox-label">🔍 Inspected</div><input type="number" id="qInspected" placeholder="0" min="0" oninput="updateProgress();validateQty()"></div>
-          <div class="rbox approved"><div class="rbox-label">✔ Approved</div><input type="number" id="qApproved" placeholder="0" min="0" oninput="validateQty()"></div>
-          <div class="rbox rejected"><div class="rbox-label">✖ Rejected</div><input type="number" id="qRejected" placeholder="0" min="0" oninput="validateQty()"></div>
-          <div class="rbox reworked"><div class="rbox-label">🔧 Reworked</div><input type="number" id="qReworked" placeholder="0" min="0" oninput="validateQty()"></div>
-        </div>
-        <div class="val-msg" id="valMsg">⚠ Approved + Rejected + Reworked should equal Inspected.</div>
-      </div>
+     <div class="card-body">
+  <div style="font-size:11px;color:var(--mid);margin-bottom:12px;display:flex;align-items:center;gap:6px">
+    <span style="color:var(--blue);font-size:14px">⚡</span>
+    <span><b style="color:var(--white)">Inspected, Approved & Rejected</b> are auto-calculated from the OK + NOK totals in the defect table below. Enter <b style="color:var(--purple)">Reworked</b> manually if needed.</span>
+  </div>
+  <div class="result-grid">
+    <div class="rbox inspected">
+      <div class="rbox-label">🔍 Inspected</div>
+      <input type="number" id="qInspected" placeholder="0" min="0" readonly style="cursor:default;opacity:.85">
+    </div>
+    <div class="rbox approved">
+      <div class="rbox-label">✔ Approved (OK)</div>
+      <input type="number" id="qApproved" placeholder="0" min="0" readonly style="cursor:default;opacity:.85">
+    </div>
+    <div class="rbox rejected">
+      <div class="rbox-label">✖ Rejected (NOK)</div>
+      <input type="number" id="qRejected" placeholder="0" min="0" readonly style="cursor:default;opacity:.85">
+    </div>
+    <div class="rbox reworked">
+      <div class="rbox-label">🔧 Reworked</div>
+      <input type="number" id="qReworked" placeholder="0" min="0" oninput="updateProgress()">
+    </div>
+  </div>
+  <div class="val-msg" id="valMsg" style="display:none"></div>
+</div>
     </div>
 
     <!-- 03 DEFECTS merged with Serial/Lot -->
@@ -762,9 +797,11 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       <div class="card-body" style="font-size:13px;line-height:1.9;color:#ccc">
         <p style="margin-bottom:14px">To change passwords, open the HTML file in any text editor and find the <code style="background:var(--card);padding:2px 6px;border-radius:4px">USERS</code> object at the top of the script.</p>
 <pre class="script">const USERS = {
-  operator:  { pass: 'sts2024',   role: 'operator', name: 'Operator'    },
-  operator2: { pass: 'sts2024',   role: 'operator', name: 'Operator 2'  },
-  admin:     { pass: 'sts@admin', role: 'admin',    name: 'Admin'       },
+  'sebastian.loera': { pass: 'Loer@0801',  role: 'operator', name: 'Sebastian Loera', company: 'all' },
+  'jesus.arevalo':   { pass: 'sli2026',    role: 'operator', name: 'Jesus Arevalo',   company: 'sli' },
+  admin:             { pass: 'sts@admin',  role: 'admin',    name: 'Admin',           company: 'all' },
+  'cesar.loera':     { pass: 'Loer@0321',  role: 'admin2',   name: 'Cesar Loera',     company: 'sts' },
+  'victor.loera':    { pass: 'sts@admin3', role: 'admin3',   name: 'Victor Loera',    company: 'sli' },
 };</pre>
       </div>
     </div>
@@ -951,7 +988,12 @@ function getConfig(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}
 /* ══ SUPABASE HELPERS ══ */
 async function sbGetSubmissions(){
   try{
-    const {data,error}=await db.from('submissions').select('*').order('created_at',{ascending:false});
+    let query=db.from('submissions').select('*').order('created_at',{ascending:false});
+    // admin3 (Victor) only sees SLI — admin2 (Cesar) and admin see everything
+    if(currentUser?.role==='admin3'){
+      query=query.ilike('customer_code','SLI%');
+    }
+    const {data,error}=await query;
     if(error)throw error;
     return data||[];
   }catch(e){console.error('sbGetSubmissions:',e);return[]}
@@ -960,6 +1002,7 @@ async function sbGetSubmissions(){
 async function sbSaveSubmission(d){
   const row={
     form_id:d.formId, submit_date:d.submitDate, submit_date_iso:d.submitDateISO,
+    company:currentUser?.company||'all',
     customer_code:d.customerCode, customer_name:d.customerName,
     service_start:d.serviceStart, service_end:d.serviceEnd,
     part_number:d.partNumber, part_description:d.partDescription, mfg_date:d.mfgDate,
@@ -1022,9 +1065,11 @@ async function doLogin(){
     return;
   }
 
-  // STAFF LOGIN
+ // STAFF LOGIN
   const found=USERS[user];
-  if(!found||found.pass!==pass||found.role!==selectedRole){
+  // admin2 and admin3 log in via the 'admin' role tab
+  const effectiveRole=found?.role==='admin2'||found?.role==='admin3'?'admin':found?.role;
+  if(!found||found.pass!==pass||effectiveRole!==selectedRole){
     document.getElementById('loginErr').style.display='block';
     document.getElementById('loginPass').value='';
     return;
@@ -1033,19 +1078,23 @@ async function doLogin(){
   document.getElementById('loginScreen').classList.remove('active');
   document.getElementById('appScreen').classList.add('active');
   document.getElementById('userName').textContent=found.name;
-  document.getElementById('userRole').textContent=found.role;
+document.getElementById('userRole').textContent=
+    found.role==='admin'?'Admin · All':
+    found.role==='admin2'?'Admin · STS & SLI':
+    found.role==='admin3'?'Admin · SLI Only':'Operator';
   document.getElementById('userAvatar').textContent=found.name[0].toUpperCase();
-  document.getElementById('userAvatar').style.background=found.role==='admin'?'var(--red)':'var(--blue)';
-  const isAdmin=found.role==='admin';
+  document.getElementById('userAvatar').style.background=
+    found.role==='operator'?'var(--blue)':
+    found.role==='admin3'?'var(--teal)':'var(--red)';
+  const isAdmin=found.role==='admin'||found.role==='admin2'||found.role==='admin3';
   document.getElementById('adminNav').style.display=isAdmin?'flex':'none';
-  document.getElementById('setupWrap').style.display=isAdmin?'block':'none';
+  document.getElementById('setupWrap').style.display=found.role==='admin'?'block':'none';
   document.getElementById('adminPdfBtn').style.display=isAdmin?'flex':'none';
   document.getElementById('hamburgerBtn').style.display='';
   document.getElementById('mobUserName').textContent=found.name;
   if(isAdmin)document.getElementById('adminMobileNav').style.display='block';
   await initApp();
-}
-
+  if(!isAdmin)showPage('formPage');
 function logout(){
   currentUser=null;allSubmissions=[];
   document.getElementById('appScreen').classList.remove('active');
@@ -1067,8 +1116,11 @@ function logoutClient(){
 async function initApp(){
   loadConfig();
   // Initialize 3 default defect/serial/lot rows
-  const defBody=document.getElementById('defBody');
-  if(!defBody.rows.length){addBulkDef(3);}
+ const defBody=document.getElementById('defBody');
+if(!defBody.rows.length){addBulkDef(3);}
+// Initialize part table
+const partBody=document.getElementById('partBody');
+if(partBody&&!partBody.rows.length){addPartBulkRows(1);}
   updateProgress();
   // Load submissions for admin AND operators (operators need theirs to edit)
   showToast('Loading…','info');
@@ -1120,16 +1172,14 @@ function addBulkDef(forceCount){
   const body=document.getElementById('defBody');
   const countInput=document.getElementById('bulkRowCount');
   const n=forceCount||Math.min(Math.max(parseInt(countInput?.value)||1,1),500);
-  const partVal=document.getElementById('partNum')?.value||'';
-  const mfgVal=document.getElementById('mfgDate')?.value||'';
   const frag=document.createDocumentFragment();
   for(let j=0;j<n;j++){
     const i=body.rows.length+j+1;
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td style="color:var(--mid);font-size:11px;font-weight:700;text-align:center">${pad(i)}</td>
-      <td><input type="text" placeholder="Part #" style="width:100%" value="${partVal}"></td>
-      <td><input type="date" style="width:100%" value="${mfgVal}"></td>
+      <td><input type="text" placeholder="Part #" style="width:100%"></td>
+      <td><input type="date" style="width:100%"></td>
       <td><input type="text" placeholder="e.g. SN-20240001" style="width:100%"></td>
       <td><input type="text" placeholder="e.g. LOT-2024-B01" style="width:100%"></td>
       <td><input type="text" placeholder="e.g. Scratch, dent…" style="width:100%"></td>
@@ -1154,10 +1204,21 @@ function calcDefTotal(){
   let ok=0,nok=0;
   document.querySelectorAll('#defBody tr').forEach(tr=>{
     const ins=tr.querySelectorAll('input[type=number]');
-    ok+=parseFloat(ins[0]?.value)||0;nok+=parseFloat(ins[1]?.value)||0;
+    ok+=parseFloat(ins[0]?.value)||0;
+    nok+=parseFloat(ins[1]?.value)||0;
   });
-  const okEl=document.getElementById('totalOK');const nokEl=document.getElementById('totalDef');
-  if(okEl)okEl.textContent=ok;if(nokEl)nokEl.textContent=nok;
+  const okEl=document.getElementById('totalOK');
+  const nokEl=document.getElementById('totalDef');
+  if(okEl)okEl.textContent=ok;
+  if(nokEl)nokEl.textContent=nok;
+  // ⚡ Auto-push totals up to Card 02
+  const qI=document.getElementById('qInspected');
+  const qA=document.getElementById('qApproved');
+  const qR=document.getElementById('qRejected');
+  if(qI)qI.value=(ok+nok)||'';
+  if(qA)qA.value=ok||'';
+  if(qR)qR.value=nok||'';
+  updateProgress();
 }
 
 /* ══ PERSONNEL ══ */
@@ -1200,7 +1261,15 @@ function removePhoto(i){uploadedPhotos.splice(i,1);renderPhotoGrid()}
 
 /* ══ VALIDATE / PROGRESS ══ */
 function validateQty(){const s=num('qInspected'),a=num('qApproved'),r=num('qRejected'),rw=num('qReworked');document.getElementById('valMsg').style.display=(s>0&&(a+r+rw)!==s)?'block':'none'}
-function updateProgress(){const fields=['custCode','svcStart','partNum','qInspected','numPeople'];const filled=fields.filter(id=>(v(id)||'').trim()!=='').length;document.getElementById('pFill').style.width=(filled/fields.length*100)+'%'}
+function updateProgress(){
+  const baseFields=['custCode','svcStart','numPeople'];
+  const filled=baseFields.filter(id=>(v(id)||'').trim()!=='').length;
+  const firstPartInput=document.querySelector('#partBody tr input:first-of-type');
+  const hasPartNum=(firstPartInput?.value||'').trim()!=='';
+  const hasInspected=parseFloat(document.getElementById('qInspected')?.value||0)>0;
+  const total=filled+(hasPartNum?1:0)+(hasInspected?1:0);
+  document.getElementById('pFill').style.width=(total/5*100)+'%';
+}
 
 /* ══ COLLECT ══ */
 function collect(){
@@ -1688,10 +1757,23 @@ function filterPayroll(wk){currentPayrollWeek=wk;loadPayroll()}
 
 /* ══ CLEAR DATA (admin only) ══ */
 async function clearData(){
-  if(!confirm('Delete ALL submissions from Supabase? This cannot be undone.'))return;
-  const {error}=await db.from('submissions').delete().neq('id','00000000-0000-0000-0000-000000000000');
-  if(error){showToast('Error: '+error.message,'err');return}
-  allSubmissions=[];loadOverview();renderDirectory();loadPayroll();showToast('All data deleted.','info');
+  const role=currentUser?.role;
+  const scopeLabel=role==='admin3'?'SLI':'ALL';
+  if(!confirm(`Delete ALL ${scopeLabel} submissions from Supabase? This cannot be undone.`))return;
+  try{
+    let query=db.from('submissions').delete();
+    if(role==='admin3'){
+      // Victor only deletes SLI records
+      query=query.ilike('customer_code','SLI%');
+    } else {
+      // admin and Cesar (admin2) delete everything they can see
+      query=query.neq('id','00000000-0000-0000-0000-000000000000');
+    }
+    const {error}=await query;
+    if(error)throw error;
+    allSubmissions=[];loadOverview();renderDirectory();loadPayroll();
+    showToast(`🗑 All ${scopeLabel} data deleted.`,'info');
+  }catch(e){showToast('Error: '+e.message,'err')}
 }
 
 /* ══ PDF — MAIN REPORT ══ */
@@ -2159,6 +2241,39 @@ function calChangeMonth(dir){
   calRender();
 }
 function calGoToday(){const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();calSelectedDate=null;calRender();}
+
+/* ══ PART TABLE (Card 01) ══ */
+function addPartBulkRows(forceCount){
+  const body=document.getElementById('partBody');
+  const countInput=document.getElementById('partRowCount');
+  const n=forceCount||Math.min(Math.max(parseInt(countInput?.value)||1,1),100);
+  const frag=document.createDocumentFragment();
+  for(let j=0;j<n;j++){
+    const i=body.rows.length+j+1;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="color:var(--mid);font-size:11px;font-weight:700;text-align:center">${String(i).padStart(2,'0')}</td>
+      <td><input type="text" placeholder="e.g. PN-00421" style="width:100%" oninput="updateProgress()"></td>
+      <td><input type="text" placeholder="Optional description" style="width:100%"></td>
+      <td><input type="text" placeholder="e.g. Scratch, crack…" style="width:100%"></td>
+      <td><button class="btn-del" onclick="deletePartRow(this)" title="Remove row">✕</button></td>`;
+    frag.appendChild(tr);
+  }
+  body.appendChild(frag);
+  if(countInput)countInput.value='';
+}
+function deletePartRow(btn){
+  const tr=btn.closest('tr');
+  if(!tr)return;
+  if(document.querySelectorAll('#partBody tr').length<=1){
+    showToast('⚠ Keep at least one part row.','err');return;
+  }
+  tr.remove();
+  document.querySelectorAll('#partBody tr').forEach((r,i)=>{
+    const c=r.querySelector('td:first-child');
+    if(c)c.textContent=String(i+1).padStart(2,'0');
+  });
+}
 
 window.onload=()=>document.getElementById('loginScreen').classList.add('active');
 </script>
