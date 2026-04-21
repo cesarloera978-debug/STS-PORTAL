@@ -1095,6 +1095,7 @@ document.getElementById('userRole').textContent=
   if(isAdmin)document.getElementById('adminMobileNav').style.display='block';
   await initApp();
   if(!isAdmin)showPage('formPage');
+}
 function logout(){
   currentUser=null;allSubmissions=[];
   document.getElementById('appScreen').classList.remove('active');
