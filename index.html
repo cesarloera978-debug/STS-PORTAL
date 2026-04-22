@@ -695,29 +695,45 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       <button class="atab" onclick="switchAdminTab('wixTab')" id="atab3">🌐 Wix Setup</button>
       <button class="atab" onclick="switchAdminTab('calendarTab')" id="atab4">📅 Calendar</button>
     </div>
-    <div class="admin-content active" id="summaryTab">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap">
-  <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid)">Filter by Job</span>
-  <select id="overviewJobFilter" onchange="loadOverview()" style="min-width:220px;background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--pure);font-family:'DM Sans',sans-serif;font-size:13px;outline:none">
-    <option value="all">All Jobs</option>
-  </select>
-  <div id="overviewJobChip" style="font-size:12px;color:var(--mid)"></div>
-</div>
-      <div class="stat-grid" id="statGrid">
-        <div class="stat-box s-inspected"><div class="stat-label">Total Inspected</div><div class="stat-val" id="stInspected">—</div><div class="stat-sub">all submissions</div></div>
-        <div class="stat-box s-approved"><div class="stat-label">Total Approved</div><div class="stat-val" id="stApproved">—</div><div class="stat-sub" id="stApprovedPct">—</div></div>
-        <div class="stat-box s-rejected"><div class="stat-label">Total Rejected</div><div class="stat-val" id="stRejected">—</div><div class="stat-sub" id="stRejectedPct">—</div></div>
-        <div class="stat-box s-hours"><div class="stat-label">Total Hours</div><div class="stat-val" id="stHours">—</div><div class="stat-sub" id="stPeople">—</div></div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><div class="card-ico">⚠️</div><div class="card-title">Defect Totals</div></div>
-        <div class="card-body" id="defectSummaryBody"><div class="no-data"><div class="nd-ico">📭</div>No submissions yet.</div></div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
-        <button class="btn-primary" onclick="downloadPDF()">📄 Download PDF Report</button>
-        <button class="btn-secondary" onclick="clearData()" style="color:var(--red);border-color:rgba(232,55,42,.4)">🗑 Clear All Data</button>
-      </div>
+   <div class="admin-content active" id="summaryTab">
+  <!-- LEVEL 0: Job Cards Grid (default) -->
+  <div id="ovJobGrid">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">Select a Job to view its summary</div>
+      <select id="ovCompanyFilter" onchange="renderOvJobGrid()" style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:7px 12px;color:var(--pure);font-size:12px;outline:none">
+        <option value="all">All Companies</option>
+        <option value="STS">STS Services</option>
+        <option value="SLI">SLI</option>
+      </select>
     </div>
+    <div id="ovJobCards"></div>
+  </div>
+
+  <!-- LEVEL 1: Job Detail -->
+  <div id="ovJobDetail" style="display:none">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <button onclick="backToOvGrid()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600">← Back to Jobs</button>
+      <div>
+        <div id="ovDetailJobId" style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--pure)"></div>
+        <div id="ovDetailJobDesc" style="font-size:13px;color:var(--mid)"></div>
+      </div>
+      <button onclick="downloadPDF()" class="btn-primary" style="margin-left:auto">📄 Download PDF</button>
+    </div>
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-box s-inspected"><div class="stat-label">Total Inspected</div><div class="stat-val" id="stInspected">—</div><div class="stat-sub">all submissions</div></div>
+      <div class="stat-box s-approved"><div class="stat-label">Total Approved</div><div class="stat-val" id="stApproved">—</div><div class="stat-sub" id="stApprovedPct">—</div></div>
+      <div class="stat-box s-rejected"><div class="stat-label">Total Rejected</div><div class="stat-val" id="stRejected">—</div><div class="stat-sub" id="stRejectedPct">—</div></div>
+      <div class="stat-box s-hours"><div class="stat-label">Total Hours</div><div class="stat-val" id="stHours">—</div><div class="stat-sub" id="stPeople">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-ico">⚠️</div><div class="card-title">Defect Totals</div></div>
+      <div class="card-body" id="defectSummaryBody"><div class="no-data"><div class="nd-ico">📭</div>No submissions yet.</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+      <button class="btn-secondary" onclick="clearData()" style="color:var(--red);border-color:rgba(232,55,42,.4)">🗑 Clear All Data</button>
+    </div>
+  </div>
+</div>
     <div class="admin-content" id="historyTab">
       <div class="card">
         <div class="card-hd"><div class="card-ico">📋</div><div class="card-title">All Submissions</div></div>
@@ -770,8 +786,8 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
           <label>Company <span class="req">*</span></label>
           <select id="newJobCompany" onchange="updateJobIdPreview()">
             <option value="">— select company —</option>
-            <option value="STS">STS Services</option>
-            <option value="SLI">SLI</option>
+           <option value="STS" id="compOptSTS">STS Services</option>
+           <option value="SLI" id="compOptSLI">SLI</option>
           </select>
         </div>
         <div class="field"><label>Job Date</label><input type="date" id="newJobDate"></div>
@@ -948,9 +964,16 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
       <div style="padding:20px">
         <input type="hidden" id="editSubId">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Job / Quote #</div>
+        <div class="field" style="margin-bottom:16px">
+        <label>Assign to Job</label>
+        <select id="editJobId" style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--pure);width:100%;outline:none">
+        <option value="">— unassigned —</option>
+          </select>
+        </div>
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Customer & Service</div>
         <div class="g2" style="margin-bottom:16px">
-          <div class="field"><label>Customer Code</label><input type="text" id="editCustCode"></div>
+          <div class="field" ><label>Customer Code</label><input type="text" id="editCustCode"></div>
           <div class="field"><label>Customer Name</label><input type="text" id="editCustName"></div>
           <div class="field"><label>Service Start</label><input type="date" id="editSvcStart"></div>
           <div class="field"><label>Service End</label><input type="date" id="editSvcEnd"></div>
@@ -1192,6 +1215,7 @@ document.getElementById('userRole').textContent=
   if(isAdmin)document.getElementById('adminMobileNav').style.display='block';
   await initApp();
   if(!isAdmin)showPage('formPage');
+  initJobCompanyFilter();
 }
 function logout(){
   currentUser=null;allSubmissions=[];
@@ -1394,7 +1418,9 @@ function collect(){
     submitDate:now.toLocaleString('en-US'),submitDateISO:now.toISOString(),jobId:v('jobSelect')||null,
     customerCode:v('custCode'),customerName:v('custName'),
     serviceStart:v('svcStart'),serviceEnd:v('svcEnd'),
-    partNumber:v('partNum'),partDescription:v('partDesc'),mfgDate:v('mfgDate'),
+    partNumber:document.querySelector('#partBody tr input:first-of-type')?.value.trim()||'',
+    partDescription:document.querySelector('#partBody tr td:nth-child(3) input')?.value.trim()||'',
+    mfgDate:'',
     serialNumbers:defects.map(d=>d.serial).filter(Boolean).join(' | '),
     lotNumbers:defects.map(d=>d.lot).filter(Boolean).join(' | '),
     slRows,inspected:num('qInspected'),approved:num('qApproved'),
@@ -1413,7 +1439,7 @@ async function submitToSheets(){
   const d=collect();
   if(!d.jobId){showToast('⚠ Select a Job first.','err');return}
   if(!d.customerCode){showToast('⚠ Enter a Customer Code first.','err');return}
-  if(!d.partNumber){showToast('⚠ Enter a Part Number.','err');return}
+  if(!d.partNumber){showToast('⚠ Enter a Part Number in Card 01.','err');return}
   document.getElementById('btnTxt').style.display='none';
   document.getElementById('spinner').style.display='block';
   document.getElementById('submitBtn').disabled=true;
@@ -1461,7 +1487,9 @@ function resetDaily(){
 
 /* ══ OVERVIEW ══ */
 function loadOverview(){
-  const selJob=document.getElementById('overviewJobFilter')?.value||'all';
+  renderOvJobGrid();
+  // also refresh history tab if visible
+  const selJob='all';
   const subs=selJob==='all'?allSubmissions:allSubmissions.filter(s=>s.job_id===selJob);
   const chip=document.getElementById('overviewJobChip');
   if(chip){
@@ -2075,6 +2103,18 @@ function openEditModal(subId){
   document.getElementById('editTotalHrs').value=s.total_hours||'';
   document.getElementById('editSubmittedBy').value=s.submitted_by||'';
   document.getElementById('editNotes').value=s.notes||'';
+// populate job dropdown and set current
+const editJobSel=document.getElementById('editJobId');
+if(editJobSel){
+  editJobSel.innerHTML='<option value="">— unassigned —</option>';
+  allJobs.forEach(j=>{
+    const opt=document.createElement('option');
+    opt.value=j.job_id;
+    opt.textContent=j.job_id+(j.description?' — '+j.description:'');
+    if(j.job_id===s.job_id)opt.selected=true;
+    editJobSel.appendChild(opt);
+  });
+}
   // Build defect rows
   const body=document.getElementById('editDefBody');body.innerHTML='';
   const defects=s.defects||[];
@@ -2159,6 +2199,7 @@ async function saveEditedReport(){
   const defectSummary=defects.map(d=>`${d.code}:${d.desc}(${d.qty})`).join('; ');
   const allPhotos=[...editExistingPhotos,...editPhotos];
   const updates={
+    job_id:document.getElementById('editJobId')?.value||null,
     customer_code:document.getElementById('editCustCode').value.trim(),
     customer_name:document.getElementById('editCustName').value.trim(),
     service_start:document.getElementById('editSvcStart').value,
@@ -2405,6 +2446,18 @@ function updateJobIdPreview(){
   if(!preview.dataset.manualEdit)preview.value=getNextJobId(company);
   checkJobIdConflict();
 }
+
+function initJobCompanyFilter(){
+  const u=currentUser?.username;
+  const stsOpt=document.getElementById('compOptSTS');
+  if(u==='jesus.arevalo'||currentUser?.role==='admin3'){
+    if(stsOpt)stsOpt.style.display='none';
+    const sel=document.getElementById('newJobCompany');
+    if(sel)sel.value='SLI';
+    updateJobIdPreview();
+  }
+}
+
 function checkJobIdConflict(){
   const preview=document.getElementById('jobIdPreview');
   if(!preview)return;
@@ -2454,8 +2507,10 @@ function setJobListFilter(f){
   renderJobsList();
 }
 function renderJobsList(){
-  const createCard=document.getElementById('createJobCard');
-  if(createCard)createCard.style.display=currentUser?.role==='admin'?'':'none';
+ const createCard=document.getElementById('createJobCard');
+  const canCreate=['admin','admin2','admin3','operator','operator'].includes(currentUser?.role)||
+  ['sebastian.loera','jesus.arevalo'].includes(currentUser?.username);
+  if(createCard)createCard.style.display=canCreate?'':'none';
   const el=document.getElementById('jobsList');if(!el)return;
   const filtered=allJobs.filter(j=>jobListFilter==='all'||j.status===jobListFilter);
   if(!filtered.length){el.innerHTML='<div class="no-data"><div class="nd-ico">🗂</div>No '+jobListFilter+' jobs.</div>';return;}
@@ -2482,10 +2537,12 @@ function renderJobsList(){
       </div>
       <div style="display:flex;gap:6px;flex-direction:column;align-items:flex-end;flex-shrink:0">
         <button onclick="filterOverviewByJob('${j.job_id}')" style="background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">📊 View in Overview</button>
-        ${isActive
+       ${(currentUser?.role==='admin'||currentUser?.role==='admin2'||currentUser?.role==='admin3')
+        ?(isActive
           ?`<button onclick="closeJob('${j.id}','${j.job_id}')" style="background:transparent;border:1px solid rgba(245,158,11,.4);color:var(--yellow);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🔒 Close Job</button>`
-          :`<button onclick="reopenJob('${j.id}','${j.job_id}')" style="background:transparent;border:1px solid rgba(34,197,94,.4);color:var(--green);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🔓 Reopen</button>`
-        }
+          :`<button onclick="reopenJob('${j.id}','${j.job_id}')" style="background:transparent;border:1px solid rgba(34,197,94,.4);color:var(--green);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🔓 Reopen</button>`)
+          :''
+}
       </div>
     </div>`;
   }).join('');
@@ -2554,9 +2611,91 @@ async function reopenJob(id,jobId){
   catch(e){showToast('❌ '+e.message,'err');}
 }
 function filterOverviewByJob(jobId){
-  showPage('overviewPage');switchAdminTab('summaryTab');
-  const sel=document.getElementById('overviewJobFilter');
-  if(sel){sel.value=jobId;loadOverview();}
+  showPage('overviewPage');
+  switchAdminTab('summaryTab');
+  setTimeout(()=>openOvJobDetail(jobId),100);
+}
+
+/* ══ OVERVIEW JOB GRID ══ */
+function renderOvJobGrid(){
+  const compFilter=document.getElementById('ovCompanyFilter')?.value||'all';
+  const el=document.getElementById('ovJobCards');
+  if(!el)return;
+  let jobs=allJobs;
+  if(compFilter!=='all')jobs=jobs.filter(j=>j.company===compFilter);
+  if(currentUser?.role==='admin3')jobs=jobs.filter(j=>j.company==='SLI');
+  if(!jobs.length){
+    el.innerHTML='<div class="no-data"><div class="nd-ico">🗂</div>No jobs found. Create one in the Jobs tab.</div>';
+    return;
+  }
+  el.innerHTML=jobs.map(j=>{
+    const subs=allSubmissions.filter(s=>s.job_id===j.job_id);
+    const tI=subs.reduce((a,s)=>a+(s.inspected||0),0);
+    const tA=subs.reduce((a,s)=>a+(s.approved||0),0);
+    const tR=subs.reduce((a,s)=>a+(s.rejected||0),0);
+    const tH=subs.reduce((a,s)=>a+parseFloat(s.total_hours||0),0);
+    const isActive=j.status==='active';
+    return`<div onclick="openOvJobDetail('${j.job_id}')" style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:8px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.background='rgba(59,130,246,.06)'" onmouseout="this.style.borderColor='var(--line)';this.style.background='var(--card)'">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+            <span style="font-family:'Montserrat',sans-serif;font-size:15px;font-weight:900;color:var(--pure)">${j.job_id}</span>
+            <span class="pill pill-b">${j.company}</span>
+            <span style="font-size:10px;font-weight:700;color:${isActive?'var(--green)':'var(--soft)'};background:${isActive?'var(--greenbg)':'var(--muted)'};padding:2px 8px;border-radius:20px;text-transform:uppercase">${j.status}</span>
+          </div>
+          ${j.description?`<div style="font-size:12px;color:var(--mid);margin-bottom:6px">${j.description}</div>`:''}
+          ${j.customer_name?`<div style="font-size:12px;color:var(--mid);margin-bottom:6px">Client: <b style="color:var(--white)">${j.customer_name}</b></div>`:''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="pill pill-b">${subs.length} form${subs.length!==1?'s':''}</span>
+            ${tI?`<span style="font-size:10px;font-weight:700;color:var(--blue);background:var(--bluebg);padding:3px 9px;border-radius:20px">${tI} inspected</span>`:''}
+            ${tA?`<span style="font-size:10px;font-weight:700;color:var(--green);background:var(--greenbg);padding:3px 9px;border-radius:20px">${tA} approved</span>`:''}
+            ${tR?`<span class="pill pill-r">${tR} rejected</span>`:''}
+            ${tH?`<span style="font-size:10px;font-weight:700;color:var(--yellow);background:var(--yellowbg);padding:3px 9px;border-radius:20px">${tH.toFixed(1)}h</span>`:''}
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--mid);text-align:right;flex-shrink:0">
+          ${j.service_start?`<div>📅 ${j.service_start}${j.service_end?' → '+j.service_end:''}</div>`:''}
+          <div style="margin-top:4px;color:var(--blue);font-weight:600">View summary →</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openOvJobDetail(jobId){
+  const j=allJobs.find(x=>x.job_id===jobId);
+  if(!j)return;
+  document.getElementById('ovJobGrid').style.display='none';
+  document.getElementById('ovJobDetail').style.display='block';
+  document.getElementById('ovDetailJobId').textContent=j.job_id;
+  document.getElementById('ovDetailJobDesc').textContent=(j.description||'')+(j.customer_name?' · '+j.customer_name:'');
+  // set the hidden filter and compute stats for this job
+  const subs=allSubmissions.filter(s=>s.job_id===jobId);
+  let tI=0,tA=0,tR=0,tRw=0,tH=0,tP=0;const defMap={};
+  subs.forEach(s=>{
+    tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0;
+    tH+=parseFloat(s.total_hours)||0;tP+=parseInt(s.num_people)||0;
+    (s.defects||[]).forEach(d=>{const key=d.desc||'Unknown';defMap[key]=(defMap[key]||0)+(d.qty||0)});
+  });
+  document.getElementById('stInspected').textContent=tI||'—';
+  document.getElementById('stApproved').textContent=tA||'—';
+  document.getElementById('stRejected').textContent=tR||'—';
+  document.getElementById('stHours').textContent=tH?tH.toFixed(1):'—';
+  document.getElementById('stApprovedPct').textContent=tI?((tA/tI)*100).toFixed(1)+'% pass rate':'—';
+  document.getElementById('stRejectedPct').textContent=tI?((tR/tI)*100).toFixed(1)+'% reject rate':'—';
+  document.getElementById('stPeople').textContent=tP?tP+' person-days':'—';
+  const defBody=document.getElementById('defectSummaryBody');
+  const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
+  if(!defEntries.length){defBody.innerHTML='<div class="no-data"><div class="nd-ico">✅</div>No defects recorded.</div>';}
+  else{
+    const totalDef=defEntries.reduce((s,[,v])=>s+v,0);
+    defBody.innerHTML=`<table class="tbl"><thead><tr><th>Defect</th><th style="width:90px">Qty</th><th style="width:120px">% of Rejected</th><th style="width:160px">Bar</th></tr></thead><tbody>${defEntries.map(([desc,qty])=>{const pct=tR?((qty/tR)*100).toFixed(1):0;return`<tr><td>${desc}</td><td>${qty}</td><td>${pct}%</td><td><div style="background:var(--line);border-radius:3px;height:8px;overflow:hidden"><div style="width:${pct}%;background:var(--red);height:100%;border-radius:3px"></div></div></td></tr>`}).join('')}<tr class="tfoot-row"><td><b>TOTAL</b></td><td><b>${totalDef}</b></td><td></td><td></td></tr></tbody></table>`;
+  }
+}
+
+function backToOvGrid(){
+  document.getElementById('ovJobGrid').style.display='block';
+  document.getElementById('ovJobDetail').style.display='none';
 }
   
 window.onload=()=>document.getElementById('loginScreen').classList.add('active');
