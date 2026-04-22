@@ -2087,11 +2087,13 @@ function openEditModal(subId){
   const s=allSubmissions.find(x=>x.id===subId);
   if(!s){showToast('Report not found.','err');return;}
   // Role check: operators can only edit their own submissions
-  if(currentUser.role==='operator'){
-    const myName=(currentUser.name||'').toLowerCase().trim();
-    const subBy=(s.submitted_by||'').toLowerCase().trim();
-    if(myName!==subBy){showToast('⚠ You can only edit submissions you submitted.','err');return;}
-  }
+ const isAdmin=currentUser.role==='admin'||currentUser.role==='admin2'||currentUser.role==='admin3';
+const isAllowedOperator=currentUser.username==='sebastian.loera'||currentUser.username==='jesus.arevalo';
+if(!isAdmin&&!isAllowedOperator){
+  const myName=(currentUser.name||'').toLowerCase().trim();
+  const subBy=(s.submitted_by||'').toLowerCase().trim();
+  if(myName!==subBy){showToast('⚠ You can only edit submissions you submitted.','err');return;}
+}
   document.getElementById('editSubId').value=subId;
   document.getElementById('editModalFid').textContent=s.form_id||'';
   document.getElementById('editCustCode').value=s.customer_code||'';
