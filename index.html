@@ -774,7 +774,12 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
 
 <!-- ══ JOBS PAGE ══ -->
 <div class="page" id="jobsPage">
-  <div class="pg-header"><div class="pg-eyebrow">Job Management</div><div class="pg-title">Jobs</div></div>
+  <div class="pg-header">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px" id="jobsBackRow">
+    <button onclick="showPage('formPage')" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'">← Back to Form</button>
+  </div>
+  <div class="pg-eyebrow">Job Management</div><div class="pg-title">Jobs</div>
+</div>
   <div class="card" id="createJobCard" style="border-color:rgba(59,130,246,.3)">
     <div class="card-hd" style="background:rgba(59,130,246,.06)">
       <div class="card-ico" style="background:var(--bluebg)">🗂</div>
@@ -2541,7 +2546,8 @@ function renderJobsList(){
         ?(isActive
           ?`<button onclick="closeJob('${j.id}','${j.job_id}')" style="background:transparent;border:1px solid rgba(245,158,11,.4);color:var(--yellow);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🔒 Close Job</button>`
           :`<button onclick="reopenJob('${j.id}','${j.job_id}')" style="background:transparent;border:1px solid rgba(34,197,94,.4);color:var(--green);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🔓 Reopen</button>`)
-          :''
+          :`<button onclick="deleteJob('${j.id}','${j.job_id}')" style="background:transparent;border:1px solid rgba(232,55,42,.3);color:var(--red);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🗑 Delete</button>
+         :''
 }
       </div>
     </div>`;
@@ -2697,6 +2703,24 @@ function backToOvGrid(){
   document.getElementById('ovJobGrid').style.display='block';
   document.getElementById('ovJobDetail').style.display='none';
 }
+
+async function sbDeleteJob(id){
+  const {error}=await db.from('jobs').delete().eq('id',id);
+  if(error)throw error;
+}
+
+async function deleteJob(id,jobId){
+  const subCount=allSubmissions.filter(s=>s.job_id===jobId).length;
+  const warn=subCount>0?`\n\n⚠ This job has ${subCount} submission${subCount!==1?'s':''} linked to it. They won't be deleted but will no longer be linked to a job.`:'';
+  if(!confirm('Delete job '+jobId+'? This cannot be undone.'+warn))return;
+  try{
+    await sbDeleteJob(id);
+    allJobs=allJobs.filter(x=>x.id!==id);
+    populateJobSelectors();
+    renderJobsList();
+    showToast('🗑 Job '+jobId+' deleted.','info');
+  }catch(e){showToast('❌ '+e.message,'err');}
+}  
   
 window.onload=()=>document.getElementById('loginScreen').classList.add('active');
 </script>
