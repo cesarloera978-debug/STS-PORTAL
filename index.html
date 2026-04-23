@@ -1785,16 +1785,6 @@ async function loadClientPortal(clientCode){
     subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tH+=parseFloat(s.total_hours)||0;});
     const releasedOn=new Date(approvals[0].approved_at).toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'});
     area.innerHTML=`
-      <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:20px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">RESUMEN DE SERVICIO</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
-          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--blue)">${tI}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Inspeccionados</div></div>
-          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--green)">${tA}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Aprobados</div></div>
-          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--red)">${tR}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Rechazados</div></div>
-          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--yellow)">${tH.toFixed(1)}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Horas</div></div>
-        </div>
-        <div style="margin-top:12px;font-size:11px;color:var(--soft)">Publicado por STS Services el ${releasedOn} · ${subs.length} formulario${subs.length!==1?'s':''}</div>
-      </div>
       <div id="clientSubsList">
         ${subs.map((s,si)=>{
           const defects=s.defects||[];
@@ -1831,7 +1821,7 @@ async function loadClientPortal(clientCode){
                 <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure)">Reporte #${si+1} · ${s.submit_date||''}</div>
                 <div style="font-size:11px;color:var(--mid);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
               </div>
-              <button onclick="downloadClientReportPDF('${clientCode}','${(s.part_number||'').replace(/'/g,'')}')" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">📄 Descargar PDF</button>
+              <button onclick="downloadClientReportPDF('${clientCode}','${(s.part_number||'').replace(/\\/g,'').replace(/'/g,\"\\'\")}','${s.id}')"
             </div>
             <div style="padding:16px 18px">
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
@@ -1854,9 +1844,9 @@ async function loadClientPortal(clientCode){
 }
 /* ══ CLIENT PDF DOWNLOAD ══ */
 async function downloadClientReportPDF(clientCode, partNumber){
-  showToast('Generating PDF…','info');
   const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).eq('part_number',partNumber).order('created_at',{ascending:true});
   if(!subs||!subs.length){showToast('No data found.','err');return}
+  showToast('Generating PDF…','info');  // ← moved here, after the check
   const cfg=getConfig();
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
@@ -1911,7 +1901,7 @@ async function downloadClientReportPDF(clientCode, partNumber){
     });y+=6;
   }
   // Photos
-  const photosAll=subs.flatMap(s=>s.photos||[]).slice(0,8);
+  const photosAll=subs.flatMap(s=>s.photos||[]);
   if(photosAll.length){
     if(y>220){doc.addPage();y=20}
     doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
