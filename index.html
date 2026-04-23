@@ -1104,13 +1104,11 @@ const db = createClient(SUPA_URL, SUPA_KEY);
 
 /* ══ STAFF CREDENTIALS (edit to add/change users) ══ */
 const USERS = {
-  operator:  { pass: 'sts2024',   role: 'operator', name: 'Operator'    },
-  operator2: { pass: 'sts2024',   role: 'operator', name: 'Operator 2'  },
-  'sebastian.loera': { pass: 'Loer@0801',  role: 'operator', name: 'Sebastian Loera' },
-  'jesus.arevalo':   { pass: 'sli2026',    role: 'operator', name: 'Jesus Arevalo' },
-  'cesar.loera':     { pass: 'Loer@0321',  role: 'admin2',   name: 'Cesar Loera' },
-  'victor.loera':    { pass: 'sts@admin3', role: 'admin3',   name: 'Victor Loera' },
-  admin:     { pass: 'sts@admin', role: 'admin',    name: 'Admin'       },
+  'sebastian.loera': { pass: 'Loer@0801',  role: 'operator', name: 'Sebastian Loera', company: 'all' },
+  'jesus.arevalo':   { pass: 'sli2026',    role: 'operator', name: 'Jesus Arevalo',   company: 'sli' },
+  admin:             { pass: 'sts@admin',  role: 'admin',    name: 'Admin',           company: 'all' },
+  'cesar.loera':     { pass: 'Loer@0321',  role: 'admin2',   name: 'Cesar Loera',     company: 'all' },
+  'victor.loera':    { pass: 'sts@admin3', role: 'admin3',   name: 'Victor Loera',    company: 'sli' },
 };
 
 /* ══ CLIENT ACCOUNTS — add new clients here ══
@@ -1818,7 +1816,7 @@ async function loadClientPortal(clientCode){
                 <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure)">Reporte #${si+1} · ${s.submit_date||''}</div>
                 <div style="font-size:11px;color:var(--mid);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
               </div>
-              <button onclick="downloadClientReportPDF('${clientCode}','${(s.part_number||'').replace(/\\/g,'').replace(/'/g,\"\\'\")}','${s.id}')"
+              <button onclick="downloadClientReportPDF('${clientCode}',this.dataset.pn,this.dataset.sid)" data-pn="${(s.part_number||'').replace(/'/g,'')}" data-sid="${s.id}"
             </div>
             <div style="padding:16px 18px">
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
