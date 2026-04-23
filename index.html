@@ -1781,9 +1781,6 @@ async function loadClientPortal(clientCode){
       area.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No se encontraron reportes para su cuenta.</div>';
       return;
     }
-    let tI=0,tA=0,tR=0,tH=0;
-    subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tH+=parseFloat(s.total_hours)||0;});
-    const releasedOn=new Date(approvals[0].approved_at).toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'});
     area.innerHTML=`
       <div id="clientSubsList">
         ${subs.map((s,si)=>{
