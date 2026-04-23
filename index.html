@@ -717,7 +717,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
         <div id="ovDetailJobId" style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--pure)"></div>
         <div id="ovDetailJobDesc" style="font-size:13px;color:var(--mid)"></div>
       </div>
-      <button onclick="downloadPDF()" class="btn-primary" style="margin-left:auto">📄 Download PDF</button>
+      <button onclick="downloadJobPDF(currentOvJobId)" class="btn-primary" style="margin-left:auto">📄 Download Job PDF</button>
     </div>
     <div class="stat-grid" id="statGrid">
       <div class="stat-box s-inspected"><div class="stat-label">Total Inspected</div><div class="stat-val" id="stInspected">—</div><div class="stat-sub">all submissions</div></div>
@@ -936,10 +936,58 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
     </div>
   </div>
   <div style="max-width:900px;margin:0 auto;padding:28px 24px">
-    <div class="pg-header">
-      <div class="pg-eyebrow">Secure Client Portal</div>
-      <div class="pg-title" id="clientPortalTitle">Your Reports</div>
+    <div class="pg-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="pg-eyebrow">Portal de Cliente</div>
+        <div class="pg-title" id="clientPortalTitle">Sus Reportes</div>
+      </div>
+      <button onclick="toggleClientTutorial()" style="background:transparent;border:1.5px solid rgba(59,130,246,.4);color:var(--blue);font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;padding:9px 16px;border-radius:8px;cursor:pointer;white-space:nowrap;flex-shrink:0">❓ ¿Cómo usar el portal?</button>
     </div>
+
+    <!-- SPANISH TUTORIAL PANEL -->
+    <div id="clientTutorialPanel" style="display:none;background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(59,130,246,.04));border:1.5px solid rgba(59,130,246,.3);border-radius:14px;padding:24px;margin-bottom:20px;animation:fadeUp .3s ease both">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div style="font-family:'Montserrat',sans-serif;font-size:16px;font-weight:900;color:var(--pure)">📋 Guía de Uso — Portal de Cliente</div>
+        <button onclick="toggleClientTutorial()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:5px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600">✕ Cerrar</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px">
+          <div style="font-size:22px;margin-bottom:8px">🔐</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure);margin-bottom:6px">Paso 1 — Iniciar Sesión</div>
+          <div style="font-size:12px;color:var(--mid);line-height:1.7">En la pantalla de inicio, seleccione la pestaña <b style="color:var(--white)">🏢 Client</b>. Ingrese el <b style="color:var(--white)">código de cliente</b> y la <b style="color:var(--white)">contraseña</b> que STS Services le proporcionó. Ejemplo: código <code style="background:var(--card);padding:1px 5px;border-radius:4px;font-size:11px">STS001</code></div>
+        </div>
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px">
+          <div style="font-size:22px;margin-bottom:8px">📊</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure);margin-bottom:6px">Paso 2 — Ver Sus Reportes</div>
+          <div style="font-size:12px;color:var(--mid);line-height:1.7">Una vez dentro, verá el <b style="color:var(--white)">resumen general</b> con el total de piezas inspeccionadas, aprobadas, rechazadas y horas trabajadas. Cada reporte muestra el <b style="color:var(--white)">número de parte</b>, fecha y resultados completos.</div>
+        </div>
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px">
+          <div style="font-size:22px;margin-bottom:8px">⚠️</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure);margin-bottom:6px">Paso 3 — Revisar Defectos</div>
+          <div style="font-size:12px;color:var(--mid);line-height:1.7">Cada reporte incluye la <b style="color:var(--white)">tabla de defectos</b> con número de serie, lote/batch, descripción del defecto y cantidad. Si no hay defectos, aparecerá el mensaje <b style="color:var(--green)">✅ Sin defectos registrados.</b></div>
+        </div>
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px">
+          <div style="font-size:22px;margin-bottom:8px">📸</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure);margin-bottom:6px">Paso 4 — Ver Evidencia Fotográfica</div>
+          <div style="font-size:12px;color:var(--mid);line-height:1.7">Debajo de la tabla de defectos encontrará las <b style="color:var(--white)">fotos de evidencia</b> tomadas durante la inspección. Estas muestran el estado físico de las piezas inspeccionadas.</div>
+        </div>
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px">
+          <div style="font-size:22px;margin-bottom:8px">📄</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure);margin-bottom:6px">Paso 5 — Descargar PDF</div>
+          <div style="font-size:12px;color:var(--mid);line-height:1.7">Use el botón <b style="color:var(--red)">📄 Descargar PDF</b> en cada reporte para obtener una copia en PDF con todos los detalles, defectos y fotos. Guárdelo en su dispositivo o compártalo con su equipo.</div>
+        </div>
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px">
+          <div style="font-size:22px;margin-bottom:8px">❓</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure);margin-bottom:6px">¿Reportes No Disponibles?</div>
+          <div style="font-size:12px;color:var(--mid);line-height:1.7">Si ve el mensaje <b style="color:var(--white)">🔒 Reportes No Disponibles Aún</b>, significa que su reporte está en revisión. Comuníquese con STS Services al <b style="color:var(--white)">portal.stslaredo.com</b> para más información.</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="font-size:18px">📞</div>
+        <div style="font-size:12px;color:var(--mid);line-height:1.6"><b style="color:var(--white)">¿Necesita ayuda?</b> Comuníquese con STS Services directamente. Su código de cliente y contraseña son confidenciales — no los comparta con nadie que no sea parte de su equipo autorizado.</div>
+      </div>
+    </div>
+
     <div id="clientReportsArea">
       <div class="no-data"><div class="nd-ico" style="font-size:40px">⏳</div>Loading your reports…</div>
     </div>
@@ -1083,6 +1131,7 @@ let currentUser=null, selectedRole='operator';
 let uploadedPhotos=[];
 let currentClientCode=null;
 let currentPayrollWeek='all';
+let allSubmissions=[];
 let allJobs=[];
 let jobListFilter='active';
 
@@ -1253,7 +1302,7 @@ if(partBody&&!partBody.rows.length){addPartBulkRows(1);}
   showToast('Loading…','info');
  [allSubmissions, allJobs]=await Promise.all([sbGetSubmissions(),sbGetJobs()]);
 populateJobSelectors();
-  if(currentUser.role==='admin'){
+   if(currentUser.role==='admin'||currentUser.role==='admin2'||currentUser.role==='admin3'){
     loadOverview();renderDirectory();loadPayroll();
   } else {
     // For operators, show their panel if they have submissions
@@ -1371,8 +1420,29 @@ function handlePhotoSelect(e){processFiles(e.target.files);e.target.value=''}
 function processFiles(files){
   Array.from(files).forEach(file=>{
     if(!file.type.startsWith('image/'))return;
+    const img=new Image();
     const reader=new FileReader();
-    reader.onload=ev=>{uploadedPhotos.push({dataUrl:ev.target.result,name:file.name});renderPhotoGrid()};
+    reader.onload=ev=>{
+      img.onload=()=>{
+        const MAX=1200;
+        const canvas=document.createElement('canvas');
+        let w=img.width,h=img.height;
+        if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+        else if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        const compressed=canvas.toDataURL('image/jpeg',0.6);
+        const kb=Math.round(compressed.length*0.75/1024);
+        uploadedPhotos.push({dataUrl:compressed,name:file.name,kb});
+        if(uploadedPhotos.length>50){
+          uploadedPhotos.pop();
+          showToast('⚠ Max 50 photos per report.','err');
+          return;
+        }
+        renderPhotoGrid();
+      };
+      img.src=ev.target.result;
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -1380,11 +1450,14 @@ function renderPhotoGrid(){
   const grid=document.getElementById('photoGrid');grid.innerHTML='';
   uploadedPhotos.forEach((ph,i)=>{
     const div=document.createElement('div');div.className='photo-thumb';
-    div.innerHTML=`<img src="${ph.dataUrl}" alt="${ph.name}"><button class="ph-del" onclick="removePhoto(${i})">✕</button><div class="ph-cap">${ph.name}</div>`;
+    div.innerHTML=`<img src="${ph.dataUrl}" alt="${ph.name}"><button class="ph-del" onclick="removePhoto(${i})">✕</button><div class="ph-cap">${ph.name} · ${ph.kb||'?'}KB</div>`;
     grid.appendChild(div);
   });
+  const total=uploadedPhotos.reduce((a,p)=>a+(p.kb||0),0);
   const cnt=document.getElementById('photoCount');
-  cnt.textContent=uploadedPhotos.length?uploadedPhotos.length+' photo'+(uploadedPhotos.length!==1?'s':'')+' attached':'';
+  cnt.textContent=uploadedPhotos.length
+    ?`${uploadedPhotos.length} photo${uploadedPhotos.length!==1?'s':''} · ~${total}KB total`
+    :'';
 }
 function removePhoto(i){uploadedPhotos.splice(i,1);renderPhotoGrid()}
 
@@ -1673,7 +1746,11 @@ function openClientDetail(code){
       </div>
     </div>`;
   }).join('');
+  if(!subs.length){
+  document.getElementById('detailSubmissions').innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No submissions found.</div>';
+ } else {
   document.getElementById('detailSubmissions').innerHTML=`<table class="sub-table"><thead><tr><th>Date</th><th>Form ID</th><th>Part #</th><th>Inspected</th><th>Approved</th><th>Rejected</th><th>Hours</th><th>By</th></tr></thead><tbody>${subs.map(s=>`<tr><td>${s.submit_date||''}</td><td style="font-size:10px;color:var(--mid)">${s.form_id||''}</td><td>${s.part_number||'—'}</td><td style="color:var(--blue);font-weight:700">${s.inspected}</td><td style="color:var(--green);font-weight:700">${s.approved}</td><td style="color:var(--red);font-weight:700">${s.rejected}</td><td>${s.total_hours}</td><td style="color:var(--mid)">${s.submitted_by||'—'}</td></tr>`).join('')}</tbody></table>`;
+}
   document.getElementById('dirListView').style.display='none';
   document.getElementById('dirDetailView').classList.add('active');
 }
@@ -1687,77 +1764,94 @@ function closeClientDetail(){
 /* ══ CLIENT PORTAL ══ */
 async function loadClientPortal(clientCode){
   const area=document.getElementById('clientReportsArea');
-  area.innerHTML='<div class="no-data"><div class="nd-ico">⏳</div>Loading your reports…</div>';
+  area.innerHTML='<div class="no-data"><div class="nd-ico">⏳</div>Cargando tus reportes…</div>';
   try{
-    // Check if admin has released this client
     const {data:approvals}=await db.from('client_approvals').select('*').eq('customer_code',clientCode).eq('released',true);
     if(!approvals||approvals.length===0){
       area.innerHTML=`<div style="text-align:center;padding:60px 20px">
         <div style="font-size:56px;margin-bottom:16px">🔒</div>
-        <div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:800;color:var(--white);margin-bottom:10px">Reports Not Yet Released</div>
-        <div style="font-size:14px;color:var(--mid);max-width:400px;margin:0 auto;line-height:1.7">Your inspection reports are being reviewed by our team. You will be notified once they have been approved and released. Please check back soon or contact STS Services directly.</div>
+        <div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:800;color:var(--white);margin-bottom:10px">Reportes No Disponibles Aún</div>
+        <div style="font-size:14px;color:var(--mid);max-width:400px;margin:0 auto;line-height:1.7">Sus reportes de inspección están siendo revisados por nuestro equipo. Se le notificará una vez que hayan sido aprobados y publicados. Por favor regrese pronto o comuníquese directamente con STS Services.</div>
         <div style="margin-top:24px"><a href="https://www.stslaredo.com" target="_blank" style="color:var(--red);text-decoration:none;font-weight:600">www.stslaredo.com</a></div>
       </div>`;
       return;
     }
-    // Load submissions for this client
     const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).order('created_at',{ascending:false});
-    if(!subs||subs.length===0){
-      area.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No reports found for your account.</div>';
+    if(!subs||!subs.length){
+      area.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No se encontraron reportes para su cuenta.</div>';
       return;
     }
-    // Group by part number / service
-    const byPN={};
-    subs.forEach(s=>{
-      const pn=s.part_number||'Unknown';
-      if(!byPN[pn])byPN[pn]={pn,desc:s.part_description||'',dates:[],subs:[]};
-      byPN[pn].subs.push(s);
-      if(s.service_start)byPN[pn].dates.push(s.service_start);
-      if(s.service_end)byPN[pn].dates.push(s.service_end);
-    });
     let tI=0,tA=0,tR=0,tH=0;
-    subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tH+=parseFloat(s.total_hours)||0});
-    const releasedOn=new Date(approvals[0].approved_at).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+    subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tH+=parseFloat(s.total_hours)||0;});
+    const releasedOn=new Date(approvals[0].approved_at).toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'});
     area.innerHTML=`
-      <!-- Summary stats -->
       <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:20px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">SERVICE SUMMARY</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">RESUMEN DE SERVICIO</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
-          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--blue)">${tI}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Inspected</div></div>
-          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--green)">${tA}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Approved</div></div>
-          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--red)">${tR}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Rejected</div></div>
-          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--yellow)">${tH.toFixed(1)}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Hours</div></div>
+          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--blue)">${tI}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Inspeccionados</div></div>
+          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--green)">${tA}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Aprobados</div></div>
+          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--red)">${tR}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Rechazados</div></div>
+          <div style="text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:28px;font-weight:900;color:var(--yellow)">${tH.toFixed(1)}</div><div style="font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Horas</div></div>
         </div>
-        <div style="margin-top:12px;font-size:11px;color:var(--soft)">Released by STS Services on ${releasedOn} · ${subs.length} submission${subs.length!==1?'s':''}</div>
+        <div style="margin-top:12px;font-size:11px;color:var(--soft)">Publicado por STS Services el ${releasedOn} · ${subs.length} formulario${subs.length!==1?'s':''}</div>
       </div>
-      <!-- Reports by part number -->
-      ${Object.values(byPN).map(g=>{
-        const dates=g.dates.filter(Boolean).sort();
-        const dateRange=dates.length?dates[0]+(dates.length>1?' → '+dates[dates.length-1]:''):'—';
-        const gI=g.subs.reduce((s,x)=>s+(x.inspected||0),0);
-        const gA=g.subs.reduce((s,x)=>s+(x.approved||0),0);
-        const gR=g.subs.reduce((s,x)=>s+(x.rejected||0),0);
-        return`<div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:14px">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
-            <div>
-              <div style="font-family:'Montserrat',sans-serif;font-size:16px;font-weight:900;color:var(--pure)">Part Number: ${g.pn}</div>
-              ${g.desc?`<div style="font-size:12px;color:var(--mid);margin-top:2px">${g.desc}</div>`:''}
-              <div style="font-size:12px;color:var(--mid);margin-top:6px">📅 ${dateRange} · ${g.subs.length} submission${g.subs.length!==1?'s':''}</div>
-              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-                <span class="pill pill-b">Inspected: ${gI}</span>
-                <span class="pill pill-g">Approved: ${gA}</span>
-                <span class="pill pill-r">Rejected: ${gR}</span>
+      <div id="clientSubsList">
+        ${subs.map((s,si)=>{
+          const defects=s.defects||[];
+          const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
+          const photos=s.photos||[];
+          const defRows=defects.length
+            ?`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
+                <thead><tr>
+                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px;text-transform:uppercase;letter-spacing:1px">Serie #</th>
+                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px;text-transform:uppercase;letter-spacing:1px">Lote / Batch</th>
+                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px;text-transform:uppercase;letter-spacing:1px">Defecto</th>
+                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px;text-transform:uppercase;letter-spacing:1px">Código</th>
+                  <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--red);font-size:10px;text-transform:uppercase;letter-spacing:1px">Cant.</th>
+                </tr></thead>
+                <tbody>${defects.map((d,di)=>`<tr style="background:${di%2===0?'rgba(255,255,255,.02)':'transparent'}">
+                  <td style="padding:6px 8px;color:var(--mid)">${d.serial||'—'}</td>
+                  <td style="padding:6px 8px;color:var(--mid)">${d.lot||'—'}</td>
+                  <td style="padding:6px 8px">${d.desc||'—'}</td>
+                  <td style="padding:6px 8px;color:var(--mid)">${d.code||'—'}</td>
+                  <td style="padding:6px 8px;text-align:right;color:var(--red);font-weight:700">${d.qty||0}</td>
+                </tr>`).join('')}
+                <tr><td colspan="4" style="padding:8px;text-align:right;font-size:10px;color:var(--mid);font-weight:700;border-top:1px solid var(--line)">TOTAL DEFECTOS</td>
+                    <td style="padding:8px;text-align:right;color:var(--red);font-weight:700;border-top:1px solid var(--line)">${defTotal}</td></tr>
+                </tbody></table>`
+            :`<div style="font-size:12px;color:var(--soft);font-style:italic;padding:10px 0">✅ Sin defectos registrados.</div>`;
+          const photoHtml=photos.length
+            ?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:8px">📸 EVIDENCIA FOTOGRÁFICA</div>
+               <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">
+                 ${photos.map(ph=>`<div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--line)"><img src="${ph.dataUrl}" alt="${ph.name||''}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`).join('')}
+               </div></div>`:'';
+          return`<div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden">
+            <div style="background:var(--card);padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div>
+                <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure)">Reporte #${si+1} · ${s.submit_date||''}</div>
+                <div style="font-size:11px;color:var(--mid);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
               </div>
+              <button onclick="downloadClientReportPDF('${clientCode}','${(s.part_number||'').replace(/'/g,'')}')" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">📄 Descargar PDF</button>
             </div>
-            <button onclick="downloadClientReportPDF('${clientCode}','${g.pn}')" style="background:var(--red);color:#fff;border:none;border-radius:9px;padding:11px 20px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">📄 Download Report</button>
-          </div>
-        </div>`;
-      }).join('')}`;
+            <div style="padding:16px 18px">
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+                <div style="background:var(--bluebg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--blue)">${s.inspected||0}</div><div style="font-size:9px;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:1px">Inspeccionados</div></div>
+                <div style="background:var(--greenbg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--green)">${s.approved||0}</div><div style="font-size:9px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:1px">Aprobados</div></div>
+                <div style="background:var(--redlo);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--red)">${s.rejected||0}</div><div style="font-size:9px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:1px">Rechazados</div></div>
+                <div style="background:var(--purplebg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--purple)">${s.reworked||0}</div><div style="font-size:9px;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:1px">Retrabajados</div></div>
+              </div>
+              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:6px">⚠️ DESGLOSE DE DEFECTOS / NÚMEROS DE SERIE Y LOTE</div>
+              ${defRows}
+              ${photoHtml}
+              ${s.notes?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:6px">📝 NOTAS</div><div style="background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--mid);font-style:italic">${s.notes}</div></div>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
   }catch(e){
-    area.innerHTML=`<div class="no-data"><div class="nd-ico">❌</div>Error loading reports: ${e.message}</div>`;
+    area.innerHTML=`<div class="no-data"><div class="nd-ico">❌</div>Error al cargar reportes: ${e.message}</div>`;
   }
 }
-
 /* ══ CLIENT PDF DOWNLOAD ══ */
 async function downloadClientReportPDF(clientCode, partNumber){
   showToast('Generating PDF…','info');
@@ -1916,6 +2010,126 @@ async function clearData(){
   }catch(e){showToast('Error: '+e.message,'err')}
 }
 
+/* ══ PDF — JOB REPORT ══ */
+function downloadJobPDF(jobId){
+  if(!jobId){showToast('⚠ No job selected.','err');return;}
+  const j=allJobs.find(x=>x.job_id===jobId);
+  if(!j){showToast('⚠ Job not found.','err');return;}
+  const subs=allSubmissions.filter(s=>s.job_id===jobId);
+  if(!subs.length){showToast('⚠ No submissions for this job.','err');return;}
+  const cfg=getConfig();
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,M=16,CW=W-M*2;let y=18;
+  const RED=[232,55,42],SOFT=[138,143,154],LIGHT=[34,37,43],BORDER=[46,49,56];
+  // ── Header ──
+  doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
+  doc.text('STS SERVICES — JOB REPORT',M,9);
+  doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  doc.text(j.job_id+(j.description?' · '+j.description:''),M,15);
+  doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});
+  y=28;
+  // ── Job Info Box ──
+  doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
+  doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
+  ['JOB ID','COMPANY','CLIENT','SERVICE DATES'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
+  doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');
+  doc.text(j.job_id,M+4,y+13);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);
+  doc.text(j.company,M+4+CW/4,y+13);
+  doc.text(j.customer_name||j.customer_code||'—',M+4+CW/2,y+13);
+  const dateRange=(j.service_start||'—')+(j.service_end?' → '+j.service_end:'');
+  doc.text(dateRange,M+4+3*CW/4,y+13);
+  y+=24;
+  // ── Aggregated Totals ──
+  let tI=0,tA=0,tR=0,tRw=0,tH=0;
+  subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0;tH+=parseFloat(s.total_hours)||0;});
+  const bw=(CW-9)/4;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('JOB TOTALS — '+subs.length+' SUBMISSIONS',M,y+1);y+=4;
+  [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
+    const bx=M+i*(bw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
+    doc.setFontSize(14);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
+  });
+  y+=22;
+  // ── Defect Summary ──
+  const defMap={};
+  subs.forEach(s=>(s.defects||[]).forEach(d=>{const key=d.desc||'Unknown';defMap[key]=(defMap[key]||0)+(d.qty||0);}));
+  const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
+  if(defEntries.length){
+    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('DEFECT SUMMARY',M+6,y+4.5);y+=10;
+    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text('DEFECT',M+4,y+3.5);doc.text('QTY',M+120,y+3.5);doc.text('% OF REJECTED',M+150,y+3.5);y+=5;
+    defEntries.forEach(([desc,qty],i)=>{
+      doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(200,210,220);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+      doc.text(String(desc).substring(0,50),M+4,y+3.5);doc.text(String(qty),M+120,y+3.5);
+      doc.text(tR?((qty/tR)*100).toFixed(1)+'%':'—',M+150,y+3.5);y+=5;
+    });y+=6;
+  }
+  // ── Per-Submission Detail ──
+  subs.forEach((s,si)=>{
+    if(y>230){doc.addPage();y=20;}
+    doc.setFillColor(...BORDER);doc.rect(M,y,CW,6,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(8);doc.setFont('helvetica','bold');
+    doc.text(`FORM #${si+1}  ·  ${(s.submit_date||'').split(',')[0]}  ·  ${s.form_id||''}  ·  By: ${s.submitted_by||''}`,M+3,y+4.2);y+=8;
+    // Part row
+    doc.setFillColor(34,37,43);doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+    doc.text('PART #',M+2,y+3.5);doc.text('DESCRIPTION',M+42,y+3.5);doc.text('MFG DATE',M+110,y+3.5);doc.text('HOURS',M+162,y+3.5);y+=5;
+    doc.setFillColor(28,30,36);doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(200,210,220);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text(s.part_number||'—',M+2,y+3.5);
+    doc.text((s.part_description||'—').substring(0,28),M+42,y+3.5);
+    doc.text(s.mfg_date||'—',M+110,y+3.5);
+    doc.text(String(s.total_hours||'—'),M+162,y+3.5);y+=7;
+    // Qty row
+    const qbw=(CW-6)/4;
+    [[s.inspected||0,'INSP',[59,130,246]],[s.approved||0,'APPV',[34,197,94]],[s.rejected||0,'REJ',[232,55,42]],[s.reworked||0,'RWK',[168,85,247]]].forEach(([val,lbl,c],i)=>{
+      const bx=M+i*(qbw+2);doc.setFillColor(...c,0.15*255);doc.setFillColor(c[0]/4,c[1]/4,c[2]/4);
+      doc.roundedRect(bx,y,qbw,8,1,1,'F');
+      doc.setTextColor(...c);doc.setFontSize(5.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+qbw/2,y+3,{align:'center'});
+      doc.setFontSize(9);doc.text(String(val),bx+qbw/2,y+7,{align:'center'});
+    });y+=12;
+    // Defect rows
+    const defects=s.defects||[];
+    if(defects.length){
+      doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+      doc.text('SERIAL #',M+3,y+3.5);doc.text('LOT / BATCH #',M+40,y+3.5);doc.text('DEFECT',M+82,y+3.5);doc.text('CODE',M+140,y+3.5);doc.text('QTY',M+162,y+3.5);y+=5;
+      defects.forEach((d,di)=>{
+        if(y>272){doc.addPage();y=20;}
+        doc.setFillColor(di%2===0?34:28,di%2===0?37:30,di%2===0?43:36);doc.rect(M,y,CW,5,'F');
+        doc.setTextColor(200,210,220);doc.setFontSize(7);doc.setFont('helvetica','normal');
+        doc.text((d.serial||'—').substring(0,16),M+3,y+3.5);
+        doc.text((d.lot||'—').substring(0,16),M+40,y+3.5);
+        doc.text((d.desc||'—').substring(0,28),M+82,y+3.5);
+        doc.text((d.code||'—').substring(0,10),M+140,y+3.5);
+        doc.text(String(d.qty||0),M+162,y+3.5);y+=5;
+      });y+=4;
+    }
+    // Photos (up to 4 per submission)
+    const photos=(s.photos||[]).slice(0,4);
+    if(photos.length){
+      if(y>240){doc.addPage();y=20;}
+      const imgW=40,imgH=30,gap=4;
+      photos.forEach((ph,ix)=>{try{doc.addImage(ph.dataUrl,'JPEG',M+ix*(imgW+gap),y,imgW,imgH);}catch(e){}});
+      y+=imgH+6;
+    }
+    y+=4;
+  });
+  // Footer
+  doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  doc.text('STS Services  ·  www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W/2,289,{align:'center'});
+  doc.text('Job Report: '+j.job_id+' · Generated '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
+  doc.save('STS_Job_'+j.job_id+'_'+new Date().toISOString().split('T')[0]+'.pdf');
+  showToast('📄 Job PDF downloaded!','info');
+}
+
 /* ══ PDF — MAIN REPORT ══ */
 function downloadPDF(){
   const subs=allSubmissions;const cfg=getConfig();
@@ -2055,7 +2269,14 @@ function downloadPayrollPDF(filterWeek){
 /* ══ CLIENT DETAIL PDF ══ */
 function downloadClientPDF(){
   if(!currentClientCode)return;
-  downloadClientReportPDF(currentClientCode,'ALL');
+  // Get all unique part numbers for this client, download combined PDF
+  const subs=allSubmissions.filter(s=>s.customer_code===currentClientCode);
+  const partNumbers=[...new Set(subs.map(s=>s.part_number).filter(Boolean))];
+  if(!partNumbers.length){showToast('No data found.','err');return;}
+  // Download one PDF per part number
+  partNumbers.forEach((pn,i)=>{
+    setTimeout(()=>downloadClientReportPDF(currentClientCode,pn),i*500);
+  });
 }
 
 /* ══ MOBILE MENU ══ */
@@ -2066,6 +2287,10 @@ function toggleMobileMenu(){
 function closeMobileMenu(){
   document.getElementById('hamburgerBtn').classList.remove('open');
   document.getElementById('mobileMenu').classList.remove('open');
+}
+function toggleClientTutorial(){
+  const panel=document.getElementById('clientTutorialPanel');
+  if(panel)panel.style.display=panel.style.display==='none'?'block':'none';
 }
 function mobileNav(pageId){
   showPage(pageId);closeMobileMenu();
@@ -2171,8 +2396,29 @@ function handleEditPhotoSelect(e){processEditFiles(e.target.files);e.target.valu
 function processEditFiles(files){
   Array.from(files).forEach(file=>{
     if(!file.type.startsWith('image/'))return;
+    const img=new Image();
     const reader=new FileReader();
-    reader.onload=ev=>{editPhotos.push({dataUrl:ev.target.result,name:file.name});renderEditNewPhotos();};
+    reader.onload=ev=>{
+      img.onload=()=>{
+        const MAX=1200;
+        const canvas=document.createElement('canvas');
+        let w=img.width,h=img.height;
+        if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+        else if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        const compressed=canvas.toDataURL('image/jpeg',0.6);
+        const kb=Math.round(compressed.length*0.75/1024);
+        editPhotos.push({dataUrl:compressed,name:file.name,kb});
+        if(editPhotos.length>50){
+          editPhotos.pop();
+          showToast('⚠ Max 50 photos per report.','err');
+          return;
+        }
+        renderEditNewPhotos();
+      };
+      img.src=ev.target.result;
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -2281,6 +2527,7 @@ async function loadMySubmissions(){
 /* ══ CALENDAR ══ */
 const CAL_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const CAL_DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let currentOvJobId=null;
 let calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),calSelectedDate=null;
 function calIsoDate(s){const d=new Date(s);if(isNaN(d))return null;return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');}
 function calBuildMap(){const map={};allSubmissions.forEach(s=>{const k=calIsoDate(s.submit_date_iso||s.submit_date);if(!k)return;if(!map[k])map[k]=[];map[k].push(s);});return map;}
@@ -2550,7 +2797,9 @@ function renderJobsList(){
             :`<button onclick="reopenJob('${j.id}','${j.job_id}')" style="background:transparent;border:1px solid rgba(34,197,94,.4);color:var(--green);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🔓 Reopen</button>`)
           :''
         }
-        <button onclick="deleteJob('${j.id}','${j.job_id}')" style="background:transparent;border:1px solid rgba(232,55,42,.3);color:var(--red);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🗑 Delete</button>
+        ${(currentUser?.role==='admin'||currentUser?.role==='admin2'||currentUser?.role==='admin3')
+          ?`<button onclick="deleteJob('${j.id}','${j.job_id}')" style="background:transparent;border:1px solid rgba(232,55,42,.3);color:var(--red);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🗑 Delete</button>`
+          :''}
       </div>
     </div>`;
   }).join('');
@@ -2671,6 +2920,7 @@ function renderOvJobGrid(){
 }
 
 function openOvJobDetail(jobId){
+  currentOvJobId=jobId;
   const j=allJobs.find(x=>x.job_id===jobId);
   if(!j)return;
   document.getElementById('ovJobGrid').style.display='none';
