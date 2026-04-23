@@ -1816,7 +1816,7 @@ async function loadClientPortal(clientCode){
                 <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure)">Reporte #${si+1} · ${s.submit_date||''}</div>
                 <div style="font-size:11px;color:var(--mid);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
               </div>
-              <button onclick="downloadClientReportPDF('${clientCode}','${(s.part_number||'').replace(/\\/g,'').replace(/'/g,String.fromCharCode(39))}')" style="background:#e8372a;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:Montserrat,sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">📄 Descargar PDF</button>
+              <button onclick="downloadClientReportPDF('${clientCode}',this.dataset.pn,this.dataset.sid)" data-pn="${(s.part_number||'').replace(/'/g,'')}" data-sid="${s.id}"
             </div>
             <div style="padding:16px 18px">
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
@@ -1839,84 +1839,224 @@ async function loadClientPortal(clientCode){
 }
 /* ══ CLIENT PDF DOWNLOAD ══ */
 async function downloadClientReportPDF(clientCode, partNumber){
-  const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).eq('part_number',partNumber).order('created_at',{ascending:true});
+  // Query by client code only — we show ALL submissions for this client grouped by job
+  const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).order('created_at',{ascending:true});
   if(!subs||!subs.length){showToast('No data found.','err');return}
-  showToast('Generating PDF…','info');  // ← moved here, after the check
+  showToast('Generating PDF…','info');
   const cfg=getConfig();
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
-  const W=210,M=16,CW=W-M*2;let y=18;
-  const RED=[232,55,42],SOFT=[138,143,154],LIGHT=[34,37,43],BORDER=[46,49,56];
+  const W=210,M=16,CW=W-M*2;
+  const RED=[232,55,42],SOFT=[138,143,154],LIGHT=[34,37,43],BORDER=[46,49,56],WHITE=[240,245,247],DIM=[200,210,220];
+
+  function checkPage(needed){
+    if(y+needed>272){doc.addPage();y=20;}
+  }
+  function sectionHeader(label){
+    checkPage(12);
+    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
+    doc.setTextColor(...WHITE);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text(label,M+6,y+4.5);y+=10;
+  }
+  function rowHeader(cols){
+    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+    cols.forEach(([txt,x])=>doc.text(txt,M+x,y+3.5));
+    y+=5;
+  }
+  function dataRow(cols,idx){
+    doc.setFillColor(idx%2===0?34:28,idx%2===0?37:30,idx%2===0?43:36);
+    doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(...DIM);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    cols.forEach(([txt,x])=>doc.text(String(txt).substring(0,40),M+x,y+3.5));
+    y+=5;
+  }
+
+  let y=18;
   const last=subs[subs.length-1];
-  // Header
+
+  // ── COVER HEADER ──
   doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
-  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(14);
   doc.text('STS SERVICES — INSPECTION REPORT',M,9);
   doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text(`${clientCode} · Part: ${partNumber}`,M,15);
-  doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});y=28;
-  // Client info box
+  doc.text(`Client: ${clientCode} · ${last.customer_name||''}`,M,16);
+  doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,16,{align:'right'});
+  y=28;
+
+  // ── CLIENT INFO BOX ──
   doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
   doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
-  ['CLIENT CODE','CLIENT NAME','SERVICE START','SERVICE END'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
-  doc.setTextColor(240,245,247);doc.setFontSize(10);doc.setFont('helvetica','bold');
+  ['CLIENT CODE','CLIENT NAME','TOTAL FORMS','GENERATED'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
+  doc.setTextColor(...WHITE);doc.setFontSize(10);doc.setFont('helvetica','bold');
   doc.text(clientCode,M+4,y+13);
   doc.setFont('helvetica','normal');doc.setFontSize(9);
   doc.text(last.customer_name||'—',M+4+CW/4,y+13);
-  const dates=subs.map(s=>s.service_start).filter(Boolean).sort();
-  const endDates=subs.map(s=>s.service_end).filter(Boolean).sort();
-  doc.text(dates[0]||'—',M+4+CW/2,y+13);
-  doc.text(endDates[endDates.length-1]||'—',M+4+3*CW/4,y+13);
+  doc.text(String(subs.length),M+4+CW/2,y+13);
+  doc.text(new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),M+4+3*CW/4,y+13);
   y+=24;
-  // Totals
-  let tI=0,tA=0,tR=0,tRw=0;
-  subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0});
+
+  // ── OVERALL TOTALS ──
+  let tI=0,tA=0,tR=0,tRw=0,tH=0;
+  subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0;tH+=parseFloat(s.total_hours)||0;});
   const bw=(CW-9)/4;
-  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('TOTALS',M,y+1);y+=4;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('OVERALL TOTALS',M,y+1);y+=4;
   [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
     const bx=M+i*(bw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
     doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
     doc.setFontSize(14);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
   });y+=22;
-  // Defects
-  const defMap={};
-  subs.forEach(s=>(s.defects||[]).forEach(d=>{defMap[d.desc]=(defMap[d.desc]||0)+d.qty}));
-  const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
-  if(defEntries.length){
-    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('DEFECT BREAKDOWN',M+6,y+4.5);y+=10;
-    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
-    doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
-    doc.text('DEFECT',M+4,y+3.5);doc.text('QTY',M+120,y+3.5);doc.text('% OF REJECTED',M+150,y+3.5);y+=5;
-    defEntries.forEach(([desc,qty],i)=>{
-      doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);doc.rect(M,y,CW,5,'F');
-      doc.setTextColor(200,210,220);doc.setFontSize(8);doc.setFont('helvetica','normal');
-      doc.text(desc,M+4,y+3.5);doc.text(String(qty),M+120,y+3.5);
-      doc.text(tR?((qty/tR)*100).toFixed(1)+'%':'—',M+150,y+3.5);y+=5;
-    });y+=6;
-  }
-  // Photos
-  const photosAll=subs.flatMap(s=>s.photos||[]);
-  if(photosAll.length){
-    if(y>220){doc.addPage();y=20}
-    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('PHOTO EVIDENCE',M+6,y+4.5);y+=10;
-    const imgW=40,imgH=32,gap=4;let ix=0;
-    for(let ph of photosAll){try{doc.addImage(ph.dataUrl,'JPEG',M+(ix%4)*(imgW+gap),y+Math.floor(ix/4)*(imgH+gap),imgW,imgH)}catch(e){}ix++}
-    y+=Math.ceil(photosAll.length/4)*(imgH+gap)+4;
-  }
-  // Official release note
-  if(y>260){doc.addPage();y=20}
+  // Hours box
+  doc.setFillColor(60,50,10);doc.roundedRect(M,y,CW,10,2,2,'F');
+  doc.setTextColor(245,158,11);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('TOTAL HOURS:',M+4,y+6.5);
+  doc.setFontSize(10);doc.text(tH.toFixed(1)+' hrs',M+40,y+6.5);
+  doc.setTextColor(...SOFT);doc.setFontSize(7);
+  doc.text('across '+subs.length+' submission'+(subs.length!==1?'s':''),M+70,y+6.5);
+  y+=16;
+
+  // ── PER-SUBMISSION DETAIL ──
+  subs.forEach((s,si)=>{
+    checkPage(30);
+    // Submission divider bar
+    doc.setFillColor(...BORDER);doc.rect(M,y,CW,7,'F');
+    doc.setTextColor(...WHITE);doc.setFontSize(8);doc.setFont('helvetica','bold');
+    const subLabel=`SUBMISSION #${si+1}  ·  ${(s.submit_date||'').split(',')[0]}  ·  By: ${s.submitted_by||'—'}  ·  Form: ${s.form_id||'—'}`;
+    doc.text(subLabel.substring(0,90),M+3,y+4.8);
+    if(s.job_id){doc.setTextColor(59,130,246);doc.setFontSize(7);doc.text('Job: '+s.job_id,W-M-2,y+4.8,{align:'right'});}
+    y+=10;
+
+    // (A) PART INFORMATION
+    checkPage(22);
+    sectionHeader('A  PART INFORMATION');
+    doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,16,2,2,'FD');
+    doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+    ['PART NUMBER','DESCRIPTION','MFG DATE','SERVICE DATES'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+4));
+    doc.setTextColor(...WHITE);doc.setFont('helvetica','normal');doc.setFontSize(8);
+    doc.text(s.part_number||'—',M+4,y+11);
+    doc.text((s.part_description||'—').substring(0,22),M+4+CW/4,y+11);
+    doc.text(s.mfg_date||'—',M+4+CW/2,y+11);
+    doc.text((s.service_start||'—')+(s.service_end?' → '+s.service_end:''),M+4+3*CW/4,y+11);
+    y+=20;
+
+    // (B) DEFECT BREAKDOWN & SERIAL/LOT
+    const defects=s.defects||[];
+    checkPage(18);
+    sectionHeader('B  DEFECT BREAKDOWN & SERIAL / LOT NUMBERS');
+    if(defects.length){
+      rowHeader([['SERIAL #',3],['LOT / BATCH #',38],['DEFECT DESCRIPTION',78],['CODE',138],['OK',158],['NOK',172]]);
+      defects.forEach((d,di)=>{
+        checkPage(6);
+        dataRow([
+          [(d.serial||'—').substring(0,14),3],
+          [(d.lot||'—').substring(0,14),38],
+          [(d.desc&&d.desc!=='—'?d.desc:'No defect').substring(0,28),78],
+          [(d.code&&d.code!=='—'?d.code:'—').substring(0,8),138],
+          [d.ok||0,158],
+          [d.qty||0,172]
+        ],di);
+      });
+      // totals row
+      const totNok=defects.reduce((a,d)=>a+(d.qty||0),0);
+      const totOk=defects.reduce((a,d)=>a+(d.ok||0),0);
+      doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+      doc.text('TOTAL',M+3,y+3.5);
+      doc.setTextColor(34,197,94);doc.text(String(totOk),M+158,y+3.5);
+      doc.setTextColor(232,55,42);doc.text(String(totNok),M+172,y+3.5);
+      y+=7;
+    } else {
+      doc.setFillColor(22,40,22);doc.roundedRect(M,y,CW,7,2,2,'F');
+      doc.setTextColor(34,197,94);doc.setFontSize(8);doc.setFont('helvetica','normal');
+      doc.text('✓ No defects recorded for this submission.',M+4,y+4.8);
+      y+=11;
+    }
+
+    // (C) INSPECTION RESULTS
+    checkPage(22);
+    sectionHeader('C  INSPECTION RESULTS');
+    const qbw=(CW-9)/4;
+    [[s.inspected||0,'INSPECTED',[59,130,246]],[s.approved||0,'APPROVED',[34,197,94]],[s.rejected||0,'REJECTED',[232,55,42]],[s.reworked||0,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
+      const bx=M+i*(qbw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,qbw,14,2,2,'F');
+      doc.setTextColor(255,255,255);doc.setFontSize(6);doc.setFont('helvetica','bold');doc.text(lbl,bx+qbw/2,y+4.5,{align:'center'});
+      doc.setFontSize(12);doc.text(String(val),bx+qbw/2,y+11,{align:'center'});
+    });y+=18;
+
+    // (D) HOURS
+    checkPage(12);
+    sectionHeader('D  PERSONNEL & HOURS');
+    const personnel=s.personnel||[];
+    if(personnel.length){
+      rowHeader([['NAME',3],['ROLE',70],['HOURS',140]]);
+      personnel.filter(p=>p.name&&p.name!=='—').forEach((p,pi)=>{
+        checkPage(6);
+        dataRow([[(p.name||'—').substring(0,30),3],[(p.role||'—').substring(0,20),70],[p.hours||0,140]],pi);
+      });
+      // total hours row
+      const hrs=parseFloat(s.total_hours)||0;
+      doc.setFillColor(60,50,10);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(245,158,11);doc.setFontSize(7);doc.setFont('helvetica','bold');
+      doc.text('TOTAL HOURS',M+3,y+3.5);doc.text(hrs.toFixed(1)+' hrs',M+140,y+3.5);
+      y+=7;
+    } else {
+      doc.setFillColor(...LIGHT);doc.roundedRect(M,y,CW,7,2,2,'F');
+      doc.setTextColor(...SOFT);doc.setFontSize(8);doc.setFont('helvetica','normal');
+      doc.text('Total Hours: '+(s.total_hours||'—'),M+4,y+4.8);
+      y+=11;
+    }
+
+    // (E) PHOTOS
+    const photos=s.photos||[];
+    if(photos.length){
+      checkPage(20);
+      sectionHeader('E  PHOTO EVIDENCE');
+      const imgW=42,imgH=34,gap=3;
+      photos.forEach((ph,ix)=>{
+        const col=ix%4;
+        const row=Math.floor(ix/4);
+        if(col===0&&row>0){checkPage(imgH+gap);}
+        if(col===0&&row===0&&y+imgH>272){doc.addPage();y=20;}
+        try{
+          const fmt=ph.dataUrl&&ph.dataUrl.includes('image/png')?'PNG':'JPEG';
+          doc.addImage(ph.dataUrl,fmt,M+col*(imgW+gap),y+row*(imgH+gap),imgW,imgH);
+        }catch(e){}
+      });
+      y+=Math.ceil(photos.length/4)*(imgH+gap)+4;
+    }
+
+    // Notes
+    if(s.notes){
+      checkPage(14);
+      doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,12,2,2,'FD');
+      doc.setTextColor(...SOFT);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text('NOTES',M+4,y+4);
+      doc.setTextColor(...DIM);doc.setFont('helvetica','normal');doc.setFontSize(8);
+      const noteLines=doc.splitTextToSize(s.notes,CW-10);
+      doc.text(noteLines[0]||'',M+4,y+9);
+      y+=16;
+    }
+
+    y+=4; // spacing between submissions
+  });
+
+  // ── OFFICIAL RELEASE ──
+  checkPage(20);
   doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,16,2,2,'FD');
   doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('OFFICIAL RELEASE',M+4,y+5);
-  doc.setTextColor(240,245,247);doc.setFont('helvetica','normal');doc.setFontSize(8);
-  doc.text('This report has been reviewed and officially released by STS Services management.',M+4,y+11);y+=22;
-  // Footer
-  doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');
-  doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text('STS Services  ·  www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W/2,289,{align:'center'});
-  doc.text('Confidential Client Report — Generated '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
-  doc.save(`STS_Report_${clientCode}_PN${partNumber}_${new Date().toISOString().split('T')[0]}.pdf`);
+  doc.setTextColor(...WHITE);doc.setFont('helvetica','normal');doc.setFontSize(8);
+  doc.text('This report has been reviewed and officially released by STS Services management.',M+4,y+11);
+  y+=22;
+
+  // ── FOOTER on every page ──
+  const pageCount=doc.getNumberOfPages();
+  for(let p=1;p<=pageCount;p++){
+    doc.setPage(p);
+    doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+    doc.text('STS Services  ·  Confidential Client Report  ·  www.stslaredo.com',W/2,288,{align:'center'});
+    doc.text('Generated '+new Date().toLocaleDateString()+'  ·  Page '+p+' of '+pageCount,W/2,293,{align:'center'});
+  }
+
+  doc.save(`STS_Report_${clientCode}_${new Date().toISOString().split('T')[0]}.pdf`);
   showToast('📄 Report downloaded!','info');
 }
 
