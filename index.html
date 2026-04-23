@@ -1850,7 +1850,6 @@ async function downloadClientReportPDF(clientCode, jobId){
   const RED=[232,55,42],SOFT=[138,143,154],PANEL=[26,28,32],CARD=[34,37,43],BORDER=[46,49,56];
   const last=subs[subs.length-1];
   function checkPage(need){if(y+need>272){doc.addPage();y=20;}}
-  // Header
   doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
   doc.text('STS SERVICES - REPORTE DE INSPECCION',M,9);
@@ -1858,7 +1857,6 @@ async function downloadClientReportPDF(clientCode, jobId){
   doc.text(clientCode+' - Job: '+jobId,M,15);
   doc.text('www.stslaredo.com'+(cfg.email?' - '+cfg.email:''),W-M,15,{align:'right'});
   y=28;
-  // Client info box
   doc.setFillColor(...PANEL);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
   doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
   ['CODIGO CLIENTE','NOMBRE','INICIO SERVICIO','FIN SERVICIO'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
@@ -1871,23 +1869,23 @@ async function downloadClientReportPDF(clientCode, jobId){
   doc.text(dates[0]||'-',M+4+CW/2,y+13);
   doc.text(endDates[endDates.length-1]||'-',M+4+3*CW/4,y+13);
   y+=24;
-  // Job totals
-  let tI=0,tA=0,tR=0,tRw=0;
-  subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0});
-  const bw=(CW-9)/4;
+  let tI=0,tA=0,tR=0,tRw=0,tH=0;
+  subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0;tH+=parseFloat(s.total_hours)||0;});
   doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);
   doc.text('TOTALES DEL JOB - '+subs.length+' REPORTE'+(subs.length!==1?'S':''),M,y+1);y+=4;
-  [[tI,'INSPECCIONADOS',[59,130,246]],[tA,'APROBADOS',[34,197,94]],[tR,'RECHAZADOS',[232,55,42]],[tRw,'RETRABAJADOS',[168,85,247]]].forEach(([val,lbl,c],i)=>{
+  const bw=(CW-12)/5;
+  [[tI,'INSPECCIONADOS',[59,130,246]],[tA,'APROBADOS',[34,197,94]],[tR,'RECHAZADOS',[232,55,42]],[tRw,'RETRABAJADOS',[168,85,247]],[tH.toFixed(1),'HORAS TOTALES',[245,158,11]]].forEach(([val,lbl,c],i)=>{
     const bx=M+i*(bw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(5.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
-    doc.setFontSize(14);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
+    doc.setTextColor(255,255,255);doc.setFontSize(5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
+    doc.setFontSize(12);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
   });y+=24;
-  // Per-report cards
   subs.forEach((s,si)=>{
     checkPage(30);
     doc.setFillColor(...CARD);doc.roundedRect(M,y,CW,10,2,2,'F');
     doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');
     doc.text('Reporte #'+(si+1)+' - '+((s.submit_date||'').split(',')[0]||''),M+4,y+6.5);
+    doc.setFontSize(8);doc.setTextColor(245,158,11);
+    doc.text('Horas: '+(s.total_hours||'0'),W-M-4,y+6.5,{align:'right'});
     doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(...SOFT);
     doc.text('PN: '+(s.part_number||'-')+(s.part_description?' - '+s.part_description:'')+' | ID: '+(s.form_id||''),M+4,y+9.5);
     y+=13;
@@ -1898,6 +1896,15 @@ async function downloadClientReportPDF(clientCode, jobId){
       doc.setTextColor(...c);doc.setFontSize(5);doc.setFont('helvetica','bold');doc.text(lbl,bx+sw/2,y+4,{align:'center'});
       doc.setFontSize(11);doc.text(String(val),bx+sw/2,y+11,{align:'center'});
     });y+=17;
+    checkPage(10);
+    doc.setFillColor(...PANEL);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,8,1,1,'FD');
+    doc.setTextColor(...SOFT);doc.setFontSize(6);doc.setFont('helvetica','bold');
+    doc.text('INFORMACION DE PARTE:',M+3,y+5);
+    doc.setFont('helvetica','normal');doc.setTextColor(200,210,220);
+    const partDefects=(s.part_defects&&s.part_defects.trim())?s.part_defects:'Sin defecto registrado en parte';
+    const partLine='PN: '+(s.part_number||'-')+(s.part_description?' | '+s.part_description:'')+' | Defecto: '+partDefects;
+    doc.text(partLine.substring(0,105),M+42,y+5);
+    y+=11;
     const defects=(s.defects||[]);
     const hasDefects=defects.some(d=>(d.serial||d.lot||(d.desc&&d.desc!=='-'&&d.desc!=='--')));
     checkPage(12);
@@ -1962,6 +1969,7 @@ async function downloadClientReportPDF(clientCode, jobId){
   doc.save('STS_Report_'+clientCode+'_Job'+jobId+'_'+new Date().toISOString().split('T')[0]+'.pdf');
   showToast('Reporte descargado!','info');
 }
+
 /* ══ PAYROLL ══ */
 function getWeekKey(dateStr){
   const d=new Date(dateStr);const day=d.getDay();const diff=day>=5?day-5:day+2;
