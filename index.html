@@ -1816,7 +1816,7 @@ async function loadClientPortal(clientCode){
                 <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure)">Reporte #${si+1} · ${s.submit_date||''}</div>
                 <div style="font-size:11px;color:var(--mid);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
               </div>
-              <button onclick="downloadClientReportPDF('${clientCode}','${(s.part_number||'').replace(/'/g,String.fromCharCode(39))}')" style="background:#e8372a;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:Montserrat,sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">📄 Descargar PDF</button>
+              <button onclick="downloadClientReportPDF('${clientCode}','${s.job_id||''}')" style="background:#e8372a;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:Montserrat,sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">📄 Descargar PDF</button>
             </div>
             <div style="padding:16px 18px">
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
@@ -1838,22 +1838,24 @@ async function loadClientPortal(clientCode){
   }
 }
 /* ══ CLIENT PDF DOWNLOAD ══ */
-async function downloadClientReportPDF(clientCode, partNumber){
-  const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).eq('part_number',partNumber).order('created_at',{ascending:true});
+async function downloadClientReportPDF(clientCode, jobId){
+  if(!jobId){showToast('Este reporte no tiene Job asignado.','err');return}
+  const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).eq('job_id',jobId).order('created_at',{ascending:true});
   if(!subs||!subs.length){showToast('No data found.','err');return}
-  showToast('Generating PDF…','info');  // ← moved here, after the check
+  showToast('Generating PDF…','info');
   const cfg=getConfig();
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const W=210,M=16,CW=W-M*2;let y=18;
   const RED=[232,55,42],SOFT=[138,143,154],LIGHT=[34,37,43],BORDER=[46,49,56];
   const last=subs[subs.length-1];
+  const jobLabel=jobId||clientCode;
   // Header
   doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
   doc.text('STS SERVICES — INSPECTION REPORT',M,9);
   doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text(`${clientCode} · Part: ${partNumber}`,M,15);
+  doc.text(`${clientCode} · Job: ${jobLabel}`,M,15);
   doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});y=28;
   // Client info box
   doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
@@ -1916,7 +1918,7 @@ async function downloadClientReportPDF(clientCode, partNumber){
   doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
   doc.text('STS Services  ·  www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W/2,289,{align:'center'});
   doc.text('Confidential Client Report — Generated '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
-  doc.save(`STS_Report_${clientCode}_PN${partNumber}_${new Date().toISOString().split('T')[0]}.pdf`);
+  doc.save(`STS_Report_${clientCode}_Job${jobId}_${new Date().toISOString().split('T')[0]}.pdf`);
   showToast('📄 Report downloaded!','info');
 }
 
@@ -2256,11 +2258,11 @@ function downloadClientPDF(){
   if(!currentClientCode)return;
   // Get all unique part numbers for this client, download combined PDF
   const subs=allSubmissions.filter(s=>s.customer_code===currentClientCode);
-  const partNumbers=[...new Set(subs.map(s=>s.part_number).filter(Boolean))];
-  if(!partNumbers.length){showToast('No data found.','err');return;}
-  // Download one PDF per part number
-  partNumbers.forEach((pn,i)=>{
-    setTimeout(()=>downloadClientReportPDF(currentClientCode,pn),i*500);
+  const jobIds=[...new Set(subs.map(s=>s.job_id).filter(Boolean))];
+  if(!jobIds.length){showToast('No data found.','err');return;}
+  // Download one PDF per job
+  jobIds.forEach((jid,i)=>{
+    setTimeout(()=>downloadClientReportPDF(currentClientCode,jid),i*500);
   });
 }
 
