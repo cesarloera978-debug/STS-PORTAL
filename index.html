@@ -1785,52 +1785,58 @@ async function loadClientPortal(clientCode){
           const defects=s.defects||[];
           const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
           const photos=s.photos||[];
-          const defRows=defects.length
+          const hasDefects=defects.some(d=>d.serial||d.lot||(d.desc&&d.desc!=='—'&&d.desc!=='--'));
+          const defRows=hasDefects
             ?`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
                 <thead><tr>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px;text-transform:uppercase;letter-spacing:1px">Serie #</th>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px;text-transform:uppercase;letter-spacing:1px">Lote / Batch</th>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px;text-transform:uppercase;letter-spacing:1px">Defecto</th>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px;text-transform:uppercase;letter-spacing:1px">Código</th>
-                  <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);color:var(--red);font-size:10px;text-transform:uppercase;letter-spacing:1px">Cant.</th>
+                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Serie #</th>
+                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Lote / Batch</th>
+                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Defecto</th>
+                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Código</th>
+                  <th style="text-align:right;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:#e8372a;font-size:10px;text-transform:uppercase;letter-spacing:1px">Cant.</th>
                 </tr></thead>
                 <tbody>${defects.map((d,di)=>`<tr style="background:${di%2===0?'rgba(255,255,255,.02)':'transparent'}">
-                  <td style="padding:6px 8px;color:var(--mid)">${d.serial||'—'}</td>
-                  <td style="padding:6px 8px;color:var(--mid)">${d.lot||'—'}</td>
-                  <td style="padding:6px 8px">${d.desc||'—'}</td>
-                  <td style="padding:6px 8px;color:var(--mid)">${d.code||'—'}</td>
-                  <td style="padding:6px 8px;text-align:right;color:var(--red);font-weight:700">${d.qty||0}</td>
+                  <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.serial||'—'}</td>
+                  <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.lot||'—'}</td>
+                  <td style="padding:6px 8px;color:#e2e8f0">${d.desc||'—'}</td>
+                  <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.code||'—'}</td>
+                  <td style="padding:6px 8px;text-align:right;color:#e8372a;font-weight:700">${d.qty||0}</td>
                 </tr>`).join('')}
-                <tr><td colspan="4" style="padding:8px;text-align:right;font-size:10px;color:var(--mid);font-weight:700;border-top:1px solid var(--line)">TOTAL DEFECTOS</td>
-                    <td style="padding:8px;text-align:right;color:var(--red);font-weight:700;border-top:1px solid var(--line)">${defTotal}</td></tr>
+                <tr><td colspan="4" style="padding:8px;text-align:right;font-size:10px;color:rgba(138,143,154,1);font-weight:700;border-top:1px solid rgba(255,255,255,.08)">TOTAL DEFECTOS</td>
+                    <td style="padding:8px;text-align:right;color:#e8372a;font-weight:700;border-top:1px solid rgba(255,255,255,.08)">${defTotal}</td></tr>
                 </tbody></table>`
-            :`<div style="font-size:12px;color:var(--soft);font-style:italic;padding:10px 0">✅ Sin defectos registrados.</div>`;
+            :`<div style="font-size:12px;color:rgba(138,143,154,1);font-style:italic;padding:10px 0">✅ Sin defectos registrados.</div>`;
           const photoHtml=photos.length
-            ?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:8px">📸 EVIDENCIA FOTOGRÁFICA</div>
+            ?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:8px">📸 EVIDENCIA FOTOGRÁFICA</div>
                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">
-                 ${photos.map(ph=>`<div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--line)"><img src="${ph.dataUrl}" alt="${ph.name||''}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`).join('')}
+                 ${photos.map(ph=>`<div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><img src="${ph.dataUrl}" alt="${ph.name||''}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`).join('')}
                </div></div>`:'';
-          return`<div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden">
-            <div style="background:var(--card);padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+          return`<div style="background:rgba(26,28,32,1);border:1px solid rgba(46,49,56,1);border-radius:12px;margin-bottom:14px;overflow:hidden">
+            <div style="background:rgba(34,37,43,1);padding:14px 18px;border-bottom:1px solid rgba(46,49,56,1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
               <div>
-                <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure)">Reporte #${si+1} · ${s.submit_date||''}</div>
-                <div style="font-size:11px;color:var(--mid);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
+                <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:#f0f5f7">Reporte #${si+1} · ${s.submit_date||''}</div>
+                <div style="font-size:11px;color:rgba(138,143,154,1);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
               </div>
-              <button onclick="downloadClientReportPDF('${clientCode}',this.dataset.pn,this.dataset.sid)" data-pn="${(s.part_number||'').replace(/'/g,'')}" data-sid="${s.id}"
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                ${s.total_hours?`<span style="font-size:11px;font-weight:700;color:#f59e0b">⏱ ${s.total_hours}h</span>`:''}
+                ${s.part_defects?`<span style="font-size:10px;color:rgba(138,143,154,1);background:rgba(232,55,42,.12);border:1px solid rgba(232,55,42,.3);border-radius:6px;padding:3px 8px">🔍 ${s.part_defects}</span>`:''}
+                <button onclick="downloadClientReportPDF('${clientCode}','${s.job_id||''}')" style="background:#e8372a;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:Montserrat,sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">📄 Descargar PDF</button>
+              </div>
             </div>
             <div style="padding:16px 18px">
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
-                <div style="background:var(--bluebg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--blue)">${s.inspected||0}</div><div style="font-size:9px;color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:1px">Inspeccionados</div></div>
-                <div style="background:var(--greenbg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--green)">${s.approved||0}</div><div style="font-size:9px;color:var(--green);font-weight:700;text-transform:uppercase;letter-spacing:1px">Aprobados</div></div>
-                <div style="background:var(--redlo);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--red)">${s.rejected||0}</div><div style="font-size:9px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:1px">Rechazados</div></div>
-                <div style="background:var(--purplebg);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--purple)">${s.reworked||0}</div><div style="font-size:9px;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:1px">Retrabajados</div></div>
+                <div style="background:rgba(59,130,246,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#3b82f6">${s.inspected||0}</div><div style="font-size:9px;color:#3b82f6;font-weight:700;text-transform:uppercase;letter-spacing:1px">Inspeccionados</div></div>
+                <div style="background:rgba(34,197,94,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#22c55e">${s.approved||0}</div><div style="font-size:9px;color:#22c55e;font-weight:700;text-transform:uppercase;letter-spacing:1px">Aprobados</div></div>
+                <div style="background:rgba(232,55,42,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#e8372a">${s.rejected||0}</div><div style="font-size:9px;color:#e8372a;font-weight:700;text-transform:uppercase;letter-spacing:1px">Rechazados</div></div>
+                <div style="background:rgba(168,85,247,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#a855f7">${s.reworked||0}</div><div style="font-size:9px;color:#a855f7;font-weight:700;text-transform:uppercase;letter-spacing:1px">Retrabajados</div></div>
               </div>
-              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:6px">⚠️ DESGLOSE DE DEFECTOS / NÚMEROS DE SERIE Y LOTE</div>
+              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:6px">⚠️ DESGLOSE DE DEFECTOS / NÚMEROS DE SERIE Y LOTE</div>
               ${defRows}
               ${photoHtml}
-              ${s.notes?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:6px">📝 NOTAS</div><div style="background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--mid);font-style:italic">${s.notes}</div></div>`:''}
+              ${s.notes?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:6px">📝 NOTAS</div><div style="background:rgba(34,37,43,1);border:1px solid rgba(46,49,56,1);border-radius:8px;padding:10px 12px;font-size:12px;color:rgba(138,143,154,1);font-style:italic">${s.notes}</div></div>`:''}
             </div>
           </div>`;
+
         }).join('')}
       </div>`;
   }catch(e){
