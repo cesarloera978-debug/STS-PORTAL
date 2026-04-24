@@ -1838,86 +1838,136 @@ async function loadClientPortal(clientCode){
   }
 }
 /* ══ CLIENT PDF DOWNLOAD ══ */
-async function downloadClientReportPDF(clientCode, partNumber){
-  const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).eq('part_number',partNumber).order('created_at',{ascending:true});
+async function downloadClientReportPDF(clientCode, jobId){
+  if(!jobId){showToast('Este reporte no tiene Quote asignado.','err');return}
+  const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).eq('job_id',jobId).order('created_at',{ascending:true});
   if(!subs||!subs.length){showToast('No data found.','err');return}
-  showToast('Generating PDF…','info');  // ← moved here, after the check
+  showToast('Generating PDF...','info');
   const cfg=getConfig();
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const W=210,M=16,CW=W-M*2;let y=18;
-  const RED=[232,55,42],SOFT=[138,143,154],LIGHT=[34,37,43],BORDER=[46,49,56];
+  const RED=[232,55,42],SOFT=[138,143,154],PANEL=[26,28,32],CARD=[34,37,43],BORDER=[46,49,56];
   const last=subs[subs.length-1];
-  // Header
+  function checkPage(need){if(y+need>272){doc.addPage();y=20;}}
   doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
-  doc.text('STS SERVICES — INSPECTION REPORT',M,9);
+  doc.text('STS SERVICES - REPORTE DE INSPECCION',M,9);
   doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text(`${clientCode} · Part: ${partNumber}`,M,15);
-  doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});y=28;
-  // Client info box
-  doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
+  doc.text(clientCode+' - Quote: '+jobId,M,15);
+  doc.text('www.stslaredo.com'+(cfg.email?' - '+cfg.email:''),W-M,15,{align:'right'});
+  y=28;
+  doc.setFillColor(...PANEL);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
   doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
-  ['CLIENT CODE','CLIENT NAME','SERVICE START','SERVICE END'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
+  ['CODIGO CLIENTE','NOMBRE','INICIO SERVICIO','FIN SERVICIO'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
   doc.setTextColor(240,245,247);doc.setFontSize(10);doc.setFont('helvetica','bold');
   doc.text(clientCode,M+4,y+13);
   doc.setFont('helvetica','normal');doc.setFontSize(9);
-  doc.text(last.customer_name||'—',M+4+CW/4,y+13);
+  doc.text(last.customer_name||'-',M+4+CW/4,y+13);
   const dates=subs.map(s=>s.service_start).filter(Boolean).sort();
   const endDates=subs.map(s=>s.service_end).filter(Boolean).sort();
-  doc.text(dates[0]||'—',M+4+CW/2,y+13);
-  doc.text(endDates[endDates.length-1]||'—',M+4+3*CW/4,y+13);
+  doc.text(dates[0]||'-',M+4+CW/2,y+13);
+  doc.text(endDates[endDates.length-1]||'-',M+4+3*CW/4,y+13);
   y+=24;
-  // Totals
-  let tI=0,tA=0,tR=0,tRw=0;
-  subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0});
-  const bw=(CW-9)/4;
-  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('TOTALS',M,y+1);y+=4;
-  [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
+  let tI=0,tA=0,tR=0,tRw=0,tH=0;
+  subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0;tH+=parseFloat(s.total_hours)||0;});
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);
+  doc.text('TOTALES DE COTIZACION - '+subs.length+' REPORTE'+(subs.length!==1?'S':''),M,y+1);y+=4;
+  const bw=(CW-12)/5;
+  [[tI,'INSPECCIONADOS',[59,130,246]],[tA,'APROBADOS',[34,197,94]],[tR,'RECHAZADOS',[232,55,42]],[tRw,'RETRABAJADOS',[168,85,247]],[tH.toFixed(1),'HORAS TOTALES',[245,158,11]]].forEach(([val,lbl,c],i)=>{
     const bx=M+i*(bw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
-    doc.setFontSize(14);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
-  });y+=22;
-  // Defects
-  const defMap={};
-  subs.forEach(s=>(s.defects||[]).forEach(d=>{defMap[d.desc]=(defMap[d.desc]||0)+d.qty}));
-  const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
-  if(defEntries.length){
-    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('DEFECT BREAKDOWN',M+6,y+4.5);y+=10;
-    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
-    doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
-    doc.text('DEFECT',M+4,y+3.5);doc.text('QTY',M+120,y+3.5);doc.text('% OF REJECTED',M+150,y+3.5);y+=5;
-    defEntries.forEach(([desc,qty],i)=>{
-      doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);doc.rect(M,y,CW,5,'F');
-      doc.setTextColor(200,210,220);doc.setFontSize(8);doc.setFont('helvetica','normal');
-      doc.text(desc,M+4,y+3.5);doc.text(String(qty),M+120,y+3.5);
-      doc.text(tR?((qty/tR)*100).toFixed(1)+'%':'—',M+150,y+3.5);y+=5;
-    });y+=6;
-  }
-  // Photos
-  const photosAll=subs.flatMap(s=>s.photos||[]);
-  if(photosAll.length){
-    if(y>220){doc.addPage();y=20}
-    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('PHOTO EVIDENCE',M+6,y+4.5);y+=10;
-    const imgW=40,imgH=32,gap=4;let ix=0;
-    for(let ph of photosAll){try{doc.addImage(ph.dataUrl,'JPEG',M+(ix%4)*(imgW+gap),y+Math.floor(ix/4)*(imgH+gap),imgW,imgH)}catch(e){}ix++}
-    y+=Math.ceil(photosAll.length/4)*(imgH+gap)+4;
-  }
-  // Official release note
-  if(y>260){doc.addPage();y=20}
-  doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,16,2,2,'FD');
-  doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('OFFICIAL RELEASE',M+4,y+5);
+    doc.setTextColor(255,255,255);doc.setFontSize(5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
+    doc.setFontSize(12);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
+  });y+=24;
+  subs.forEach((s,si)=>{
+    checkPage(30);
+    doc.setFillColor(...CARD);doc.roundedRect(M,y,CW,10,2,2,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text('Reporte #'+(si+1)+' - '+((s.submit_date||'').split(',')[0]||''),M+4,y+6.5);
+    doc.setFontSize(8);doc.setTextColor(245,158,11);
+    doc.text('Horas: '+(s.total_hours||'0'),W-M-4,y+6.5,{align:'right'});
+    doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(...SOFT);
+    doc.text('PN: '+(s.part_number||'-')+(s.part_description?' - '+s.part_description:'')+' | ID: '+(s.form_id||''),M+4,y+9.5);
+    y+=13;
+    checkPage(16);
+    const sw=(CW-9)/4;
+    [[s.inspected||0,'INSPECCIONADOS',[59,130,246]],[s.approved||0,'APROBADOS',[34,197,94]],[s.rejected||0,'RECHAZADOS',[232,55,42]],[s.reworked||0,'RETRABAJADOS',[168,85,247]]].forEach(([val,lbl,c],i)=>{
+      const bx=M+i*(sw+3);doc.setFillColor(Math.round(c[0]/5),Math.round(c[1]/5),Math.round(c[2]/5));doc.roundedRect(bx,y,sw,14,1,1,'F');
+      doc.setTextColor(...c);doc.setFontSize(5);doc.setFont('helvetica','bold');doc.text(lbl,bx+sw/2,y+4,{align:'center'});
+      doc.setFontSize(11);doc.text(String(val),bx+sw/2,y+11,{align:'center'});
+    });y+=17;
+    checkPage(10);
+    doc.setFillColor(...PANEL);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,8,1,1,'FD');
+    doc.setTextColor(...SOFT);doc.setFontSize(6);doc.setFont('helvetica','bold');
+    doc.text('INFORMACION DE PARTE:',M+3,y+5);
+    doc.setFont('helvetica','normal');doc.setTextColor(200,210,220);
+    const partDefects=(s.part_defects&&s.part_defects.trim())?s.part_defects:'Sin defecto registrado en parte';
+    const partLine='PN: '+(s.part_number||'-')+(s.part_description?' | '+s.part_description:'')+' | Defecto: '+partDefects;
+    doc.text(partLine.substring(0,105),M+42,y+5);
+    y+=11;
+    const defects=(s.defects||[]);
+    const hasDefects=defects.some(d=>(d.serial||d.lot||(d.desc&&d.desc!=='-'&&d.desc!=='--')));
+    checkPage(12);
+    doc.setFillColor(...RED);doc.rect(M,y,3,5,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+    doc.text('DESGLOSE DE DEFECTOS / NUMEROS DE SERIE Y LOTE',M+6,y+3.8);y+=8;
+    if(!hasDefects){
+      doc.setFillColor(...PANEL);doc.roundedRect(M,y,CW,6,1,1,'F');
+      doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','italic');
+      doc.text('Sin defectos registrados.',M+4,y+4);y+=9;
+    } else {
+      checkPage(8);
+      doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(...SOFT);doc.setFontSize(6);doc.setFont('helvetica','bold');
+      doc.text('SERIE #',M+3,y+3.5);doc.text('LOTE/BATCH',M+38,y+3.5);doc.text('DEFECTO',M+78,y+3.5);doc.text('CODIGO',M+138,y+3.5);doc.text('CANT.',M+163,y+3.5);y+=5;
+      defects.forEach((d,di)=>{
+        if(!d.serial&&!d.lot&&(!d.desc||d.desc==='-'||d.desc==='--'))return;
+        checkPage(5);
+        doc.setFillColor(di%2===0?34:28,di%2===0?37:30,di%2===0?43:36);doc.rect(M,y,CW,5,'F');
+        doc.setTextColor(200,210,220);doc.setFontSize(6.5);doc.setFont('helvetica','normal');
+        doc.text(String(d.serial||'-').substring(0,18),M+3,y+3.5);
+        doc.text(String(d.lot||'-').substring(0,18),M+38,y+3.5);
+        doc.text(String(d.desc||'-').substring(0,30),M+78,y+3.5);
+        doc.text(String(d.code||'-').substring(0,10),M+138,y+3.5);
+        doc.setTextColor(232,55,42);doc.setFont('helvetica','bold');
+        doc.text(String(d.qty||0),M+163,y+3.5);y+=5;
+      });
+      const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
+      doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(...SOFT);doc.setFontSize(6);doc.setFont('helvetica','bold');
+      doc.text('TOTAL DEFECTOS',M+100,y+3.5);
+      doc.setTextColor(232,55,42);doc.text(String(defTotal),M+163,y+3.5);y+=8;
+    }
+    if(s.notes){
+      checkPage(10);
+      doc.setFillColor(...PANEL);doc.roundedRect(M,y,CW,9,1,1,'FD');
+      doc.setTextColor(...SOFT);doc.setFontSize(6);doc.setFont('helvetica','bold');doc.text('NOTAS:',M+3,y+3.5);
+      doc.setFont('helvetica','normal');doc.setTextColor(200,210,220);
+      doc.text(String(s.notes).substring(0,120),M+20,y+3.5);y+=12;
+    }
+    const photos=(s.photos||[]).slice(0,4);
+    if(photos.length){
+      checkPage(36);
+      doc.setFillColor(...RED);doc.rect(M,y,3,5,'F');
+      doc.setTextColor(240,245,247);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+      doc.text('EVIDENCIA FOTOGRAFICA',M+6,y+3.8);y+=8;
+      const imgW=40,imgH=30,gap=4;
+      photos.forEach((ph,ix)=>{try{doc.addImage(ph.dataUrl,'JPEG',M+ix*(imgW+gap),y,imgW,imgH);}catch(e){}});
+      y+=imgH+8;
+    }
+    y+=4;
+  });
+  checkPage(20);
+  doc.setFillColor(...PANEL);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,16,2,2,'FD');
+  doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('LIBERACION OFICIAL',M+4,y+5);
   doc.setTextColor(240,245,247);doc.setFont('helvetica','normal');doc.setFontSize(8);
-  doc.text('This report has been reviewed and officially released by STS Services management.',M+4,y+11);y+=22;
-  // Footer
+  doc.text('Este reporte ha sido revisado y liberado oficialmente por STS Services.',M+4,y+11);y+=22;
   doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text('STS Services  ·  www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W/2,289,{align:'center'});
-  doc.text('Confidential Client Report — Generated '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
-  doc.save(`STS_Report_${clientCode}_PN${partNumber}_${new Date().toISOString().split('T')[0]}.pdf`);
-  showToast('📄 Report downloaded!','info');
+  doc.text('STS Services - www.stslaredo.com'+(cfg.email?' - '+cfg.email:''),W/2,289,{align:'center'});
+  doc.text('Reporte Confidencial - Generado el '+new Date().toLocaleDateString('es-MX'),W/2,293,{align:'center'});
+  doc.save('STS_Report_'+clientCode+'_Quote'+jobId+'_'+new Date().toISOString().split('T')[0]+'.pdf');
+  showToast('Reporte descargado!','info');
 }
 
 /* ══ PAYROLL ══ */
@@ -2256,11 +2306,10 @@ function downloadClientPDF(){
   if(!currentClientCode)return;
   // Get all unique part numbers for this client, download combined PDF
   const subs=allSubmissions.filter(s=>s.customer_code===currentClientCode);
-  const partNumbers=[...new Set(subs.map(s=>s.part_number).filter(Boolean))];
-  if(!partNumbers.length){showToast('No data found.','err');return;}
-  // Download one PDF per part number
-  partNumbers.forEach((pn,i)=>{
-    setTimeout(()=>downloadClientReportPDF(currentClientCode,pn),i*500);
+  const jobIds=[...new Set(subs.map(s=>s.job_id).filter(Boolean))];
+  if(!jobIds.length){showToast('No data found.','err');return;}
+  jobIds.forEach((jid,i)=>{
+    setTimeout(()=>downloadClientReportPDF(currentClientCode,jid),i*500);
   });
 }
 
