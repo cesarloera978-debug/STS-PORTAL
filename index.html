@@ -1770,7 +1770,7 @@ async function loadClientPortal(clientCode){
       area.innerHTML=`<div style="text-align:center;padding:60px 20px">
         <div style="font-size:56px;margin-bottom:16px">🔒</div>
         <div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:800;color:var(--white);margin-bottom:10px">Reportes No Disponibles Aún</div>
-        <div style="font-size:14px;color:var(--mid);max-width:400px;margin:0 auto;line-height:1.7">Sus reportes de inspección están siendo revisados por nuestro equipo. Se le notificará una vez que hayan sido aprobados y publicados. Por favor regrese pronto o comuníquese directamente con STS Services.</div>
+        <div style="font-size:14px;color:var(--mid);max-width:400px;margin:0 auto;line-height:1.7">Sus reportes de inspección están siendo revisados por nuestro equipo. Se le notificará una vez que hayan sido aprobados y publicados.</div>
         <div style="margin-top:24px"><a href="https://www.stslaredo.com" target="_blank" style="color:var(--red);text-decoration:none;font-weight:600">www.stslaredo.com</a></div>
       </div>`;
       return;
@@ -1780,69 +1780,166 @@ async function loadClientPortal(clientCode){
       area.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No se encontraron reportes para su cuenta.</div>';
       return;
     }
-    area.innerHTML=`
-      <div id="clientSubsList">
-        ${subs.map((s,si)=>{
-          const defects=s.defects||[];
-          const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
-          const photos=s.photos||[];
-          const hasDefects=defects.some(d=>d.serial||d.lot||(d.desc&&d.desc!=='—'&&d.desc!=='--'));
-          const defRows=hasDefects
-            ?`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
-                <thead><tr>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Serie #</th>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Lote / Batch</th>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Defecto</th>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Código</th>
-                  <th style="text-align:right;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:#e8372a;font-size:10px;text-transform:uppercase;letter-spacing:1px">Cant.</th>
-                </tr></thead>
-                <tbody>${defects.map((d,di)=>`<tr style="background:${di%2===0?'rgba(255,255,255,.02)':'transparent'}">
-                  <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.serial||'—'}</td>
-                  <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.lot||'—'}</td>
-                  <td style="padding:6px 8px;color:#e2e8f0">${d.desc||'—'}</td>
-                  <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.code||'—'}</td>
-                  <td style="padding:6px 8px;text-align:right;color:#e8372a;font-weight:700">${d.qty||0}</td>
-                </tr>`).join('')}
-                <tr><td colspan="4" style="padding:8px;text-align:right;font-size:10px;color:rgba(138,143,154,1);font-weight:700;border-top:1px solid rgba(255,255,255,.08)">TOTAL DEFECTOS</td>
-                    <td style="padding:8px;text-align:right;color:#e8372a;font-weight:700;border-top:1px solid rgba(255,255,255,.08)">${defTotal}</td></tr>
-                </tbody></table>`
-            :`<div style="font-size:12px;color:rgba(138,143,154,1);font-style:italic;padding:10px 0">✅ Sin defectos registrados.</div>`;
-          const photoHtml=photos.length
-            ?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:8px">📸 EVIDENCIA FOTOGRÁFICA</div>
-               <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">
-                 ${photos.map(ph=>`<div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><img src="${ph.dataUrl}" alt="${ph.name||''}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`).join('')}
-               </div></div>`:'';
-          return`<div style="background:rgba(26,28,32,1);border:1px solid rgba(46,49,56,1);border-radius:12px;margin-bottom:14px;overflow:hidden">
-            <div style="background:rgba(34,37,43,1);padding:14px 18px;border-bottom:1px solid rgba(46,49,56,1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-              <div>
-                <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:#f0f5f7">Reporte #${si+1} · ${s.submit_date||''}</div>
-                <div style="font-size:11px;color:rgba(138,143,154,1);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                ${s.total_hours?`<span style="font-size:11px;font-weight:700;color:#f59e0b">⏱ ${s.total_hours}h</span>`:''}
-                ${s.part_defects?`<span style="font-size:10px;color:rgba(138,143,154,1);background:rgba(232,55,42,.12);border:1px solid rgba(232,55,42,.3);border-radius:6px;padding:3px 8px">🔍 ${s.part_defects}</span>`:''}
-                <button onclick="downloadClientReportPDF('${clientCode}','${s.job_id||''}')" style="background:#e8372a;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:Montserrat,sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">📄 Descargar PDF</button>
-              </div>
-            </div>
-            <div style="padding:16px 18px">
-              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
-                <div style="background:rgba(59,130,246,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#3b82f6">${s.inspected||0}</div><div style="font-size:9px;color:#3b82f6;font-weight:700;text-transform:uppercase;letter-spacing:1px">Inspeccionados</div></div>
-                <div style="background:rgba(34,197,94,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#22c55e">${s.approved||0}</div><div style="font-size:9px;color:#22c55e;font-weight:700;text-transform:uppercase;letter-spacing:1px">Aprobados</div></div>
-                <div style="background:rgba(232,55,42,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#e8372a">${s.rejected||0}</div><div style="font-size:9px;color:#e8372a;font-weight:700;text-transform:uppercase;letter-spacing:1px">Rechazados</div></div>
-                <div style="background:rgba(168,85,247,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#a855f7">${s.reworked||0}</div><div style="font-size:9px;color:#a855f7;font-weight:700;text-transform:uppercase;letter-spacing:1px">Retrabajados</div></div>
-              </div>
-              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:6px">⚠️ DESGLOSE DE DEFECTOS / NÚMEROS DE SERIE Y LOTE</div>
-              ${defRows}
-              ${photoHtml}
-              ${s.notes?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:6px">📝 NOTAS</div><div style="background:rgba(34,37,43,1);border:1px solid rgba(46,49,56,1);border-radius:8px;padding:10px 12px;font-size:12px;color:rgba(138,143,154,1);font-style:italic">${s.notes}</div></div>`:''}
-            </div>
-          </div>`;
 
-        }).join('')}
+    // ── Helper: get month key from service_start ──
+    function monthKey(s){
+      const raw=s.service_start||s.created_at||'';
+      const d=new Date(raw);
+      if(isNaN(d.getTime()))return'Sin Fecha';
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    }
+    function monthLabel(key){
+      if(key==='Sin Fecha')return'📁 Sin Fecha';
+      const [y,m]=key.split('-');
+      const names=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      return'📅 '+names[parseInt(m)-1]+' '+y;
+    }
+
+    // ── Group subs by month → then by job_id ──
+    const months={};
+    subs.forEach(s=>{
+      const mk=monthKey(s);
+      if(!months[mk])months[mk]={key:mk,jobs:{}};
+      const jid=s.job_id||'sin-quote';
+      if(!months[mk].jobs[jid])months[mk].jobs[jid]={job_id:jid,subs:[]};
+      months[mk].jobs[jid].subs.push(s);
+    });
+    const monthKeys=Object.keys(months).filter(k=>k!=='Sin Fecha').sort().reverse();
+    if(months['Sin Fecha'])monthKeys.push('Sin Fecha');
+
+    // ── Build submission detail card ──
+    function buildSubCard(s,si){
+      const defects=s.defects||[];
+      const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
+      const photos=s.photos||[];
+      const hasDefects=defects.some(d=>d.serial||d.lot||(d.desc&&d.desc!=='—'&&d.desc!=='--'));
+      const defRows=hasDefects
+        ?`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
+            <thead><tr>
+              <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Serie #</th>
+              <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Lote / Batch</th>
+              <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Defecto</th>
+              <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Código</th>
+              <th style="text-align:right;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:#e8372a;font-size:10px;text-transform:uppercase;letter-spacing:1px">Cant.</th>
+            </tr></thead>
+            <tbody>${defects.map((d,di)=>`<tr style="background:${di%2===0?'rgba(255,255,255,.02)':'transparent'}">
+              <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.serial||'—'}</td>
+              <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.lot||'—'}</td>
+              <td style="padding:6px 8px;color:#e2e8f0">${d.desc||'—'}</td>
+              <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.code||'—'}</td>
+              <td style="padding:6px 8px;text-align:right;color:#e8372a;font-weight:700">${d.qty||0}</td>
+            </tr>`).join('')}
+            <tr><td colspan="4" style="padding:8px;text-align:right;font-size:10px;color:rgba(138,143,154,1);font-weight:700;border-top:1px solid rgba(255,255,255,.08)">TOTAL DEFECTOS</td>
+                <td style="padding:8px;text-align:right;color:#e8372a;font-weight:700;border-top:1px solid rgba(255,255,255,.08)">${defTotal}</td></tr>
+            </tbody></table>`
+        :`<div style="font-size:12px;color:rgba(138,143,154,1);font-style:italic;padding:10px 0">✅ Sin defectos registrados.</div>`;
+      const photoHtml=photos.length
+        ?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:8px">📸 EVIDENCIA FOTOGRÁFICA</div>
+           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">
+             ${photos.map(ph=>`<div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><img src="${ph.dataUrl}" alt="${ph.name||''}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`).join('')}
+           </div></div>`:'';
+      return`<div style="background:rgba(22,24,28,1);border:1px solid rgba(46,49,56,1);border-radius:10px;margin-bottom:10px;overflow:hidden">
+        <div style="background:rgba(34,37,43,1);padding:12px 16px;border-bottom:1px solid rgba(46,49,56,1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-family:'Montserrat',sans-serif;font-size:12px;font-weight:800;color:#f0f5f7">Reporte #${si+1} · ${s.submit_date||''}</div>
+            <div style="font-size:10px;color:rgba(138,143,154,1);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ${s.total_hours?`<span style="font-size:11px;font-weight:700;color:#f59e0b">⏱ ${s.total_hours}h</span>`:''}
+            ${s.part_defects?`<span style="font-size:10px;color:rgba(138,143,154,1);background:rgba(232,55,42,.12);border:1px solid rgba(232,55,42,.3);border-radius:6px;padding:3px 8px">🔍 ${s.part_defects}</span>`:''}
+          </div>
+        </div>
+        <div style="padding:14px 16px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">
+            <div style="background:rgba(59,130,246,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:900;color:#3b82f6">${s.inspected||0}</div><div style="font-size:8px;color:#3b82f6;font-weight:700;text-transform:uppercase;letter-spacing:1px">Inspeccionados</div></div>
+            <div style="background:rgba(34,197,94,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:900;color:#22c55e">${s.approved||0}</div><div style="font-size:8px;color:#22c55e;font-weight:700;text-transform:uppercase;letter-spacing:1px">Aprobados</div></div>
+            <div style="background:rgba(232,55,42,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:900;color:#e8372a">${s.rejected||0}</div><div style="font-size:8px;color:#e8372a;font-weight:700;text-transform:uppercase;letter-spacing:1px">Rechazados</div></div>
+            <div style="background:rgba(168,85,247,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:900;color:#a855f7">${s.reworked||0}</div><div style="font-size:8px;color:#a855f7;font-weight:700;text-transform:uppercase;letter-spacing:1px">Retrabajados</div></div>
+          </div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:6px">⚠️ DESGLOSE DE DEFECTOS / NÚMEROS DE SERIE Y LOTE</div>
+          ${defRows}
+          ${photoHtml}
+          ${s.notes?`<div style="margin-top:10px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:6px">📝 NOTAS</div><div style="background:rgba(34,37,43,1);border:1px solid rgba(46,49,56,1);border-radius:8px;padding:10px 12px;font-size:12px;color:rgba(138,143,154,1);font-style:italic">${s.notes}</div></div>`:''}
+        </div>
       </div>`;
+    }
+
+    // ── Build quote folder card ──
+    function buildQuoteCard(jid, jobSubs){
+      const totalI=jobSubs.reduce((a,s)=>a+(s.inspected||0),0);
+      const totalA=jobSubs.reduce((a,s)=>a+(s.approved||0),0);
+      const totalR=jobSubs.reduce((a,s)=>a+(s.rejected||0),0);
+      const totalH=jobSubs.reduce((a,s)=>a+(parseFloat(s.total_hours)||0),0);
+      const quoteId=jid==='sin-quote'?'Sin Quote Asignado':jid;
+      const uid='q-'+jid.replace(/[^a-z0-9]/gi,'_');
+      const subsHtml=jobSubs.map((s,si)=>buildSubCard(s,si)).join('');
+      return`<div style="background:rgba(26,28,32,1);border:1px solid rgba(46,49,56,1);border-radius:12px;margin-bottom:12px;overflow:hidden">
+        <!-- Quote header -->
+        <div onclick="cpToggle('${uid}')" style="background:rgba(30,33,40,1);padding:14px 18px;border-bottom:1px solid rgba(46,49,56,1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;cursor:pointer">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:20px">📋</div>
+            <div>
+              <div style="font-family:'Montserrat',sans-serif;font-size:14px;font-weight:800;color:#f0f5f7">${quoteId}</div>
+              <div style="font-size:11px;color:rgba(138,143,154,1);margin-top:2px">${jobSubs.length} reporte${jobSubs.length!==1?'s':''} · ${totalI.toLocaleString()} inspeccionados</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:10px;color:#22c55e;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:6px;padding:3px 10px;font-weight:700">${totalA.toLocaleString()} ✓</span>
+            <span style="font-size:10px;color:#e8372a;background:rgba(232,55,42,.12);border:1px solid rgba(232,55,42,.3);border-radius:6px;padding:3px 10px;font-weight:700">${totalR.toLocaleString()} ✗</span>
+            ${totalH>0?`<span style="font-size:10px;color:#f59e0b;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:3px 10px;font-weight:700">⏱ ${totalH.toFixed(1)}h</span>`:''}
+            <button onclick="event.stopPropagation();downloadClientReportPDF('${clientCode}','${jid==='sin-quote'?'':jid}')" style="background:#e8372a;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:Montserrat,sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">📄 Descargar PDF</button>
+            <span id="${uid}-arrow" style="color:rgba(138,143,154,1);font-size:16px;transition:transform .2s">▼</span>
+          </div>
+        </div>
+        <!-- Submissions (collapsed by default) -->
+        <div id="${uid}" style="display:none;padding:14px 16px">
+          ${subsHtml}
+        </div>
+      </div>`;
+    }
+
+    // ── Build month section ──
+    function buildMonthSection(mk){
+      const mo=months[mk];
+      const jobIds=Object.keys(mo.jobs);
+      const totalSubs=jobIds.reduce((a,jid)=>a+mo.jobs[jid].subs.length,0);
+      const totalI=jobIds.reduce((a,jid)=>a+mo.jobs[jid].subs.reduce((b,s)=>b+(s.inspected||0),0),0);
+      const mid='m-'+mk.replace(/[^a-z0-9]/gi,'_');
+      const quotesHtml=jobIds.map(jid=>buildQuoteCard(jid,mo.jobs[jid].subs)).join('');
+      return`<div style="margin-bottom:20px">
+        <!-- Month header -->
+        <div onclick="cpToggle('${mid}')" style="background:rgba(34,37,43,1);border:1px solid rgba(46,49,56,1);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="font-size:26px">🗂</div>
+            <div>
+              <div style="font-family:'Montserrat',sans-serif;font-size:16px;font-weight:800;color:#f0f5f7">${monthLabel(mk)}</div>
+              <div style="font-size:11px;color:rgba(138,143,154,1);margin-top:3px">${jobIds.length} quote${jobIds.length!==1?'s':''} · ${totalSubs} reporte${totalSubs!==1?'s':''} · ${totalI.toLocaleString()} piezas inspeccionadas</div>
+            </div>
+          </div>
+          <span id="${mid}-arrow" style="color:rgba(138,143,154,1);font-size:20px;transition:transform .2s">▼</span>
+        </div>
+        <!-- Quotes inside month (collapsed by default) -->
+        <div id="${mid}" style="display:none;padding:0 4px">
+          ${quotesHtml}
+        </div>
+      </div>`;
+    }
+
+    area.innerHTML=monthKeys.map(mk=>buildMonthSection(mk)).join('');
+
   }catch(e){
     area.innerHTML=`<div class="no-data"><div class="nd-ico">❌</div>Error al cargar reportes: ${e.message}</div>`;
   }
+}
+
+// Toggle expand/collapse for portal folders
+function cpToggle(id){
+  const el=document.getElementById(id);
+  const arrow=document.getElementById(id+'-arrow');
+  if(!el)return;
+  const open=el.style.display==='none';
+  el.style.display=open?'block':'none';
+  if(arrow)arrow.style.transform=open?'rotate(180deg)':'rotate(0deg)';
 }
 /* ══ CLIENT PDF DOWNLOAD ══ */
 async function downloadClientReportPDF(clientCode, jobId){
