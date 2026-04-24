@@ -415,7 +415,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
         <button class="nav-btn" onclick="showPage('overviewPage')" id="navOverview">📊 Overview</button>
         <button class="nav-btn" onclick="showPage('directoryPage')" id="navDirectory">📁 Clients</button>
         <button class="nav-btn" onclick="showPage('payrollPage')" id="navPayroll">💰 Payroll</button>
-       <button class="nav-btn" onclick="showPage('jobsPage')" id="navJobs">🗂 Quotes</button>
+       <button class="nav-btn" onclick="showPage('jobsPage')" id="navJobs">🗂 Jobs</button>
       </div>
     </div>
     <div class="topbar-right">
@@ -440,7 +440,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       <button class="mob-nav-btn" onclick="mobileNav('overviewPage')" id="mobNavOverview"><span class="mob-ico">📊</span> Overview</button>
       <button class="mob-nav-btn" onclick="mobileNav('directoryPage')" id="mobNavDirectory"><span class="mob-ico">📁</span> Client Directory</button>
       <button class="mob-nav-btn" onclick="mobileNav('payrollPage')" id="mobNavPayroll"><span class="mob-ico">💰</span> Payroll</button>
-      <button class="mob-nav-btn" onclick="mobileNav('jobsPage')" id="mobNavJobs"><span class="mob-ico">🗂</span> Quotes</button>
+      <button class="mob-nav-btn" onclick="mobileNav('jobsPage')" id="mobNavJobs"><span class="mob-ico">🗂</span> Jobs</button>
     </div>
     <div class="mob-divider"></div>
     <div class="mob-user-row">
@@ -498,7 +498,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   <span style="background:var(--blue);color:#fff;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;padding:4px 12px;border-radius:20px;text-transform:uppercase;flex-shrink:0">Job</span>
   <div style="flex:1;min-width:200px">
     <div class="field">
-      <label>Select Active Quote <span class="req">*</span></label>
+      <label>Select Active Job <span class="req">*</span></label>
       <select id="jobSelect" oninput="onJobSelect();updateProgress()" style="background:var(--dark);border-color:rgba(59,130,246,.4)">
         <option value="">— choose a job —</option>
       </select>
@@ -699,7 +699,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   <!-- LEVEL 0: Job Cards Grid (default) -->
   <div id="ovJobGrid">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">Select a Quote to view its summary</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">Select a Job to view its summary</div>
       <select id="ovCompanyFilter" onchange="renderOvJobGrid()" style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:7px 12px;color:var(--pure);font-size:12px;outline:none">
         <option value="all">All Companies</option>
         <option value="STS">STS Services</option>
@@ -712,12 +712,12 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   <!-- LEVEL 1: Job Detail -->
   <div id="ovJobDetail" style="display:none">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
-      <button onclick="backToOvGrid()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600">← Back to Quotes</button>
+      <button onclick="backToOvGrid()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600">← Back to Jobs</button>
       <div>
         <div id="ovDetailJobId" style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--pure)"></div>
         <div id="ovDetailJobDesc" style="font-size:13px;color:var(--mid)"></div>
       </div>
-      <button onclick="downloadJobPDF(currentOvJobId)" class="btn-primary" style="margin-left:auto">📄 Download Quote PDF</button>
+      <button onclick="downloadJobPDF(currentOvJobId)" class="btn-primary" style="margin-left:auto">📄 Download Job PDF</button>
     </div>
     <div class="stat-grid" id="statGrid">
       <div class="stat-box s-inspected"><div class="stat-label">Total Inspected</div><div class="stat-val" id="stInspected">—</div><div class="stat-sub">all submissions</div></div>
@@ -778,7 +778,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px" id="jobsBackRow">
     <button onclick="showPage('formPage')" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'">← Back to Form</button>
   </div>
-  <div class="pg-eyebrow">Quote Management</div><div class="pg-title">Quotes</div>
+  <div class="pg-eyebrow">Job Management</div><div class="pg-title">Jobs</div>
 </div>
   <div class="card" id="createJobCard" style="border-color:rgba(59,130,246,.3)">
     <div class="card-hd" style="background:rgba(59,130,246,.06)">
@@ -795,20 +795,20 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
            <option value="SLI" id="compOptSLI">SLI</option>
           </select>
         </div>
-        <div class="field"><label>Quote Date</label><input type="date" id="newJobDate"></div>
+        <div class="field"><label>Job Date</label><input type="date" id="newJobDate"></div>
         <div class="field"><label>Customer Code</label><input type="text" id="newJobCustCode" placeholder="e.g. STS001"></div>
         <div class="field"><label>Customer Name</label><input type="text" id="newJobCustName" placeholder="e.g. AMN"></div>
         <div class="field"><label>Service Start</label><input type="date" id="newJobSvcStart"></div>
         <div class="field"><label>Service End</label><input type="date" id="newJobSvcEnd"></div>
       </div>
       <div class="field" style="margin-bottom:14px">
-        <label>Quote Description</label>
+        <label>Job Description</label>
         <input type="text" id="newJobDesc" placeholder="e.g. Plant A — Intake manifold gasket inspection">
       </div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <div style="flex:1;min-width:160px">
           <div class="field" style="margin-bottom:0">
-            <label style="font-size:10px;letter-spacing:1.5px">Quote ID <span style="color:var(--soft);font-weight:400;text-transform:none;letter-spacing:0">(auto-filled · editable)</span></label>
+            <label style="font-size:10px;letter-spacing:1.5px">Job ID <span style="color:var(--soft);font-weight:400;text-transform:none;letter-spacing:0">(auto-filled · editable)</span></label>
             <input type="text" id="jobIdPreview" placeholder="e.g. STS04012026"
               style="font-family:'Montserrat',sans-serif;font-size:16px;font-weight:900;color:var(--blue);letter-spacing:1px;border-color:rgba(59,130,246,.4)"
               oninput="checkJobIdConflict()">
@@ -822,14 +822,14 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">Quotes</div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">Jobs</div>
     <div style="display:flex;gap:6px;margin-left:auto">
       <button class="wf-btn active" id="jobFilterActive" onclick="setJobListFilter('active')">Active</button>
       <button class="wf-btn" id="jobFilterClosed" onclick="setJobListFilter('closed')">Closed</button>
       <button class="wf-btn" id="jobFilterAll" onclick="setJobListFilter('all')">All</button>
     </div>
   </div>
-  <div id="jobsList"><div class="no-data"><div class="nd-ico">🗂</div>No quotes yet.</div></div>
+  <div id="jobsList"><div class="no-data"><div class="nd-ico">🗂</div>No jobs yet.</div></div>
 </div>
 
   <!-- ══ CLIENT DIRECTORY PAGE ══ -->
@@ -1017,9 +1017,9 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
       <div style="padding:20px">
         <input type="hidden" id="editSubId">
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Quote #</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Job / Quote #</div>
         <div class="field" style="margin-bottom:16px">
-        <label>Assign to Quote</label>
+        <label>Assign to Job</label>
         <select id="editJobId" style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--pure);width:100%;outline:none">
         <option value="">— unassigned —</option>
           </select>
@@ -1036,6 +1036,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
           <div class="field"><label>Part Number</label><input type="text" id="editPartNum"></div>
           <div class="field"><label>Part Description</label><input type="text" id="editPartDesc"></div>
           <div class="field"><label>Mfg Date</label><input type="date" id="editMfgDate"></div>
+          <div class="field"><label>Defects</label><input type="text" id="editPartDefects" placeholder="e.g. Scratch, crack…"></div>
         </div>
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Inspection Results</div>
         <div class="g4" style="margin-bottom:16px">
@@ -1513,7 +1514,7 @@ function collect(){
 /* ══ SUBMIT ══ */
 async function submitToSheets(){
   const d=collect();
-  if(!d.jobId){showToast('⚠ Select a Quote first.','err');return}
+  if(!d.jobId){showToast('⚠ Select a Job first.','err');return}
   if(!d.customerCode){showToast('⚠ Enter a Customer Code first.','err');return}
   if(!d.partNumber){showToast('⚠ Enter a Part Number in Card 01.','err');return}
   document.getElementById('btnTxt').style.display='none';
@@ -1999,7 +2000,7 @@ async function clearData(){
 function downloadJobPDF(jobId){
   if(!jobId){showToast('⚠ No job selected.','err');return;}
   const j=allJobs.find(x=>x.job_id===jobId);
-  if(!j){showToast('⚠ Quote not found.','err');return;}
+  if(!j){showToast('⚠ Job not found.','err');return;}
   const subs=allSubmissions.filter(s=>s.job_id===jobId);
   if(!subs.length){showToast('⚠ No submissions for this job.','err');return;}
   const cfg=getConfig();
@@ -2010,7 +2011,7 @@ function downloadJobPDF(jobId){
   // ── Header ──
   doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
-  doc.text('STS SERVICES — REPORTE DE COTIZACION',M,9);
+  doc.text('STS SERVICES — JOB REPORT',M,9);
   doc.setFontSize(7.5);doc.setFont('helvetica','normal');
   doc.text(j.job_id+(j.description?' · '+j.description:''),M,15);
   doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});
@@ -2018,7 +2019,7 @@ function downloadJobPDF(jobId){
   // ── Job Info Box ──
   doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
   doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
-  ['QUOTE ID','COMPANY','CLIENT','SERVICE DATES'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
+  ['JOB ID','COMPANY','CLIENT','SERVICE DATES'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
   doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');
   doc.text(j.job_id,M+4,y+13);
   doc.setFont('helvetica','normal');doc.setFontSize(8);
@@ -2031,7 +2032,7 @@ function downloadJobPDF(jobId){
   let tI=0,tA=0,tR=0,tRw=0,tH=0;
   subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0;tH+=parseFloat(s.total_hours)||0;});
   const bw=(CW-9)/4;
-  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('TOTALES DE COTIZACION — '+subs.length+' SUBMISSIONS',M,y+1);y+=4;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('JOB TOTALS — '+subs.length+' SUBMISSIONS',M,y+1);y+=4;
   [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
     const bx=M+i*(bw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
     doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
@@ -2110,9 +2111,9 @@ function downloadJobPDF(jobId){
   doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
   doc.text('STS Services  ·  www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W/2,289,{align:'center'});
-  doc.text('Quote Report: '+j.job_id+' · Generated '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
+  doc.text('Job Report: '+j.job_id+' · Generated '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
   doc.save('STS_Job_'+j.job_id+'_'+new Date().toISOString().split('T')[0]+'.pdf');
-  showToast('📄 Quote PDF downloaded!','info');
+  showToast('📄 Job PDF downloaded!','info');
 }
 
 /* ══ PDF — MAIN REPORT ══ */
@@ -2313,6 +2314,7 @@ if(!isAdmin&&!isAllowedOperator){
   document.getElementById('editPartNum').value=s.part_number||'';
   document.getElementById('editPartDesc').value=s.part_description||'';
   document.getElementById('editMfgDate').value=s.mfg_date||'';
+  document.getElementById('editPartDefects').value=s.part_defects||'';
   document.getElementById('editInspected').value=s.inspected||0;
   document.getElementById('editApproved').value=s.approved||0;
   document.getElementById('editRejected').value=s.rejected||0;
@@ -2444,6 +2446,7 @@ async function saveEditedReport(){
     service_end:document.getElementById('editSvcEnd').value,
     part_number:document.getElementById('editPartNum').value.trim(),
     part_description:document.getElementById('editPartDesc').value.trim(),
+    part_defects:document.getElementById('editPartDefects').value.trim(),
     mfg_date:document.getElementById('editMfgDate').value,
     inspected:parseInt(document.getElementById('editInspected').value)||0,
     approved:parseInt(document.getElementById('editApproved').value)||0,
@@ -2721,7 +2724,7 @@ async function createJob(){
   const desc=document.getElementById('newJobDesc')?.value.trim();
   const jobId=getGeneratedJobId();
   if(!company){showToast('⚠ Select a company.','err');return;}
-  if(!jobId){showToast('⚠ Quote ID not generated.','err');return;}
+  if(!jobId){showToast('⚠ Job ID not generated.','err');return;}
   if(allJobs.find(j=>j.job_id===jobId)){
     showToast('⚠ '+jobId+' already exists. Select it from the list.','err');
     renderJobsList();document.getElementById('jobsList')?.scrollIntoView({behavior:'smooth'});return;
@@ -2736,7 +2739,7 @@ async function createJob(){
     ['newJobCompany','newJobDate','newJobCustCode','newJobCustName','newJobSvcStart','newJobSvcEnd','newJobDesc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     const prev=document.getElementById('jobIdPreview');
     if(prev){prev.value='';delete prev.dataset.manualEdit;prev.style.color='var(--blue)';prev.style.borderColor='';}
-    showToast('✅ Quote '+jobId+' created!','ok');
+    showToast('✅ Job '+jobId+' created!','ok');
   }catch(e){showToast('❌ Failed: '+e.message,'err');}
   finally{document.getElementById('createJobTxt').style.display='inline';document.getElementById('createJobSpin').style.display='none';}
 }
@@ -2804,7 +2807,7 @@ function populateJobSelectors(){
   }
   const ovSel=document.getElementById('overviewJobFilter');
   if(ovSel){
-    const cur=ovSel.value;ovSel.innerHTML='<option value="all">All Quotes</option>';
+    const cur=ovSel.value;ovSel.innerHTML='<option value="all">All Jobs</option>';
     allJobs.forEach(j=>{
       const opt=document.createElement('option');
       opt.value=j.job_id;
@@ -2867,7 +2870,7 @@ function renderOvJobGrid(){
   if(compFilter!=='all')jobs=jobs.filter(j=>j.company===compFilter);
   if(currentUser?.role==='admin3')jobs=jobs.filter(j=>j.company==='SLI');
   if(!jobs.length){
-    el.innerHTML='<div class="no-data"><div class="nd-ico">🗂</div>No quotes found. Create one in the Quotes tab.</div>';
+    el.innerHTML='<div class="no-data"><div class="nd-ico">🗂</div>No jobs found. Create one in the Jobs tab.</div>';
     return;
   }
   el.innerHTML=jobs.map(j=>{
@@ -2955,7 +2958,7 @@ async function deleteJob(id,jobId){
     allJobs=allJobs.filter(x=>x.id!==id);
     populateJobSelectors();
     renderJobsList();
-    showToast('🗑 Quote '+jobId+' deleted.','info');
+    showToast('🗑 Job '+jobId+' deleted.','info');
   }catch(e){showToast('❌ '+e.message,'err');}
 }  
   
