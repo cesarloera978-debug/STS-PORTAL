@@ -415,7 +415,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
         <button class="nav-btn" onclick="showPage('overviewPage')" id="navOverview">📊 Overview</button>
         <button class="nav-btn" onclick="showPage('directoryPage')" id="navDirectory">📁 Clients</button>
         <button class="nav-btn" onclick="showPage('payrollPage')" id="navPayroll">💰 Payroll</button>
-       <button class="nav-btn" onclick="showPage('jobsPage')" id="navJobs">🗂 Jobs</button>
+       <button class="nav-btn" onclick="showPage('jobsPage')" id="navJobs">🗂 Quotes</button>
       </div>
     </div>
     <div class="topbar-right">
@@ -440,7 +440,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       <button class="mob-nav-btn" onclick="mobileNav('overviewPage')" id="mobNavOverview"><span class="mob-ico">📊</span> Overview</button>
       <button class="mob-nav-btn" onclick="mobileNav('directoryPage')" id="mobNavDirectory"><span class="mob-ico">📁</span> Client Directory</button>
       <button class="mob-nav-btn" onclick="mobileNav('payrollPage')" id="mobNavPayroll"><span class="mob-ico">💰</span> Payroll</button>
-      <button class="mob-nav-btn" onclick="mobileNav('jobsPage')" id="mobNavJobs"><span class="mob-ico">🗂</span> Jobs</button>
+      <button class="mob-nav-btn" onclick="mobileNav('jobsPage')" id="mobNavJobs"><span class="mob-ico">🗂</span> Quotes</button>
     </div>
     <div class="mob-divider"></div>
     <div class="mob-user-row">
@@ -498,7 +498,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   <span style="background:var(--blue);color:#fff;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;padding:4px 12px;border-radius:20px;text-transform:uppercase;flex-shrink:0">Job</span>
   <div style="flex:1;min-width:200px">
     <div class="field">
-      <label>Select Active Job <span class="req">*</span></label>
+      <label>Select Active Quote <span class="req">*</span></label>
       <select id="jobSelect" oninput="onJobSelect();updateProgress()" style="background:var(--dark);border-color:rgba(59,130,246,.4)">
         <option value="">— choose a job —</option>
       </select>
@@ -699,7 +699,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   <!-- LEVEL 0: Job Cards Grid (default) -->
   <div id="ovJobGrid">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">Select a Job to view its summary</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">Select a Quote to view its summary</div>
       <select id="ovCompanyFilter" onchange="renderOvJobGrid()" style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:7px 12px;color:var(--pure);font-size:12px;outline:none">
         <option value="all">All Companies</option>
         <option value="STS">STS Services</option>
@@ -712,12 +712,12 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   <!-- LEVEL 1: Job Detail -->
   <div id="ovJobDetail" style="display:none">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
-      <button onclick="backToOvGrid()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600">← Back to Jobs</button>
+      <button onclick="backToOvGrid()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600">← Back to Quotes</button>
       <div>
         <div id="ovDetailJobId" style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:var(--pure)"></div>
         <div id="ovDetailJobDesc" style="font-size:13px;color:var(--mid)"></div>
       </div>
-      <button onclick="downloadJobPDF(currentOvJobId)" class="btn-primary" style="margin-left:auto">📄 Download Job PDF</button>
+      <button onclick="downloadJobPDF(currentOvJobId)" class="btn-primary" style="margin-left:auto">📄 Download Quote PDF</button>
     </div>
     <div class="stat-grid" id="statGrid">
       <div class="stat-box s-inspected"><div class="stat-label">Total Inspected</div><div class="stat-val" id="stInspected">—</div><div class="stat-sub">all submissions</div></div>
@@ -778,7 +778,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px" id="jobsBackRow">
     <button onclick="showPage('formPage')" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'">← Back to Form</button>
   </div>
-  <div class="pg-eyebrow">Job Management</div><div class="pg-title">Jobs</div>
+  <div class="pg-eyebrow">Quote Management</div><div class="pg-title">Quotes</div>
 </div>
   <div class="card" id="createJobCard" style="border-color:rgba(59,130,246,.3)">
     <div class="card-hd" style="background:rgba(59,130,246,.06)">
@@ -795,20 +795,20 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
            <option value="SLI" id="compOptSLI">SLI</option>
           </select>
         </div>
-        <div class="field"><label>Job Date</label><input type="date" id="newJobDate"></div>
+        <div class="field"><label>Quote Date</label><input type="date" id="newJobDate"></div>
         <div class="field"><label>Customer Code</label><input type="text" id="newJobCustCode" placeholder="e.g. STS001"></div>
         <div class="field"><label>Customer Name</label><input type="text" id="newJobCustName" placeholder="e.g. AMN"></div>
         <div class="field"><label>Service Start</label><input type="date" id="newJobSvcStart"></div>
         <div class="field"><label>Service End</label><input type="date" id="newJobSvcEnd"></div>
       </div>
       <div class="field" style="margin-bottom:14px">
-        <label>Job Description</label>
+        <label>Quote Description</label>
         <input type="text" id="newJobDesc" placeholder="e.g. Plant A — Intake manifold gasket inspection">
       </div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
         <div style="flex:1;min-width:160px">
           <div class="field" style="margin-bottom:0">
-            <label style="font-size:10px;letter-spacing:1.5px">Job ID <span style="color:var(--soft);font-weight:400;text-transform:none;letter-spacing:0">(auto-filled · editable)</span></label>
+            <label style="font-size:10px;letter-spacing:1.5px">Quote ID <span style="color:var(--soft);font-weight:400;text-transform:none;letter-spacing:0">(auto-filled · editable)</span></label>
             <input type="text" id="jobIdPreview" placeholder="e.g. STS04012026"
               style="font-family:'Montserrat',sans-serif;font-size:16px;font-weight:900;color:var(--blue);letter-spacing:1px;border-color:rgba(59,130,246,.4)"
               oninput="checkJobIdConflict()">
@@ -822,14 +822,14 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">Jobs</div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">Quotes</div>
     <div style="display:flex;gap:6px;margin-left:auto">
       <button class="wf-btn active" id="jobFilterActive" onclick="setJobListFilter('active')">Active</button>
       <button class="wf-btn" id="jobFilterClosed" onclick="setJobListFilter('closed')">Closed</button>
       <button class="wf-btn" id="jobFilterAll" onclick="setJobListFilter('all')">All</button>
     </div>
   </div>
-  <div id="jobsList"><div class="no-data"><div class="nd-ico">🗂</div>No jobs yet.</div></div>
+  <div id="jobsList"><div class="no-data"><div class="nd-ico">🗂</div>No quotes yet.</div></div>
 </div>
 
   <!-- ══ CLIENT DIRECTORY PAGE ══ -->
@@ -1017,9 +1017,9 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       </div>
       <div style="padding:20px">
         <input type="hidden" id="editSubId">
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Job / Quote #</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Quote #</div>
         <div class="field" style="margin-bottom:16px">
-        <label>Assign to Job</label>
+        <label>Assign to Quote</label>
         <select id="editJobId" style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--pure);width:100%;outline:none">
         <option value="">— unassigned —</option>
           </select>
@@ -1513,7 +1513,7 @@ function collect(){
 /* ══ SUBMIT ══ */
 async function submitToSheets(){
   const d=collect();
-  if(!d.jobId){showToast('⚠ Select a Job first.','err');return}
+  if(!d.jobId){showToast('⚠ Select a Quote first.','err');return}
   if(!d.customerCode){showToast('⚠ Enter a Customer Code first.','err');return}
   if(!d.partNumber){showToast('⚠ Enter a Part Number in Card 01.','err');return}
   document.getElementById('btnTxt').style.display='none';
@@ -1816,7 +1816,7 @@ async function loadClientPortal(clientCode){
                 <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure)">Reporte #${si+1} · ${s.submit_date||''}</div>
                 <div style="font-size:11px;color:var(--mid);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
               </div>
-              <button onclick="downloadClientReportPDF('${clientCode}','${s.job_id||''}')" style="background:#e8372a;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:Montserrat,sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0">Descargar PDF</button>
+              <button onclick="downloadClientReportPDF('${clientCode}',this.dataset.pn,this.dataset.sid)" data-pn="${(s.part_number||'').replace(/'/g,'')}" data-sid="${s.id}"
             </div>
             <div style="padding:16px 18px">
               <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
@@ -1838,130 +1838,88 @@ async function loadClientPortal(clientCode){
   }
 }
 /* ══ CLIENT PDF DOWNLOAD ══ */
-async function downloadClientReportPDF(clientCode, jobId){
-  if(!jobId){showToast('Este reporte no tiene Job asignado.','err');return}
-  const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).eq('job_id',jobId).order('created_at',{ascending:true});
+async function downloadClientReportPDF(clientCode, partNumber){
+  const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).eq('part_number',partNumber).order('created_at',{ascending:true});
   if(!subs||!subs.length){showToast('No data found.','err');return}
-  showToast('Generating PDF...','info');
+  showToast('Generating PDF…','info');  // ← moved here, after the check
   const cfg=getConfig();
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const W=210,M=16,CW=W-M*2;let y=18;
-  const RED=[232,55,42],SOFT=[138,143,154],PANEL=[26,28,32],CARD=[34,37,43],BORDER=[46,49,56];
+  const RED=[232,55,42],SOFT=[138,143,154],LIGHT=[34,37,43],BORDER=[46,49,56];
   const last=subs[subs.length-1];
-  function checkPage(need){if(y+need>272){doc.addPage();y=20;}}
   // Header
   doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
-  doc.text('STS SERVICES - REPORTE DE INSPECCION',M,9);
+  doc.text('STS SERVICES — INSPECTION REPORT',M,9);
   doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text(clientCode+' - Job: '+jobId,M,15);
-  doc.text('www.stslaredo.com'+(cfg.email?' - '+cfg.email:''),W-M,15,{align:'right'});
-  y=28;
+  doc.text(`${clientCode} · Part: ${partNumber}`,M,15);
+  doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});y=28;
   // Client info box
-  doc.setFillColor(...PANEL);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
+  doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
   doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
-  ['CODIGO CLIENTE','NOMBRE','INICIO SERVICIO','FIN SERVICIO'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
+  ['CLIENT CODE','CLIENT NAME','SERVICE START','SERVICE END'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
   doc.setTextColor(240,245,247);doc.setFontSize(10);doc.setFont('helvetica','bold');
   doc.text(clientCode,M+4,y+13);
   doc.setFont('helvetica','normal');doc.setFontSize(9);
-  doc.text(last.customer_name||'-',M+4+CW/4,y+13);
+  doc.text(last.customer_name||'—',M+4+CW/4,y+13);
   const dates=subs.map(s=>s.service_start).filter(Boolean).sort();
   const endDates=subs.map(s=>s.service_end).filter(Boolean).sort();
-  doc.text(dates[0]||'-',M+4+CW/2,y+13);
-  doc.text(endDates[endDates.length-1]||'-',M+4+3*CW/4,y+13);
+  doc.text(dates[0]||'—',M+4+CW/2,y+13);
+  doc.text(endDates[endDates.length-1]||'—',M+4+3*CW/4,y+13);
   y+=24;
-  // Job totals
+  // Totals
   let tI=0,tA=0,tR=0,tRw=0;
   subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0});
   const bw=(CW-9)/4;
-  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);
-  doc.text('TOTALES DEL JOB - '+subs.length+' REPORTE'+(subs.length!==1?'S':''),M,y+1);y+=4;
-  [[tI,'INSPECCIONADOS',[59,130,246]],[tA,'APROBADOS',[34,197,94]],[tR,'RECHAZADOS',[232,55,42]],[tRw,'RETRABAJADOS',[168,85,247]]].forEach(([val,lbl,c],i)=>{
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('TOTALS',M,y+1);y+=4;
+  [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
     const bx=M+i*(bw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
-    doc.setTextColor(255,255,255);doc.setFontSize(5.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
+    doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
     doc.setFontSize(14);doc.text(String(val),bx+bw/2,y+13,{align:'center'});
-  });y+=24;
-  // Per-report cards
-  subs.forEach((s,si)=>{
-    checkPage(30);
-    doc.setFillColor(...CARD);doc.roundedRect(M,y,CW,10,2,2,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');
-    doc.text('Reporte #'+(si+1)+' - '+((s.submit_date||'').split(',')[0]||''),M+4,y+6.5);
-    doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(...SOFT);
-    doc.text('PN: '+(s.part_number||'-')+(s.part_description?' - '+s.part_description:'')+' | ID: '+(s.form_id||''),M+4,y+9.5);
-    y+=13;
-    checkPage(16);
-    const sw=(CW-9)/4;
-    [[s.inspected||0,'INSPECCIONADOS',[59,130,246]],[s.approved||0,'APROBADOS',[34,197,94]],[s.rejected||0,'RECHAZADOS',[232,55,42]],[s.reworked||0,'RETRABAJADOS',[168,85,247]]].forEach(([val,lbl,c],i)=>{
-      const bx=M+i*(sw+3);doc.setFillColor(Math.round(c[0]/5),Math.round(c[1]/5),Math.round(c[2]/5));doc.roundedRect(bx,y,sw,14,1,1,'F');
-      doc.setTextColor(...c);doc.setFontSize(5);doc.setFont('helvetica','bold');doc.text(lbl,bx+sw/2,y+4,{align:'center'});
-      doc.setFontSize(11);doc.text(String(val),bx+sw/2,y+11,{align:'center'});
-    });y+=17;
-    const defects=(s.defects||[]);
-    const hasDefects=defects.some(d=>(d.serial||d.lot||(d.desc&&d.desc!=='-'&&d.desc!=='--')));
-    checkPage(12);
-    doc.setFillColor(...RED);doc.rect(M,y,3,5,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
-    doc.text('DESGLOSE DE DEFECTOS / NUMEROS DE SERIE Y LOTE',M+6,y+3.8);y+=8;
-    if(!hasDefects){
-      doc.setFillColor(...PANEL);doc.roundedRect(M,y,CW,6,1,1,'F');
-      doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','italic');
-      doc.text('Sin defectos registrados.',M+4,y+4);y+=9;
-    } else {
-      checkPage(8);
-      doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
-      doc.setTextColor(...SOFT);doc.setFontSize(6);doc.setFont('helvetica','bold');
-      doc.text('SERIE #',M+3,y+3.5);doc.text('LOTE/BATCH',M+38,y+3.5);doc.text('DEFECTO',M+78,y+3.5);doc.text('CODIGO',M+138,y+3.5);doc.text('CANT.',M+163,y+3.5);y+=5;
-      defects.forEach((d,di)=>{
-        if(!d.serial&&!d.lot&&(!d.desc||d.desc==='-'||d.desc==='--'))return;
-        checkPage(5);
-        doc.setFillColor(di%2===0?34:28,di%2===0?37:30,di%2===0?43:36);doc.rect(M,y,CW,5,'F');
-        doc.setTextColor(200,210,220);doc.setFontSize(6.5);doc.setFont('helvetica','normal');
-        doc.text(String(d.serial||'-').substring(0,18),M+3,y+3.5);
-        doc.text(String(d.lot||'-').substring(0,18),M+38,y+3.5);
-        doc.text(String(d.desc||'-').substring(0,30),M+78,y+3.5);
-        doc.text(String(d.code||'-').substring(0,10),M+138,y+3.5);
-        doc.setTextColor(232,55,42);doc.setFont('helvetica','bold');
-        doc.text(String(d.qty||0),M+163,y+3.5);y+=5;
-      });
-      const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
-      doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
-      doc.setTextColor(...SOFT);doc.setFontSize(6);doc.setFont('helvetica','bold');
-      doc.text('TOTAL DEFECTOS',M+100,y+3.5);
-      doc.setTextColor(232,55,42);doc.text(String(defTotal),M+163,y+3.5);y+=8;
-    }
-    if(s.notes){
-      checkPage(10);
-      doc.setFillColor(...PANEL);doc.roundedRect(M,y,CW,9,1,1,'FD');
-      doc.setTextColor(...SOFT);doc.setFontSize(6);doc.setFont('helvetica','bold');doc.text('NOTAS:',M+3,y+3.5);
-      doc.setFont('helvetica','normal');doc.setTextColor(200,210,220);
-      doc.text(String(s.notes).substring(0,120),M+20,y+3.5);y+=12;
-    }
-    const photos=(s.photos||[]).slice(0,4);
-    if(photos.length){
-      checkPage(36);
-      doc.setFillColor(...RED);doc.rect(M,y,3,5,'F');
-      doc.setTextColor(240,245,247);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
-      doc.text('EVIDENCIA FOTOGRAFICA',M+6,y+3.8);y+=8;
-      const imgW=40,imgH=30,gap=4;
-      photos.forEach((ph,ix)=>{try{doc.addImage(ph.dataUrl,'JPEG',M+ix*(imgW+gap),y,imgW,imgH);}catch(e){}});
-      y+=imgH+8;
-    }
-    y+=4;
-  });
-  checkPage(20);
-  doc.setFillColor(...PANEL);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,16,2,2,'FD');
-  doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('LIBERACION OFICIAL',M+4,y+5);
+  });y+=22;
+  // Defects
+  const defMap={};
+  subs.forEach(s=>(s.defects||[]).forEach(d=>{defMap[d.desc]=(defMap[d.desc]||0)+d.qty}));
+  const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
+  if(defEntries.length){
+    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('DEFECT BREAKDOWN',M+6,y+4.5);y+=10;
+    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+    doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text('DEFECT',M+4,y+3.5);doc.text('QTY',M+120,y+3.5);doc.text('% OF REJECTED',M+150,y+3.5);y+=5;
+    defEntries.forEach(([desc,qty],i)=>{
+      doc.setFillColor(i%2===0?34:28,i%2===0?37:30,i%2===0?43:36);doc.rect(M,y,CW,5,'F');
+      doc.setTextColor(200,210,220);doc.setFontSize(8);doc.setFont('helvetica','normal');
+      doc.text(desc,M+4,y+3.5);doc.text(String(qty),M+120,y+3.5);
+      doc.text(tR?((qty/tR)*100).toFixed(1)+'%':'—',M+150,y+3.5);y+=5;
+    });y+=6;
+  }
+  // Photos
+  const photosAll=subs.flatMap(s=>s.photos||[]);
+  if(photosAll.length){
+    if(y>220){doc.addPage();y=20}
+    doc.setFillColor(...RED);doc.rect(M,y,3,6,'F');
+    doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text('PHOTO EVIDENCE',M+6,y+4.5);y+=10;
+    const imgW=40,imgH=32,gap=4;let ix=0;
+    for(let ph of photosAll){try{doc.addImage(ph.dataUrl,'JPEG',M+(ix%4)*(imgW+gap),y+Math.floor(ix/4)*(imgH+gap),imgW,imgH)}catch(e){}ix++}
+    y+=Math.ceil(photosAll.length/4)*(imgH+gap)+4;
+  }
+  // Official release note
+  if(y>260){doc.addPage();y=20}
+  doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,16,2,2,'FD');
+  doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('OFFICIAL RELEASE',M+4,y+5);
   doc.setTextColor(240,245,247);doc.setFont('helvetica','normal');doc.setFontSize(8);
-  doc.text('Este reporte ha sido revisado y liberado oficialmente por STS Services.',M+4,y+11);y+=22;
+  doc.text('This report has been reviewed and officially released by STS Services management.',M+4,y+11);y+=22;
+  // Footer
   doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
-  doc.text('STS Services - www.stslaredo.com'+(cfg.email?' - '+cfg.email:''),W/2,289,{align:'center'});
-  doc.text('Reporte Confidencial - Generado el '+new Date().toLocaleDateString('es-MX'),W/2,293,{align:'center'});
-  doc.save('STS_Report_'+clientCode+'_Job'+jobId+'_'+new Date().toISOString().split('T')[0]+'.pdf');
-  showToast('Reporte descargado!','info');
+  doc.text('STS Services  ·  www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W/2,289,{align:'center'});
+  doc.text('Confidential Client Report — Generated '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
+  doc.save(`STS_Report_${clientCode}_PN${partNumber}_${new Date().toISOString().split('T')[0]}.pdf`);
+  showToast('📄 Report downloaded!','info');
 }
+
 /* ══ PAYROLL ══ */
 function getWeekKey(dateStr){
   const d=new Date(dateStr);const day=d.getDay();const diff=day>=5?day-5:day+2;
@@ -2041,7 +1999,7 @@ async function clearData(){
 function downloadJobPDF(jobId){
   if(!jobId){showToast('⚠ No job selected.','err');return;}
   const j=allJobs.find(x=>x.job_id===jobId);
-  if(!j){showToast('⚠ Job not found.','err');return;}
+  if(!j){showToast('⚠ Quote not found.','err');return;}
   const subs=allSubmissions.filter(s=>s.job_id===jobId);
   if(!subs.length){showToast('⚠ No submissions for this job.','err');return;}
   const cfg=getConfig();
@@ -2052,7 +2010,7 @@ function downloadJobPDF(jobId){
   // ── Header ──
   doc.setFillColor(...RED);doc.rect(0,0,W,22,'F');
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
-  doc.text('STS SERVICES — JOB REPORT',M,9);
+  doc.text('STS SERVICES — REPORTE DE COTIZACION',M,9);
   doc.setFontSize(7.5);doc.setFont('helvetica','normal');
   doc.text(j.job_id+(j.description?' · '+j.description:''),M,15);
   doc.text('www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W-M,15,{align:'right'});
@@ -2060,7 +2018,7 @@ function downloadJobPDF(jobId){
   // ── Job Info Box ──
   doc.setFillColor(...LIGHT);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,18,2,2,'FD');
   doc.setTextColor(...SOFT);doc.setFontSize(7);doc.setFont('helvetica','bold');
-  ['JOB ID','COMPANY','CLIENT','SERVICE DATES'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
+  ['QUOTE ID','COMPANY','CLIENT','SERVICE DATES'].forEach((lbl,i)=>doc.text(lbl,M+4+i*(CW/4),y+5));
   doc.setTextColor(240,245,247);doc.setFontSize(9);doc.setFont('helvetica','bold');
   doc.text(j.job_id,M+4,y+13);
   doc.setFont('helvetica','normal');doc.setFontSize(8);
@@ -2073,7 +2031,7 @@ function downloadJobPDF(jobId){
   let tI=0,tA=0,tR=0,tRw=0,tH=0;
   subs.forEach(s=>{tI+=s.inspected||0;tA+=s.approved||0;tR+=s.rejected||0;tRw+=s.reworked||0;tH+=parseFloat(s.total_hours)||0;});
   const bw=(CW-9)/4;
-  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('JOB TOTALS — '+subs.length+' SUBMISSIONS',M,y+1);y+=4;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(...SOFT);doc.text('TOTALES DE COTIZACION — '+subs.length+' SUBMISSIONS',M,y+1);y+=4;
   [[tI,'INSPECTED',[59,130,246]],[tA,'APPROVED',[34,197,94]],[tR,'REJECTED',[232,55,42]],[tRw,'REWORKED',[168,85,247]]].forEach(([val,lbl,c],i)=>{
     const bx=M+i*(bw+3);doc.setFillColor(...c);doc.roundedRect(bx,y,bw,16,2,2,'F');
     doc.setTextColor(255,255,255);doc.setFontSize(6.5);doc.setFont('helvetica','bold');doc.text(lbl,bx+bw/2,y+5,{align:'center'});
@@ -2152,9 +2110,9 @@ function downloadJobPDF(jobId){
   doc.setFillColor(...RED);doc.rect(0,282,W,15,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
   doc.text('STS Services  ·  www.stslaredo.com'+(cfg.email?' · '+cfg.email:''),W/2,289,{align:'center'});
-  doc.text('Job Report: '+j.job_id+' · Generated '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
+  doc.text('Quote Report: '+j.job_id+' · Generated '+new Date().toLocaleDateString(),W/2,293,{align:'center'});
   doc.save('STS_Job_'+j.job_id+'_'+new Date().toISOString().split('T')[0]+'.pdf');
-  showToast('📄 Job PDF downloaded!','info');
+  showToast('📄 Quote PDF downloaded!','info');
 }
 
 /* ══ PDF — MAIN REPORT ══ */
@@ -2298,11 +2256,11 @@ function downloadClientPDF(){
   if(!currentClientCode)return;
   // Get all unique part numbers for this client, download combined PDF
   const subs=allSubmissions.filter(s=>s.customer_code===currentClientCode);
-  const jobIds=[...new Set(subs.map(s=>s.job_id).filter(Boolean))];
-  if(!jobIds.length){showToast('No data found.','err');return;}
+  const partNumbers=[...new Set(subs.map(s=>s.part_number).filter(Boolean))];
+  if(!partNumbers.length){showToast('No data found.','err');return;}
   // Download one PDF per part number
-  jobIds.forEach((jid,i)=>{
-    setTimeout(()=>downloadClientReportPDF(currentClientCode,jid),i*500);
+  partNumbers.forEach((pn,i)=>{
+    setTimeout(()=>downloadClientReportPDF(currentClientCode,pn),i*500);
   });
 }
 
@@ -2763,7 +2721,7 @@ async function createJob(){
   const desc=document.getElementById('newJobDesc')?.value.trim();
   const jobId=getGeneratedJobId();
   if(!company){showToast('⚠ Select a company.','err');return;}
-  if(!jobId){showToast('⚠ Job ID not generated.','err');return;}
+  if(!jobId){showToast('⚠ Quote ID not generated.','err');return;}
   if(allJobs.find(j=>j.job_id===jobId)){
     showToast('⚠ '+jobId+' already exists. Select it from the list.','err');
     renderJobsList();document.getElementById('jobsList')?.scrollIntoView({behavior:'smooth'});return;
@@ -2778,7 +2736,7 @@ async function createJob(){
     ['newJobCompany','newJobDate','newJobCustCode','newJobCustName','newJobSvcStart','newJobSvcEnd','newJobDesc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     const prev=document.getElementById('jobIdPreview');
     if(prev){prev.value='';delete prev.dataset.manualEdit;prev.style.color='var(--blue)';prev.style.borderColor='';}
-    showToast('✅ Job '+jobId+' created!','ok');
+    showToast('✅ Quote '+jobId+' created!','ok');
   }catch(e){showToast('❌ Failed: '+e.message,'err');}
   finally{document.getElementById('createJobTxt').style.display='inline';document.getElementById('createJobSpin').style.display='none';}
 }
@@ -2846,7 +2804,7 @@ function populateJobSelectors(){
   }
   const ovSel=document.getElementById('overviewJobFilter');
   if(ovSel){
-    const cur=ovSel.value;ovSel.innerHTML='<option value="all">All Jobs</option>';
+    const cur=ovSel.value;ovSel.innerHTML='<option value="all">All Quotes</option>';
     allJobs.forEach(j=>{
       const opt=document.createElement('option');
       opt.value=j.job_id;
@@ -2909,7 +2867,7 @@ function renderOvJobGrid(){
   if(compFilter!=='all')jobs=jobs.filter(j=>j.company===compFilter);
   if(currentUser?.role==='admin3')jobs=jobs.filter(j=>j.company==='SLI');
   if(!jobs.length){
-    el.innerHTML='<div class="no-data"><div class="nd-ico">🗂</div>No jobs found. Create one in the Jobs tab.</div>';
+    el.innerHTML='<div class="no-data"><div class="nd-ico">🗂</div>No quotes found. Create one in the Quotes tab.</div>';
     return;
   }
   el.innerHTML=jobs.map(j=>{
@@ -2997,7 +2955,7 @@ async function deleteJob(id,jobId){
     allJobs=allJobs.filter(x=>x.id!==id);
     populateJobSelectors();
     renderJobsList();
-    showToast('🗑 Job '+jobId+' deleted.','info');
+    showToast('🗑 Quote '+jobId+' deleted.','info');
   }catch(e){showToast('❌ '+e.message,'err');}
 }  
   
