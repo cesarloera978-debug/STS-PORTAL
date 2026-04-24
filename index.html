@@ -1979,8 +1979,20 @@ async function downloadClientReportPDF(clientCode, jobId){
 
 /* ══ PAYROLL ══ */
 function getWeekKey(dateStr){
-  const d=new Date(dateStr);const day=d.getDay();const diff=day>=5?day-5:day+2;
-  const fri=new Date(d);fri.setDate(d.getDate()-diff);return fri.toISOString().split('T')[0];
+  // Handle ISO strings and locale display strings like "4/22/2026, 7:31:32 PM"
+  let d=new Date(dateStr);
+  if(isNaN(d.getTime())){
+    // Try parsing "M/D/YYYY, h:mm:ss AM/PM" format
+    const m=String(dateStr).match(/(\d+)\/(\d+)\/(\d+)/);
+    if(m) d=new Date(parseInt(m[3]),parseInt(m[1])-1,parseInt(m[2]));
+  }
+  if(isNaN(d.getTime())) d=new Date();
+  // Week runs Fri–Thu. Find the most recent Friday.
+  const day=d.getDay(); // 0=Sun,1=Mon,...,5=Fri,6=Sat
+  const diff=day>=5?day-5:day+2; // days since last Friday
+  const fri=new Date(d);fri.setDate(d.getDate()-diff);
+  fri.setHours(0,0,0,0);
+  return fri.toISOString().split('T')[0];
 }
 function weekLabel(fridayISO){
   const fri=new Date(fridayISO+'T12:00:00');const thu=new Date(fri);thu.setDate(fri.getDate()+6);
@@ -1991,7 +2003,7 @@ function loadPayroll(){
   const subs=allSubmissions;
   const weeks={};const allOps={};
   subs.forEach(s=>{
-    const wk=getWeekKey(s.submit_date_iso||s.submit_date||new Date().toISOString());
+    const wk=getWeekKey(s.created_at||s.submit_date_iso||s.submit_date||new Date().toISOString());
     if(!weeks[wk])weeks[wk]={key:wk,ops:{}};
     (s.personnel||[]).forEach(p=>{
       const name=(p.name||'Unknown').trim();if(!name||name==='—')return;
@@ -2286,7 +2298,7 @@ function downloadPayrollPDF(filterWeek){
   doc.text(weekTitle,M,15);doc.text('Generated: '+new Date().toLocaleString(),W-M,15,{align:'right'});y=28;
   const subs=allSubmissions;const weeks={};
   subs.forEach(s=>{
-    const wk=getWeekKey(s.submit_date_iso||s.submit_date||new Date().toISOString());
+    const wk=getWeekKey(s.created_at||s.submit_date_iso||s.submit_date||new Date().toISOString());
     if(!weeks[wk])weeks[wk]={key:wk,ops:{}};
     (s.personnel||[]).forEach(p=>{const name=(p.name||'Unknown').trim();if(!name||name==='—')return;if(!weeks[wk].ops[name])weeks[wk].ops[name]={name,role:p.role||'—',hours:0};weeks[wk].ops[name].hours+=p.hours||0});
   });
