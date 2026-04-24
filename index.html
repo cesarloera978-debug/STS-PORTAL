@@ -1036,6 +1036,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
           <div class="field"><label>Part Number</label><input type="text" id="editPartNum"></div>
           <div class="field"><label>Part Description</label><input type="text" id="editPartDesc"></div>
           <div class="field"><label>Mfg Date</label><input type="date" id="editMfgDate"></div>
+          <div class="field"><label>Defects</label><input type="text" id="editPartDefects" placeholder="e.g. Scratch, crack…"></div>
         </div>
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Inspection Results</div>
         <div class="g4" style="margin-bottom:16px">
@@ -2368,6 +2369,7 @@ if(!isAdmin&&!isAllowedOperator){
   document.getElementById('editPartNum').value=s.part_number||'';
   document.getElementById('editPartDesc').value=s.part_description||'';
   document.getElementById('editMfgDate').value=s.mfg_date||'';
+  document.getElementById('editPartDefects').value=s.part_defects||'';
   document.getElementById('editInspected').value=s.inspected||0;
   document.getElementById('editApproved').value=s.approved||0;
   document.getElementById('editRejected').value=s.rejected||0;
@@ -2499,6 +2501,7 @@ async function saveEditedReport(){
     service_end:document.getElementById('editSvcEnd').value,
     part_number:document.getElementById('editPartNum').value.trim(),
     part_description:document.getElementById('editPartDesc').value.trim(),
+    part_defects:document.getElementById('editPartDefects').value.trim(),
     mfg_date:document.getElementById('editMfgDate').value,
     inspected:parseInt(document.getElementById('editInspected').value)||0,
     approved:parseInt(document.getElementById('editApproved').value)||0,
