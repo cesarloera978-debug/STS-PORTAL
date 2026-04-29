@@ -1031,12 +1031,23 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
           <div class="field"><label>Service Start</label><input type="date" id="editSvcStart"></div>
           <div class="field"><label>Service End</label><input type="date" id="editSvcEnd"></div>
         </div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Part Information</div>
-        <div class="g3" style="margin-bottom:16px">
-          <div class="field"><label>Part Number</label><input type="text" id="editPartNum"></div>
-          <div class="field"><label>Part Description</label><input type="text" id="editPartDesc"></div>
-          <div class="field"><label>Mfg Date</label><input type="date" id="editMfgDate"></div>
-          <div class="field"><label>Defects</label><input type="text" id="editPartDefects" placeholder="e.g. Scratch, crack…"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">Part Information</div>
+          <button onclick="editAddPartRow()" style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:var(--blue);font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;cursor:pointer">+ Add Part</button>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:16px">
+          <div style="overflow-x:auto">
+            <table class="tbl" style="min-width:500px">
+              <thead><tr>
+                <th style="width:32px">#</th>
+                <th style="min-width:140px">Part Number</th>
+                <th style="min-width:150px">Part Description</th>
+                <th style="min-width:140px">Defects</th>
+                <th style="width:32px"></th>
+              </tr></thead>
+              <tbody id="editPartBody"></tbody>
+            </table>
+          </div>
         </div>
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Inspection Results</div>
         <div class="g4" style="margin-bottom:16px">
@@ -1163,7 +1174,7 @@ async function sbSaveSubmission(d){
     company:currentUser?.company||'all',
     job_id:d.jobId||null,customer_code:d.customerCode, customer_name:d.customerName,
     service_start:d.serviceStart, service_end:d.serviceEnd,
-    part_number:d.partNumber, part_description:d.partDescription, part_defects:d.partDefects||'', parts:d.parts||[], mfg_date:d.mfgDate,
+    part_number:d.partNumber, part_description:d.partDescription, mfg_date:d.mfgDate,
     serial_numbers:d.serialNumbers, lot_numbers:d.lotNumbers,
     inspected:d.inspected, approved:d.approved, rejected:d.rejected, reworked:d.reworked,
     defects:d.defects, defect_summary:d.defectSummary, total_defects:d.totalDefects,
@@ -1495,10 +1506,8 @@ function collect(){
     submitDate:now.toLocaleString('en-US'),submitDateISO:now.toISOString(),jobId:v('jobSelect')||null,
     customerCode:v('custCode'),customerName:v('custName'),
     serviceStart:v('svcStart'),serviceEnd:v('svcEnd'),
-    parts:(()=>{const rows=[];document.querySelectorAll('#partBody tr').forEach(tr=>{const ins=tr.querySelectorAll('input');const pn=(ins[0]?.value||'').trim();if(pn)rows.push({part_number:pn,part_description:(ins[1]?.value||'').trim(),part_defects:(ins[2]?.value||'').trim()});});return rows;})(),
-    partNumber:(()=>{const rows=document.querySelectorAll('#partBody tr');const pns=[];rows.forEach(tr=>{const v=(tr.querySelector('input')?.value||'').trim();if(v)pns.push(v);});return pns.join(' / ')})(),
-    partDescription:(()=>{const rows=document.querySelectorAll('#partBody tr');const ds=[];rows.forEach(tr=>{const v=(tr.querySelector('td:nth-child(3) input')?.value||'').trim();if(v)ds.push(v);});return ds.join(' / ')})(),
-    partDefects:(()=>{const rows=document.querySelectorAll('#partBody tr');const ds=[];rows.forEach(tr=>{const v=(tr.querySelector('td:nth-child(4) input')?.value||'').trim();if(v)ds.push(v);});return ds.join(' / ')})(),
+    partNumber:document.querySelector('#partBody tr input:first-of-type')?.value.trim()||'',
+    partDescription:document.querySelector('#partBody tr td:nth-child(3) input')?.value.trim()||'',
     mfgDate:'',
     serialNumbers:defects.map(d=>d.serial).filter(Boolean).join(' | '),
     lotNumbers:defects.map(d=>d.lot).filter(Boolean).join(' | '),
@@ -1818,7 +1827,7 @@ async function loadClientPortal(clientCode){
             <div style="background:rgba(34,37,43,1);padding:14px 18px;border-bottom:1px solid rgba(46,49,56,1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
               <div>
                 <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:#f0f5f7">Reporte #${si+1} · ${s.submit_date||''}</div>
-                <div style="font-size:11px;color:rgba(138,143,154,1);margin-top:2px">PN: ${(s.parts&&s.parts.length)?s.parts.map(p=>p.part_number).filter(Boolean).join(' / '):(s.part_number||'—')} · ID: ${s.form_id||''}</div>
+                <div style="font-size:11px;color:rgba(138,143,154,1);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
               </div>
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 ${s.total_hours?`<span style="font-size:11px;font-weight:700;color:#f59e0b">⏱ ${s.total_hours}h</span>`:''}
@@ -1906,26 +1915,14 @@ async function downloadClientReportPDF(clientCode, jobId){
       doc.setFontSize(11);doc.text(String(val),bx+sw/2,y+11,{align:'center'});
     });y+=17;
     checkPage(10);
-    // Parts table - show all parts from parts[] array or fall back to part_number
-    const partsArr=(s.parts&&s.parts.length)?s.parts:[{part_number:s.part_number||'-',part_description:s.part_description||'',part_defects:s.part_defects||''}];
-    const partTableH=6+partsArr.length*5;
-    checkPage(partTableH+4);
-    doc.setFillColor(...RED);doc.rect(M,y,3,5,'F');
-    doc.setTextColor(240,245,247);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
-    doc.text('INFORMACION DE PARTE',M+6,y+3.8);y+=8;
-    doc.setFillColor(...BORDER);doc.rect(M,y,CW,5,'F');
+    doc.setFillColor(...PANEL);doc.setDrawColor(...BORDER);doc.roundedRect(M,y,CW,8,1,1,'FD');
     doc.setTextColor(...SOFT);doc.setFontSize(6);doc.setFont('helvetica','bold');
-    doc.text('PART NUMBER',M+3,y+3.5);doc.text('DESCRIPCION',M+58,y+3.5);doc.text('DEFECTO(S)',M+118,y+3.5);y+=5;
-    partsArr.forEach((p,pi)=>{
-      checkPage(5);
-      doc.setFillColor(pi%2===0?34:28,pi%2===0?37:30,pi%2===0?43:36);doc.rect(M,y,CW,5,'F');
-      doc.setTextColor(200,210,220);doc.setFontSize(6.5);doc.setFont('helvetica','normal');
-      doc.text(String(p.part_number||'-').substring(0,22),M+3,y+3.5);
-      doc.text(String(p.part_description||'-').substring(0,28),M+58,y+3.5);
-      doc.text(String(p.part_defects||'-').substring(0,28),M+118,y+3.5);
-      y+=5;
-    });
-    y+=4;
+    doc.text('INFORMACION DE PARTE:',M+3,y+5);
+    doc.setFont('helvetica','normal');doc.setTextColor(200,210,220);
+    const partDefects=(s.part_defects&&s.part_defects.trim())?s.part_defects:'Sin defecto registrado en parte';
+    const partLine='PN: '+(s.part_number||'-')+(s.part_description?' | '+s.part_description:'')+' | Defecto: '+partDefects;
+    doc.text(partLine.substring(0,105),M+42,y+5);
+    y+=11;
     const defects=(s.defects||[]);
     const hasDefects=defects.some(d=>(d.serial||d.lot||(d.desc&&d.desc!=='-'&&d.desc!=='--')));
     checkPage(12);
@@ -2375,6 +2372,24 @@ document.addEventListener('click',function(e){
 let editPhotos=[]; // new photos added during edit (base64)
 let editExistingPhotos=[]; // keeps original photos
 
+
+function editPartRowHtml(num,pn,desc,def){
+  return`<tr>
+    <td style="text-align:center;color:var(--mid);font-size:11px">${num}</td>
+    <td><input type="text" value="${pn.replace(/"/g,'&quot;')}" placeholder="Part Number" style="width:100%;background:transparent;border:none;color:var(--pure);font-size:12px;outline:none;padding:4px 6px"></td>
+    <td><input type="text" value="${desc.replace(/"/g,'&quot;')}" placeholder="Description" style="width:100%;background:transparent;border:none;color:var(--pure);font-size:12px;outline:none;padding:4px 6px"></td>
+    <td><input type="text" value="${def.replace(/"/g,'&quot;')}" placeholder="Defects" style="width:100%;background:transparent;border:none;color:var(--pure);font-size:12px;outline:none;padding:4px 6px"></td>
+    <td><button onclick="this.closest('tr').remove();editRenumberParts()" style="background:transparent;border:none;color:var(--red);font-size:14px;cursor:pointer;padding:2px 6px">✕</button></td>
+  </tr>`;
+}
+function editRenumberParts(){
+  document.querySelectorAll('#editPartBody tr').forEach((tr,i)=>{const td=tr.querySelector('td');if(td)td.textContent=i+1;});
+}
+function editAddPartRow(){
+  const tbody=document.getElementById('editPartBody');
+  const num=tbody.querySelectorAll('tr').length+1;
+  tbody.insertAdjacentHTML('beforeend',editPartRowHtml(num,'','',''));
+}
 function openEditModal(subId){
   const s=allSubmissions.find(x=>x.id===subId);
   if(!s){showToast('Report not found.','err');return;}
@@ -2392,10 +2407,11 @@ if(!isAdmin&&!isAllowedOperator){
   document.getElementById('editCustName').value=s.customer_name||'';
   document.getElementById('editSvcStart').value=s.service_start||'';
   document.getElementById('editSvcEnd').value=s.service_end||'';
-  document.getElementById('editPartNum').value=s.part_number||'';
-  document.getElementById('editPartDesc').value=s.part_description||'';
-  document.getElementById('editMfgDate').value=s.mfg_date||'';
-  document.getElementById('editPartDefects').value=s.part_defects||'';
+  // Build parts rows - use parts[] array if available, else fall back to single fields
+  const editParts=(s.parts&&s.parts.length)?s.parts:[{part_number:s.part_number||'',part_description:s.part_description||'',part_defects:s.part_defects||''}];
+  const epb=document.getElementById('editPartBody');
+  epb.innerHTML='';
+  editParts.forEach((p,i)=>epb.insertAdjacentHTML('beforeend',editPartRowHtml(i+1,p.part_number||'',p.part_description||'',p.part_defects||'')));
   document.getElementById('editInspected').value=s.inspected||0;
   document.getElementById('editApproved').value=s.approved||0;
   document.getElementById('editRejected').value=s.rejected||0;
@@ -2525,9 +2541,10 @@ async function saveEditedReport(){
     customer_name:document.getElementById('editCustName').value.trim(),
     service_start:document.getElementById('editSvcStart').value,
     service_end:document.getElementById('editSvcEnd').value,
-    part_number:document.getElementById('editPartNum').value.trim(),
-    part_description:document.getElementById('editPartDesc').value.trim(),
-    part_defects:document.getElementById('editPartDefects').value.trim(),
+    parts:(()=>{const rows=[];document.querySelectorAll('#editPartBody tr').forEach(tr=>{const ins=tr.querySelectorAll('input[type=text]');const pn=(ins[0]?.value||'').trim();if(pn)rows.push({part_number:pn,part_description:(ins[1]?.value||'').trim(),part_defects:(ins[2]?.value||'').trim()});});return rows;})(),
+    part_number:(()=>{const pns=[];document.querySelectorAll('#editPartBody tr').forEach(tr=>{const v=(tr.querySelector('input[type=text]')?.value||'').trim();if(v)pns.push(v);});return pns.join(' / ')})(),
+    part_description:(()=>{const ds=[];document.querySelectorAll('#editPartBody tr').forEach(tr=>{const ins=tr.querySelectorAll('input[type=text]');const v=(ins[1]?.value||'').trim();if(v)ds.push(v);});return ds.join(' / ')})(),
+    part_defects:(()=>{const ds=[];document.querySelectorAll('#editPartBody tr').forEach(tr=>{const ins=tr.querySelectorAll('input[type=text]');const v=(ins[2]?.value||'').trim();if(v)ds.push(v);});return ds.join(' / ')})(),
     mfg_date:document.getElementById('editMfgDate').value,
     inspected:parseInt(document.getElementById('editInspected').value)||0,
     approved:parseInt(document.getElementById('editApproved').value)||0,
