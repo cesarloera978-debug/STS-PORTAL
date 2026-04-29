@@ -994,6 +994,39 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
   </div>
 </div>
 
+
+<!-- EDIT JOB MODAL -->
+<div id="editJobModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-family:'Montserrat',sans-serif;font-size:16px;font-weight:900;color:var(--pure)">✏️ Edit Quote</div>
+        <div id="editJobModalId" style="font-size:11px;color:var(--mid);margin-top:2px"></div>
+      </div>
+      <button onclick="closeJobEditModal()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:5px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600">✕ Cancel</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="field" style="grid-column:1/-1"><label>Quote Number</label><input type="text" id="ejJobId" placeholder="e.g. STS041726" style="font-family:'Montserrat',sans-serif;font-weight:800"></div>
+      <div class="field"><label>Description</label><input type="text" id="ejDescription" placeholder="e.g. Re-empacado (Bosch)"></div>
+      <div class="field"><label>Company</label>
+        <select id="ejCompany" style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;color:var(--pure);width:100%;outline:none">
+          <option value="STS">STS</option>
+          <option value="SLI">SLI</option>
+          <option value="all">ALL</option>
+        </select>
+      </div>
+      <div class="field"><label>Customer Code</label><input type="text" id="ejCustCode" placeholder="e.g. STS001"></div>
+      <div class="field"><label>Customer Name</label><input type="text" id="ejCustName" placeholder="e.g. AMN"></div>
+      <div class="field"><label>Service Start</label><input type="date" id="ejSvcStart"></div>
+      <div class="field"><label>Service End</label><input type="date" id="ejSvcEnd"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button onclick="closeJobEditModal()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:10px 20px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700">Cancel</button>
+      <button onclick="saveJobEdit()" style="background:var(--red);color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:800">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- CALENDAR FULL REPORT OVERLAY -->
@@ -2846,6 +2879,53 @@ function setJobListFilter(f){
   ['Active','Closed','All'].forEach(x=>document.getElementById('jobFilter'+x)?.classList.toggle('active',x.toLowerCase()===f));
   renderJobsList();
 }
+
+/* ══ EDIT JOB MODAL ══ */
+let editingJobDbId=null;
+function openJobEditModal(dbId){
+  const j=allJobs.find(x=>x.id===dbId);
+  if(!j){showToast('Quote not found.','err');return;}
+  editingJobDbId=dbId;
+  document.getElementById('editJobModalId').textContent=j.job_id;
+  document.getElementById('ejJobId').value=j.job_id||'';
+  document.getElementById('ejDescription').value=j.description||'';
+  document.getElementById('ejCompany').value=j.company||'STS';
+  document.getElementById('ejCustCode').value=j.customer_code||'';
+  document.getElementById('ejCustName').value=j.customer_name||'';
+  document.getElementById('ejSvcStart').value=j.service_start||'';
+  document.getElementById('ejSvcEnd').value=j.service_end||'';
+  const modal=document.getElementById('editJobModal');
+  modal.style.display='flex';
+}
+function closeJobEditModal(){
+  document.getElementById('editJobModal').style.display='none';
+  editingJobDbId=null;
+}
+async function saveJobEdit(){
+  if(!editingJobDbId){showToast('No quote selected.','err');return;}
+  const newJobId=document.getElementById('ejJobId').value.trim();
+  if(!newJobId){showToast('Quote Number cannot be empty.','err');return;}
+  const updates={
+    job_id:newJobId,
+    description:document.getElementById('ejDescription').value.trim(),
+    company:document.getElementById('ejCompany').value,
+    customer_code:document.getElementById('ejCustCode').value.trim(),
+    customer_name:document.getElementById('ejCustName').value.trim(),
+    service_start:document.getElementById('ejSvcStart').value||null,
+    service_end:document.getElementById('ejSvcEnd').value||null,
+  };
+  try{
+    const {error}=await db.from('jobs').update(updates).eq('id',editingJobDbId);
+    if(error)throw error;
+    const j=allJobs.find(x=>x.id===editingJobDbId);
+    if(j)Object.assign(j,updates);
+    closeJobEditModal();
+    populateJobSelectors();
+    renderJobsList();
+    showToast('✅ Quote updated!','ok');
+  }catch(e){showToast('Update failed: '+e.message,'err');}
+}
+
 function renderJobsList(){
  const createCard=document.getElementById('createJobCard');
   const canCreate=['admin','admin2','admin3','operator','operator'].includes(currentUser?.role)||
@@ -2877,6 +2957,9 @@ function renderJobsList(){
       </div>
       <div style="display:flex;gap:6px;flex-direction:column;align-items:flex-end;flex-shrink:0">
         <button onclick="filterOverviewByJob('${j.job_id}')" style="background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">📊 View in Overview</button>
+        ${(currentUser?.role==='admin'||currentUser?.role==='admin2'||currentUser?.role==='admin3')
+          ?`<button onclick="openJobEditModal('${j.id}')" style="background:transparent;border:1px solid rgba(168,85,247,.4);color:var(--purple);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">✏️ Edit</button>`
+          :''}
       ${(currentUser?.role==='admin'||currentUser?.role==='admin2'||currentUser?.role==='admin3')
           ?(isActive
             ?`<button onclick="closeJob('${j.id}','${j.job_id}')" style="background:transparent;border:1px solid rgba(245,158,11,.4);color:var(--yellow);font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🔒 Close Job</button>`
