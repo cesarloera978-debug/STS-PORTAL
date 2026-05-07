@@ -730,7 +730,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       <div class="card-body" id="defectSummaryBody"><div class="no-data"><div class="nd-ico">📭</div>No submissions yet.</div></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
-      <button class="btn-secondary" onclick="clearData()" style="color:var(--red);border-color:rgba(232,55,42,.4)">🗑 Clear All Data</button>
+
     </div>
   </div>
 </div>
@@ -742,11 +742,37 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
     </div>
     <div class="admin-content" id="wixTab">
       <div class="card">
-        <div class="card-hd"><div class="card-ico">🌐</div><div class="card-title">How to Add This Portal to Your Wix Website</div></div>
-        <div class="card-body" style="font-size:13px;color:#ccc;line-height:1.9">
-          <b style="color:var(--white)">Option 1 — Link as a button (Recommended):</b> In Wix Editor, add a button labeled "QC Portal" → set link to your Netlify URL. Supervisors open it in a new tab. Clean and simple.<br><br>
-          <b style="color:var(--white)">Option 2 — iFrame embed:</b> Add Elements → Embed &amp; Social → iFrame → paste Netlify URL. Set width 100%, height 900px.<br><br>
-          <b style="color:var(--white)">Custom subdomain:</b> Netlify → Domain management → add <code style="background:var(--card);padding:2px 6px;border-radius:4px;font-size:11px">portal.stslaredo.com</code> → update DNS in your registrar to point to Netlify.
+        <div class="card-hd"><div class="card-ico">📖</div><div class="card-title">Portal Guide & Setup</div></div>
+        <div class="card-body" style="font-size:13px;color:#ccc;line-height:2">
+
+          <div style="font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:10px">👤 User Roles</div>
+          <b style="color:var(--white)">Admin</b> — Full access: create jobs, view all submissions, manage client access, payroll, delete reports.<br>
+          <b style="color:var(--white)">Operator (STS)</b> — Sees only STS jobs. Submits inspections, edits own reports. No delete.<br>
+          <b style="color:var(--white)">Operator 2 (SLI)</b> — Same as Operator but sees only SLI jobs.<br>
+          <b style="color:var(--white)">Client</b> — Read-only portal. Sees reports grouped by Month → Job → Submission. Only available after admin releases.<br><br>
+
+          <div style="font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:10px">🗂 Job ID System</div>
+          Format: <code style="background:var(--card);padding:2px 6px;border-radius:4px">STS042026</code> = Company + Month (MM) + Sequence + Year (YYYY).<br>
+          Sequence resets every month. Each company (STS / SLI) counts independently.<br>
+          Admin creates jobs — operators just pick from the list. One job per company per sequence number, no duplicates.<br><br>
+
+          <div style="font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:10px">📋 Inspection Workflow</div>
+          1. Admin creates a Job (🗂 Jobs tab) with client info, dates, description.<br>
+          2. Operator logs in → selects their job → customer info auto-fills → form is hidden.<br>
+          3. Operator fills Part Info, Defects, Personnel, Photos → submits.<br>
+          4. Admin reviews in Overview → filter by job to see totals for that specific service.<br>
+          5. Admin goes to Clients tab → finds the client → clicks <b style="color:var(--white)">Release to Client</b>.<br>
+          6. Client logs in and sees their reports organized by Month and Job.<br><br>
+
+          <div style="font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:10px">🌐 Wix Integration</div>
+          <b style="color:var(--white)">Option 1 — Button link (Recommended):</b> In Wix Editor, add a button → set link to <code style="background:var(--card);padding:2px 6px;border-radius:4px;font-size:11px">portal.stslaredo.com</code> → opens in new tab.<br>
+          <b style="color:var(--white)">Option 2 — iFrame embed:</b> Add Elements → Embed & Social → iFrame → paste portal URL. Set width 100%, height 900px.<br><br>
+
+          <div style="font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:10px">⚠️ Important Notes</div>
+          • Photos are compressed automatically before saving — large photo sets are handled safely.<br>
+          • Submissions are linked to jobs. Deleting a job does not delete its submissions.<br>
+          • The Clear All Data function has been removed for safety. Contact your developer to delete records.<br>
+          • Client portal is always in Spanish. Admin/Operator portal is in English.
         </div>
       </div>
     </div>
@@ -1814,7 +1840,7 @@ async function loadClientPortal(clientCode){
       area.innerHTML=`<div style="text-align:center;padding:60px 20px">
         <div style="font-size:56px;margin-bottom:16px">🔒</div>
         <div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:800;color:var(--white);margin-bottom:10px">Reportes No Disponibles Aún</div>
-        <div style="font-size:14px;color:var(--mid);max-width:400px;margin:0 auto;line-height:1.7">Sus reportes de inspección están siendo revisados por nuestro equipo. Se le notificará una vez que hayan sido aprobados y publicados. Por favor regrese pronto o comuníquese directamente con STS Services.</div>
+        <div style="font-size:14px;color:var(--mid);max-width:400px;margin:0 auto;line-height:1.7">Sus reportes de inspección están siendo revisados por nuestro equipo. Se le notificará una vez que hayan sido aprobados y publicados.</div>
         <div style="margin-top:24px"><a href="https://www.stslaredo.com" target="_blank" style="color:var(--red);text-decoration:none;font-weight:600">www.stslaredo.com</a></div>
       </div>`;
       return;
@@ -1824,71 +1850,214 @@ async function loadClientPortal(clientCode){
       area.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No se encontraron reportes para su cuenta.</div>';
       return;
     }
-    area.innerHTML=`
-      <div id="clientSubsList">
-        ${subs.map((s,si)=>{
-          const defects=s.defects||[];
-          const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
-          const photos=s.photos||[];
-          const hasDefects=defects.some(d=>d.serial||d.lot||(d.desc&&d.desc!=='—'&&d.desc!=='--'));
-          const defRows=hasDefects
-            ?`<table style="width:100%;border-collapse:collapse;font-size:11px;margin-top:8px">
-                <thead><tr>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Serie #</th>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Lote / Batch</th>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Defecto</th>
-                  <th style="text-align:left;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:rgba(138,143,154,1);font-size:10px;text-transform:uppercase;letter-spacing:1px">Código</th>
-                  <th style="text-align:right;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.08);color:#e8372a;font-size:10px;text-transform:uppercase;letter-spacing:1px">Cant.</th>
-                </tr></thead>
-                <tbody>${defects.map((d,di)=>`<tr style="background:${di%2===0?'rgba(255,255,255,.02)':'transparent'}">
-                  <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.serial||'—'}</td>
-                  <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.lot||'—'}</td>
-                  <td style="padding:6px 8px;color:#e2e8f0">${d.desc||'—'}</td>
-                  <td style="padding:6px 8px;color:rgba(138,143,154,1)">${d.code||'—'}</td>
-                  <td style="padding:6px 8px;text-align:right;color:#e8372a;font-weight:700">${d.qty||0}</td>
-                </tr>`).join('')}
-                <tr><td colspan="4" style="padding:8px;text-align:right;font-size:10px;color:rgba(138,143,154,1);font-weight:700;border-top:1px solid rgba(255,255,255,.08)">TOTAL DEFECTOS</td>
-                    <td style="padding:8px;text-align:right;color:#e8372a;font-weight:700;border-top:1px solid rgba(255,255,255,.08)">${defTotal}</td></tr>
-                </tbody></table>`
-            :`<div style="font-size:12px;color:rgba(138,143,154,1);font-style:italic;padding:10px 0">✅ Sin defectos registrados.</div>`;
-          const photoHtml=photos.length
-            ?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:8px">📸 EVIDENCIA FOTOGRÁFICA</div>
-               <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">
-                 ${photos.map(ph=>`<div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08)"><img src="${ph.dataUrl}" alt="${ph.name||''}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`).join('')}
-               </div></div>`:'';
-          return`<div style="background:rgba(26,28,32,1);border:1px solid rgba(46,49,56,1);border-radius:12px;margin-bottom:14px;overflow:hidden">
-            <div style="background:rgba(34,37,43,1);padding:14px 18px;border-bottom:1px solid rgba(46,49,56,1);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-              <div>
-                <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:#f0f5f7">Reporte #${si+1} · ${s.submit_date||''}</div>
-                <div style="font-size:11px;color:rgba(138,143,154,1);margin-top:2px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''} · ID: ${s.form_id||''}</div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                ${s.total_hours?`<span style="font-size:11px;font-weight:700;color:#f59e0b">⏱ ${s.total_hours}h</span>`:''}
-                ${s.part_defects?`<span style="font-size:10px;color:rgba(138,143,154,1);background:rgba(232,55,42,.12);border:1px solid rgba(232,55,42,.3);border-radius:6px;padding:3px 8px">🔍 ${s.part_defects}</span>`:''}
-                <button onclick="downloadClientReportPDF('${clientCode}','${s.job_id||''}')" style="background:#e8372a;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:Montserrat,sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">📄 Descargar PDF</button>
-              </div>
-            </div>
-            <div style="padding:16px 18px">
-              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
-                <div style="background:rgba(59,130,246,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#3b82f6">${s.inspected||0}</div><div style="font-size:9px;color:#3b82f6;font-weight:700;text-transform:uppercase;letter-spacing:1px">Inspeccionados</div></div>
-                <div style="background:rgba(34,197,94,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#22c55e">${s.approved||0}</div><div style="font-size:9px;color:#22c55e;font-weight:700;text-transform:uppercase;letter-spacing:1px">Aprobados</div></div>
-                <div style="background:rgba(232,55,42,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#e8372a">${s.rejected||0}</div><div style="font-size:9px;color:#e8372a;font-weight:700;text-transform:uppercase;letter-spacing:1px">Rechazados</div></div>
-                <div style="background:rgba(168,85,247,.15);border-radius:8px;padding:10px;text-align:center"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;color:#a855f7">${s.reworked||0}</div><div style="font-size:9px;color:#a855f7;font-weight:700;text-transform:uppercase;letter-spacing:1px">Retrabajados</div></div>
-              </div>
-              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:6px">⚠️ DESGLOSE DE DEFECTOS / NÚMEROS DE SERIE Y LOTE</div>
-              ${defRows}
-              ${photoHtml}
-              ${s.notes?`<div style="margin-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(138,143,154,1);margin-bottom:6px">📝 NOTAS</div><div style="background:rgba(34,37,43,1);border:1px solid rgba(46,49,56,1);border-radius:8px;padding:10px 12px;font-size:12px;color:rgba(138,143,154,1);font-style:italic">${s.notes}</div></div>`:''}
-            </div>
-          </div>`;
 
-        }).join('')}
-      </div>`;
+    // ── GROUP: by month → by job_id ──
+    // Build month map: { 'April 2026': { jobId: [...subs] } }
+    const monthMap={};
+    subs.forEach(s=>{
+      const d=new Date(s.submit_date_iso||s.created_at||Date.now());
+      const monthKey=d.toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+      const monthKeyEN=d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      const mk=monthKeyEN; // use English for sorting
+      if(!monthMap[mk])monthMap[mk]={label:monthKey,date:d,jobs:{}};
+      const jid=s.job_id||'SIN-COTIZACIÓN';
+      if(!monthMap[mk].jobs[jid])monthMap[mk].jobs[jid]=[];
+      monthMap[mk].jobs[jid].push(s);
+    });
+
+    // Sort months newest first
+    const sortedMonths=Object.entries(monthMap).sort((a,b)=>b[1].date-a[1].date);
+
+    // Render month level (default view)
+    area.innerHTML=`
+      <div id="clientLevel0">
+        <div style="margin-bottom:20px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:4px">Seleccione un mes</div>
+          <div style="font-size:13px;color:var(--soft)">${subs.length} reporte${subs.length!==1?'s':''} en total</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+          ${sortedMonths.map(([mk,mv])=>{
+            const totalSubs=Object.values(mv.jobs).flat().length;
+            const totalJobs=Object.keys(mv.jobs).length;
+            const totalI=Object.values(mv.jobs).flat().reduce((a,s)=>a+(s.inspected||0),0);
+            const totalR=Object.values(mv.jobs).flat().reduce((a,s)=>a+(s.rejected||0),0);
+            return`<div onclick="clientShowMonth('${mk}')" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.background='rgba(59,130,246,.06)'" onmouseout="this.style.borderColor='var(--line)';this.style.background='var(--card)'">
+              <div style="font-size:24px;margin-bottom:10px">📅</div>
+              <div style="font-family:'Montserrat',sans-serif;font-size:15px;font-weight:800;color:var(--pure);text-transform:capitalize;margin-bottom:6px">${mv.label}</div>
+              <div style="font-size:12px;color:var(--mid);margin-bottom:10px">${totalJobs} cotización${totalJobs!==1?'es':''} · ${totalSubs} reporte${totalSubs!==1?'s':''}</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <span class="pill pill-b">${totalI} inspeccionados</span>
+                ${totalR?`<span class="pill pill-r">${totalR} rechazados</span>`:''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div id="clientLevel1" style="display:none"></div>
+      <div id="clientLevel2" style="display:none"></div>`;
+
+    // Store data globally for drill-down
+    window._clientMonthMap=monthMap;
+    window._clientSubs=subs;
+
   }catch(e){
-    area.innerHTML=`<div class="no-data"><div class="nd-ico">❌</div>Error al cargar reportes: ${e.message}</div>`;
+    area.innerHTML=`<div class="no-data"><div class="nd-ico">❌</div>Error: ${e.message}</div>`;
   }
 }
-/* ══ CLIENT PDF DOWNLOAD ══ */
+
+function clientShowMonth(monthKey){
+  const mv=window._clientMonthMap[monthKey];
+  if(!mv)return;
+  document.getElementById('clientLevel0').style.display='none';
+  document.getElementById('clientLevel2').style.display='none';
+  const level1=document.getElementById('clientLevel1');
+  level1.style.display='block';
+
+  const jobs=Object.entries(mv.jobs);
+  level1.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <button onclick="clientBackToMonths()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'">← Meses</button>
+      <div>
+        <div style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:900;color:var(--pure);text-transform:capitalize">${mv.label}</div>
+        <div style="font-size:12px;color:var(--mid)">${jobs.length} cotización${jobs.length!==1?'es':''}</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${jobs.map(([jid,jsubs])=>{
+        const tI=jsubs.reduce((a,s)=>a+(s.inspected||0),0);
+        const tA=jsubs.reduce((a,s)=>a+(s.approved||0),0);
+        const tR=jsubs.reduce((a,s)=>a+(s.rejected||0),0);
+        const dates=jsubs.map(s=>new Date(s.submit_date_iso||s.created_at)).sort((a,b)=>a-b);
+        const dateRange=dates.length?dates[0].toLocaleDateString('es-MX',{month:'short',day:'numeric'})+(dates.length>1?' → '+dates[dates.length-1].toLocaleDateString('es-MX',{month:'short',day:'numeric',year:'numeric'}):''):'';
+        const custName=jsubs[0]?.customer_name||'';
+        return`<div onclick="clientShowJob('${monthKey}','${jid}')" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.background='rgba(59,130,246,.06)'" onmouseout="this.style.borderColor='var(--line)';this.style.background='var(--card)'">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+              <span style="font-family:'Montserrat',sans-serif;font-size:15px;font-weight:900;color:var(--pure)">${jid}</span>
+              ${custName?`<span class="pill" style="background:var(--muted);color:var(--white)">${custName}</span>`:''}
+            </div>
+            <div style="font-size:12px;color:var(--mid);margin-bottom:8px">📅 ${dateRange} · ${jsubs.length} reporte${jsubs.length!==1?'s':''}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="pill pill-b">${tI} inspeccionados</span>
+              <span class="pill pill-g">${tA} aprobados</span>
+              ${tR?`<span class="pill pill-r">${tR} rechazados</span>`:''}
+            </div>
+          </div>
+          <div style="font-size:20px;color:var(--mid)">›</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function clientBackToMonths(){
+  document.getElementById('clientLevel1').style.display='none';
+  document.getElementById('clientLevel2').style.display='none';
+  document.getElementById('clientLevel0').style.display='block';
+}
+
+function clientShowJob(monthKey,jobId){
+  const mv=window._clientMonthMap[monthKey];
+  const subs=mv?.jobs[jobId]||[];
+  if(!subs.length)return;
+  document.getElementById('clientLevel1').style.display='none';
+  const level2=document.getElementById('clientLevel2');
+  level2.style.display='block';
+
+  const tI=subs.reduce((a,s)=>a+(s.inspected||0),0);
+  const tA=subs.reduce((a,s)=>a+(s.approved||0),0);
+  const tR=subs.reduce((a,s)=>a+(s.rejected||0),0);
+  const tH=subs.reduce((a,s)=>a+(parseFloat(s.total_hours)||0),0);
+  const custCode=subs[0]?.customer_code||'';
+  const custName=subs[0]?.customer_name||'';
+
+  level2.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <button onclick="clientBackToMonth('${monthKey}')" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'">← ${mv.label}</button>
+      <div style="flex:1">
+        <div style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:900;color:var(--pure)">${jobId}</div>
+        <div style="font-size:12px;color:var(--mid)">${custName||custCode} · ${subs.length} reporte${subs.length!==1?'s':''}</div>
+      </div>
+      <button onclick="downloadClientReportPDF('${custCode}','${jobId}')" style="background:var(--red);color:#fff;border:none;border-radius:9px;padding:10px 18px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">📄 Descargar Reporte</button>
+    </div>
+    <!-- Summary stats -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+      <div style="background:var(--bluebg);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-family:'Montserrat',sans-serif;font-size:24px;font-weight:900;color:var(--blue)">${tI}</div>
+        <div style="font-size:10px;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Inspeccionados</div>
+      </div>
+      <div style="background:var(--greenbg);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-family:'Montserrat',sans-serif;font-size:24px;font-weight:900;color:var(--green)">${tA}</div>
+        <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Aprobados</div>
+      </div>
+      <div style="background:var(--redlo);border:1px solid rgba(232,55,42,.2);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-family:'Montserrat',sans-serif;font-size:24px;font-weight:900;color:var(--red)">${tR}</div>
+        <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Rechazados</div>
+      </div>
+      <div style="background:var(--yellowbg);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-family:'Montserrat',sans-serif;font-size:24px;font-weight:900;color:var(--yellow)">${tH.toFixed(1)}</div>
+        <div style="font-size:10px;color:var(--yellow);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Horas</div>
+      </div>
+    </div>
+    <!-- Individual submissions -->
+    ${subs.map((s,si)=>{
+      const defects=s.defects||[];
+      const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
+      const photos=s.photos||[];
+      const hasDefects=defects.some(d=>d.desc&&d.desc!=='—');
+      return`<div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden">
+        <div style="background:var(--card);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line)">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--mid);letter-spacing:1px;text-transform:uppercase">Reporte #${si+1} · ${s.form_id||''}</div>
+            <div style="font-size:12px;color:var(--soft);margin-top:2px">${s.submit_date||''} · Por: ${s.submitted_by||'—'}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-b">${s.inspected||0} insp.</span>
+            <span class="pill pill-g">${s.approved||0} aprob.</span>
+            ${(s.rejected||0)>0?`<span class="pill pill-r">${s.rejected} rechazo${s.rejected!==1?'s':''}</span>`:''}
+          </div>
+        </div>
+        <div style="padding:14px 16px">
+          <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;margin-bottom:10px">
+            <span><span style="color:var(--mid)">Parte:</span> <b>${s.part_number||'—'}</b></span>
+            ${s.part_description?`<span style="color:var(--mid)">${s.part_description}</span>`:''}
+            ${s.mfg_date?`<span><span style="color:var(--mid)">Fab:</span> ${s.mfg_date}</span>`:''}
+          </div>
+          ${hasDefects?`<div style="margin-top:8px">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:6px">⚠️ Defectos</div>
+            <table style="width:100%;border-collapse:collapse;font-size:11px">
+              <thead><tr>
+                <th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px">Serie</th>
+                <th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px">Lote</th>
+                <th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);color:var(--mid);font-size:10px">Defecto</th>
+                <th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--line);color:var(--red);font-size:10px">Cant.</th>
+              </tr></thead>
+              <tbody>${defects.map((d,di)=>`<tr style="background:${di%2===0?'rgba(255,255,255,.02)':'transparent'}">
+                <td style="padding:5px 8px;color:var(--mid)">${d.serial||'—'}</td>
+                <td style="padding:5px 8px;color:var(--mid)">${d.lot||'—'}</td>
+                <td style="padding:5px 8px;color:var(--white)">${d.desc||'—'}</td>
+                <td style="padding:5px 8px;text-align:right;color:var(--red);font-weight:700">${d.qty||0}</td>
+              </tr>`).join('')}
+              <tr><td colspan="3" style="padding:6px 8px;text-align:right;font-size:10px;color:var(--mid);font-weight:700;border-top:1px solid var(--line)">TOTAL</td>
+                  <td style="padding:6px 8px;text-align:right;color:var(--red);font-weight:700;border-top:1px solid var(--line)">${defTotal}</td></tr>
+              </tbody></table>
+          </div>`:''}
+          ${photos.length?`<div style="margin-top:12px">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:8px">📸 Evidencia</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px">
+              ${photos.map(ph=>`<div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--line)"><img src="${ph.dataUrl}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`).join('')}
+            </div>
+          </div>`:''}
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+
+function clientBackToMonth(monthKey){
+  document.getElementById('clientLevel2').style.display='none';
+  clientShowMonth(monthKey);
+}
+
+
 async function downloadClientReportPDF(clientCode, jobId){
   if(!jobId){showToast('Este reporte no tiene Quote asignado.','err');return}
   const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).eq('job_id',jobId).order('created_at',{ascending:true});
@@ -2567,7 +2736,20 @@ async function saveEditedReport(){
   });
   const totalDefects=defects.reduce((a,d)=>a+(d.qty||0),0);
   const defectSummary=defects.map(d=>`${d.code}:${d.desc}(${d.qty})`).join('; ');
-  const allPhotos=[...editExistingPhotos,...editPhotos];
+  // Compress new photos before saving to avoid payload size issues
+  const compressedNew=await Promise.all(editPhotos.map(ph=>new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=800;
+      let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){const r=Math.min(MAX/w,MAX/h);w=Math.round(w*r);h=Math.round(h*r);}
+      const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve({dataUrl:canvas.toDataURL('image/jpeg',0.65),name:ph.name});
+    };
+    img.src=ph.dataUrl;
+  })));
+  const allPhotos=[...editExistingPhotos,...compressedNew];
   const updates={
     job_id:document.getElementById('editJobId')?.value||null,
     customer_code:document.getElementById('editCustCode').value.trim(),
