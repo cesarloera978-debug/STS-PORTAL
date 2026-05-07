@@ -2736,8 +2736,8 @@ async function saveEditedReport(){
   });
   const totalDefects=defects.reduce((a,d)=>a+(d.qty||0),0);
   const defectSummary=defects.map(d=>`${d.code}:${d.desc}(${d.qty})`).join('; ');
-  // Compress new photos before saving to avoid payload size issues
-  const compressedNew=await Promise.all(editPhotos.map(ph=>new Promise(resolve=>{
+  // Compress ALL photos (existing + new) to avoid Supabase payload limit
+  const compressPhoto=ph=>new Promise(resolve=>{
     const img=new Image();
     img.onload=()=>{
       const MAX=800;
@@ -2747,9 +2747,10 @@ async function saveEditedReport(){
       canvas.getContext('2d').drawImage(img,0,0,w,h);
       resolve({dataUrl:canvas.toDataURL('image/jpeg',0.65),name:ph.name});
     };
+    img.onerror=()=>resolve(ph); // if compression fails, keep original
     img.src=ph.dataUrl;
-  })));
-  const allPhotos=[...editExistingPhotos,...compressedNew];
+  });
+  const allPhotos=await Promise.all([...editExistingPhotos,...editPhotos].map(compressPhoto));
   const updates={
     job_id:document.getElementById('editJobId')?.value||null,
     customer_code:document.getElementById('editCustCode').value.trim(),
