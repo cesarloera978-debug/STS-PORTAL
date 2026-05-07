@@ -2736,7 +2736,7 @@ async function saveEditedReport(){
   });
   const totalDefects=defects.reduce((a,d)=>a+(d.qty||0),0);
   const defectSummary=defects.map(d=>`${d.code}:${d.desc}(${d.qty})`).join('; ');
-  // Compress ALL photos before saving
+  // Compress ALL photos (existing + new) before saving
   const compressPhoto=ph=>new Promise(resolve=>{
     const img=new Image();
     img.onload=()=>{
@@ -2751,8 +2751,6 @@ async function saveEditedReport(){
     img.src=ph.dataUrl;
   });
   const allPhotos=await Promise.all([...editExistingPhotos,...editPhotos].map(compressPhoto));
-  // Split into two updates: data first, then photos separately
-  // This avoids Supabase row size limits that cause silent timeouts
   const updates={
     job_id:document.getElementById('editJobId')?.value||null,
     customer_code:document.getElementById('editCustCode').value.trim(),
@@ -2776,10 +2774,10 @@ async function saveEditedReport(){
     lot_numbers:defects.map(d=>d.lot).filter(Boolean).join(' | '),
   };
   try{
-    // Step 1: save all fields except photos
+    // Save data fields first (no photos - avoids payload size limit)
     const {error}=await db.from('submissions').update(updates).eq('id',subId);
     if(error)throw error;
-    // Step 2: save photos in a separate update call
+    // Save photos separately
     const {error:photoErr}=await db.from('submissions').update({photos:allPhotos}).eq('id',subId);
     if(photoErr)throw photoErr;
     const idx=allSubmissions.findIndex(x=>x.id===subId);
