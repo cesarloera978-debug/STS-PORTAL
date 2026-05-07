@@ -1929,7 +1929,7 @@ function clientShowMonth(monthKey){
         const tI=jsubs.reduce((a,s)=>a+(s.inspected||0),0);
         const tA=jsubs.reduce((a,s)=>a+(s.approved||0),0);
         const tR=jsubs.reduce((a,s)=>a+(s.rejected||0),0);
-        const dates=jsubs.map(s=>new Date(s.submit_date_iso||s.created_at)).sort((a,b)=>a-b);
+        const dates=jsubs.map(s=>new Date(s.service_start||s.submit_date_iso||s.created_at)).sort((a,b)=>a-b);
         const dateRange=dates.length?dates[0].toLocaleDateString('es-MX',{month:'short',day:'numeric'})+(dates.length>1?' → '+dates[dates.length-1].toLocaleDateString('es-MX',{month:'short',day:'numeric',year:'numeric'}):''):'';
         const custName=jsubs[0]?.customer_name||'';
         return`<div onclick="clientShowJob('${monthKey}','${jid}')" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.background='rgba(59,130,246,.06)'" onmouseout="this.style.borderColor='var(--line)';this.style.background='var(--card)'">
