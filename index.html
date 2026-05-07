@@ -1855,7 +1855,9 @@ async function loadClientPortal(clientCode){
     // Build month map: { 'April 2026': { jobId: [...subs] } }
     const monthMap={};
     subs.forEach(s=>{
-      const d=new Date(s.submit_date_iso||s.created_at||Date.now());
+      // Use service_start date for folder grouping, fall back to submit date
+      const dateStr=s.service_start||s.submit_date_iso||s.created_at||Date.now();
+      const d=new Date(dateStr);
       const monthKey=d.toLocaleDateString('es-MX',{month:'long',year:'numeric'});
       const monthKeyEN=d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
       const mk=monthKeyEN; // use English for sorting
