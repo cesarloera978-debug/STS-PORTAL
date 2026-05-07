@@ -2722,7 +2722,7 @@ function editAddDefRow(d){
   body.appendChild(tr);
 }
 async function saveEditedReport(){
-  const subId=document.getElementById('editSubId').value;
+  const subId=document.getElementById('editSubId')?.value;
   if(!subId)return;
   document.getElementById('editBtnTxt').style.display='none';
   document.getElementById('editSpinner').style.display='block';
@@ -2736,39 +2736,44 @@ async function saveEditedReport(){
   });
   const totalDefects=defects.reduce((a,d)=>a+(d.qty||0),0);
   const defectSummary=defects.map(d=>`${d.code}:${d.desc}(${d.qty})`).join('; ');
-  // Compress ALL photos (existing + new) before saving
+  // Compress ALL photos — handle both cached and uncached images
   const compressPhoto=ph=>new Promise(resolve=>{
-    const img=new Image();
-    img.onload=()=>{
-      const MAX=700;
-      let w=img.width,h=img.height;
-      if(w>MAX||h>MAX){const r=Math.min(MAX/w,MAX/h);w=Math.round(w*r);h=Math.round(h*r);}
-      const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      resolve({dataUrl:canvas.toDataURL('image/jpeg',0.55),name:ph.name});
+    const doCompress=img=>{
+      try{
+        const MAX=700;
+        let w=img.width||800,h=img.height||600;
+        if(w>MAX||h>MAX){const r=Math.min(MAX/w,MAX/h);w=Math.round(w*r);h=Math.round(h*r);}
+        const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve({dataUrl:canvas.toDataURL('image/jpeg',0.55),name:ph.name});
+      }catch(e){resolve({dataUrl:ph.dataUrl,name:ph.name});}
     };
+    const img=new Image();
+    img.onload=()=>doCompress(img);
     img.onerror=()=>resolve({dataUrl:ph.dataUrl,name:ph.name});
     img.src=ph.dataUrl;
+    // If already loaded (cached data URL), fire immediately
+    if(img.complete&&img.naturalWidth>0)doCompress(img);
   });
   const allPhotos=await Promise.all([...editExistingPhotos,...editPhotos].map(compressPhoto));
   const updates={
     job_id:document.getElementById('editJobId')?.value||null,
-    customer_code:document.getElementById('editCustCode').value.trim(),
-    customer_name:document.getElementById('editCustName').value.trim(),
-    service_start:document.getElementById('editSvcStart').value,
-    service_end:document.getElementById('editSvcEnd').value,
+    customer_code:document.getElementById('editCustCode')?.value.trim(),
+    customer_name:document.getElementById('editCustName')?.value.trim(),
+    service_start:document.getElementById('editSvcStart')?.value,
+    service_end:document.getElementById('editSvcEnd')?.value,
     parts:(()=>{const rows=[];document.querySelectorAll('#editPartBody tr').forEach(tr=>{const ins=tr.querySelectorAll('input[type=text]');const pn=(ins[0]?.value||'').trim();if(pn)rows.push({part_number:pn,part_description:(ins[1]?.value||'').trim(),part_defects:(ins[2]?.value||'').trim()});});return rows;})(),
     part_number:(()=>{const pns=[];document.querySelectorAll('#editPartBody tr').forEach(tr=>{const v=(tr.querySelector('input[type=text]')?.value||'').trim();if(v)pns.push(v);});return pns.join(' / ')})(),
     part_description:(()=>{const ds=[];document.querySelectorAll('#editPartBody tr').forEach(tr=>{const ins=tr.querySelectorAll('input[type=text]');const v=(ins[1]?.value||'').trim();if(v)ds.push(v);});return ds.join(' / ')})(),
     part_defects:(()=>{const ds=[];document.querySelectorAll('#editPartBody tr').forEach(tr=>{const ins=tr.querySelectorAll('input[type=text]');const v=(ins[2]?.value||'').trim();if(v)ds.push(v);});return ds.join(' / ')})(),
-    mfg_date:document.getElementById('editMfgDate').value,
-    inspected:parseInt(document.getElementById('editInspected').value)||0,
-    approved:parseInt(document.getElementById('editApproved').value)||0,
-    rejected:parseInt(document.getElementById('editRejected').value)||0,
-    reworked:parseInt(document.getElementById('editReworked').value)||0,
-    total_hours:document.getElementById('editTotalHrs').value||'0',
-    submitted_by:document.getElementById('editSubmittedBy').value.trim(),
-    notes:document.getElementById('editNotes').value.trim(),
+    mfg_date:document.getElementById('editMfgDate')?.value||'',
+    inspected:parseInt(document.getElementById('editInspected')?.value)||0,
+    approved:parseInt(document.getElementById('editApproved')?.value)||0,
+    rejected:parseInt(document.getElementById('editRejected')?.value)||0,
+    reworked:parseInt(document.getElementById('editReworked')?.value)||0,
+    total_hours:document.getElementById('editTotalHrs')?.value||'0',
+    submitted_by:document.getElementById('editSubmittedBy')?.value.trim(),
+    notes:document.getElementById('editNotes')?.value.trim(),
     defects,defect_summary:defectSummary,total_defects:totalDefects,
     serial_numbers:defects.map(d=>d.serial).filter(Boolean).join(' | '),
     lot_numbers:defects.map(d=>d.lot).filter(Boolean).join(' | '),
