@@ -1130,9 +1130,29 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
         <!-- HOURS — NEW IN V7 -->
         <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:10px">Personnel Hours</div>
         <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:16px">
-          <div class="g2">
-            <div class="field"><label>Total Hours</label><input type="number" id="editTotalHrs" min="0" step="0.5" placeholder="e.g. 8.5"></div>
-            <div class="field"><label>Submitted By</label><input type="text" id="editSubmittedBy"></div>
+          <div id="editPersonnelTableContainer">
+            <table class="personnel-table" id="editPersonnelTable" style="width:100%; border-collapse:collapse">
+              <thead>
+                <tr style="background:var(--bg);border-bottom:2px solid var(--line)">
+                  <th style="width:40px;padding:8px;text-align:center">#</th>
+                  <th style="padding:8px">Name / Employee ID</th>
+                  <th style="padding:8px">Role</th>
+                  <th style="width:120px;padding:8px">Hours Worked</th>
+                  <th style="width:50px;padding:8px;text-align:center">
+                    <button type="button" class="icon-btn" onclick="addEditPersonnelRow()" title="Add row" style="background:var(--primary);color:white;border:none;border-radius:6px;padding:4px 8px;cursor:pointer">
+                      <span style="font-size:16px">➕</span>
+                    </button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="editPersonnelRows">
+                <!-- Rows will be populated here -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div style="margin-top:12px; font-weight:600; color:var(--text); text-align:right">
+            Total Hours: <span id="editTotalHours" style="color:var(--primary)">0.00</span>
           </div>
         </div>
         <!-- PHOTOS — NEW IN V7 -->
@@ -2629,8 +2649,7 @@ if(!isAdmin&&!isAllowedOperator){
   document.getElementById('editApproved').value=s.approved||0;
   document.getElementById('editRejected').value=s.rejected||0;
   document.getElementById('editReworked').value=s.reworked||0;
-  document.getElementById('editTotalHrs').value=s.total_hours||'';
-  document.getElementById('editSubmittedBy').value=s.submitted_by||'';
+  loadEditPersonnel(s.personnel||[]);
   document.getElementById('editNotes').value=s.notes||'';
 // populate job dropdown and set current
 const editJobSel=document.getElementById('editJobId');
@@ -2656,6 +2675,110 @@ if(editJobSel){
   document.getElementById('editModalOverlay').style.display='block';
   document.body.style.overflow='hidden';
 }
+// ========== PERSONNEL EDITING FUNCTIONS ==========
+
+function loadEditPersonnel(personnelData) {
+  const tbody = document.getElementById('editPersonnelRows');
+  tbody.innerHTML = '';
+  
+  if (!personnelData || personnelData.length === 0) {
+    addEditPersonnelRow();
+    return;
+  }
+  
+  personnelData.forEach((person, index) => {
+    const row = document.createElement('tr');
+    row.style.borderBottom = '1px solid var(--line)';
+    row.innerHTML = `
+      <td style="text-align:center;padding:8px">${index + 1}</td>
+      <td style="padding:8px"><input type="text" class="form-input" value="${person.name || ''}" 
+          onchange="updateEditTotalHours()" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:6px"></td>
+      <td style="padding:8px"><input type="text" class="form-input" value="${person.role || ''}" 
+          onchange="updateEditTotalHours()" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:6px"></td>
+      <td style="padding:8px"><input type="number" class="form-input" value="${person.hours || 0}" 
+          min="0" step="0.25" onchange="updateEditTotalHours()" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:6px"></td>
+      <td style="text-align:center;padding:8px">
+        <button type="button" class="icon-btn" onclick="removeEditPersonnelRow(this)" 
+            title="Remove row" style="background:#e53e3e;color:white;border:none;border-radius:6px;padding:4px 8px;cursor:pointer">
+          <span style="font-size:16px">🗑️</span>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+  
+  updateEditTotalHours();
+}
+
+function addEditPersonnelRow() {
+  const tbody = document.getElementById('editPersonnelRows');
+  const rowCount = tbody.children.length;
+  
+  const row = document.createElement('tr');
+  row.style.borderBottom = '1px solid var(--line)';
+  row.innerHTML = `
+    <td style="text-align:center;padding:8px">${rowCount + 1}</td>
+    <td style="padding:8px"><input type="text" class="form-input" placeholder="Name or ID" 
+        onchange="updateEditTotalHours()" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:6px"></td>
+    <td style="padding:8px"><input type="text" class="form-input" placeholder="Role" 
+        onchange="updateEditTotalHours()" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:6px"></td>
+    <td style="padding:8px"><input type="number" class="form-input" value="0" 
+        min="0" step="0.25" onchange="updateEditTotalHours()" style="width:100%;padding:6px;border:1px solid var(--line);border-radius:6px"></td>
+    <td style="text-align:center;padding:8px">
+      <button type="button" class="icon-btn" onclick="removeEditPersonnelRow(this)" 
+          title="Remove row" style="background:#e53e3e;color:white;border:none;border-radius:6px;padding:4px 8px;cursor:pointer">
+        <span style="font-size:16px">🗑️</span>
+      </button>
+    </td>
+  `;
+  tbody.appendChild(row);
+  updateEditTotalHours();
+}
+
+function removeEditPersonnelRow(btn) {
+  const row = btn.closest('tr');
+  row.remove();
+  
+  const tbody = document.getElementById('editPersonnelRows');
+  Array.from(tbody.children).forEach((row, index) => {
+    row.cells[0].textContent = index + 1;
+  });
+  
+  updateEditTotalHours();
+}
+
+function updateEditTotalHours() {
+  const tbody = document.getElementById('editPersonnelRows');
+  let total = 0;
+  
+  Array.from(tbody.children).forEach(row => {
+    const hoursInput = row.cells[3].querySelector('input');
+    const hours = parseFloat(hoursInput.value) || 0;
+    total += hours;
+  });
+  
+  document.getElementById('editTotalHours').textContent = total.toFixed(2);
+}
+
+function collectEditPersonnelData() {
+  const tbody = document.getElementById('editPersonnelRows');
+  const personnel = [];
+  
+  Array.from(tbody.children).forEach(row => {
+    const name = row.cells[1].querySelector('input').value.trim();
+    const role = row.cells[2].querySelector('input').value.trim();
+    const hours = parseFloat(row.cells[3].querySelector('input').value) || 0;
+    
+    if (name || role || hours > 0) {
+      personnel.push({ name, role, hours });
+    }
+  });
+  
+  return personnel;
+}
+
+// ========== END PERSONNEL FUNCTIONS ==========
+
 function closeEditModal(){
   document.getElementById('editModalOverlay').style.display='none';
   document.body.style.overflow='';
@@ -2782,8 +2905,7 @@ async function saveEditedReport(){
     approved:parseInt(document.getElementById('editApproved')?.value)||0,
     rejected:parseInt(document.getElementById('editRejected')?.value)||0,
     reworked:parseInt(document.getElementById('editReworked')?.value)||0,
-    total_hours:document.getElementById('editTotalHrs')?.value||'0',
-    submitted_by:document.getElementById('editSubmittedBy')?.value.trim(),
+    personnel:collectEditPersonnelData(),
     notes:document.getElementById('editNotes')?.value.trim(),
     defects,defect_summary:defectSummary,total_defects:totalDefects,
     serial_numbers:defects.map(d=>d.serial).filter(Boolean).join(' | '),
