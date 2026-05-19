@@ -590,6 +590,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
  	     <tr>
 		    <th style="width:36px">#</th>
 		    <th style="min-width:110px">Part Number</th>
+		    <th style="min-width:120px">Mfg Date</th>
 		    <th style="min-width:130px">Serial Number</th>
 		    <th style="min-width:130px">Lot & Batch #</th>
 		    <th style="min-width:160px">Defect Description</th>
@@ -601,7 +602,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
             <tbody id="defBody"></tbody>
             <tfoot>
               <tr class="tfoot-row">
-                <td colspan="6" style="text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase">Total NOK (Defects)</td>
+                <td colspan="6" style="text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase">Totals</td>
                 <td id="totalOK" style="color:var(--green);font-weight:700">0</td>
                 <td id="totalDef" style="color:var(--red);font-weight:700">0</td>
                 <td></td>
@@ -1118,7 +1119,7 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
         <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:16px">
           <div style="overflow-x:auto">
             <table class="tbl">
-              <thead><tr><th>#</th><th>Serial #</th><th>Lot / Batch #</th><th>Defect Description</th><th>Code</th><th>Qty Bad</th><th></th></tr></thead>
+              <thead><tr><th>#</th><th>Part #</th><th>Serial #</th><th>Lot / Batch #</th><th>Defect Description</th><th style="width:70px;text-align:center">OK</th><th style="width:70px;text-align:center">NOK</th><th></th></tr></thead>
               <tbody id="editDefBody"></tbody>
             </table>
           </div>
@@ -2876,21 +2877,23 @@ function renumberEditDefRows() {
     }
   });
 }
-const editDefects = [];
-document.querySelectorAll('#editDefBody tr').forEach(row => {
-  const cells = row.querySelectorAll('input');
-  if (cells.length >= 7) {
-    editDefects.push({
-      partNumber:        cells[0].value,
-      serial:            cells[1].value,
-      lot:               cells[2].value,
-      defectDescription: cells[3].value,
-      code:              cells[4].value,
-      ok:                cells[5].value,
-      nok:               cells[6].value
-    });
-  }
-});
+async function saveEditedReport(){
+  const subId=document.getElementById('editSubId').value;
+  document.getElementById('editBtnTxt').style.display='none';
+  document.getElementById('editSpinner').style.display='inline-block';
+  const defects=[];
+  document.querySelectorAll('#editDefBody tr').forEach(row=>{
+    const cells=row.querySelectorAll('input');
+    if(cells.length>=7){
+      const partNum=cells[0].value.trim();
+      const serial=cells[1].value.trim();
+      const lot=cells[2].value.trim();
+      const desc=cells[3].value.trim();
+      const ok=parseFloat(cells[5].value)||0;
+      const nok=parseFloat(cells[6].value)||0;
+      if(desc||serial||lot||partNum)defects.push({partNum,serial,lot,desc:desc||'—',code:'—',qty:nok,ok,nok});
+    }
+  });
   const totalDefects=defects.reduce((a,d)=>a+(d.qty||0),0);
   const defectSummary=defects.map(d=>`${d.code}:${d.desc}(${d.qty})`).join('; ');
   // Compress ALL photos — handle both cached and uncached images
