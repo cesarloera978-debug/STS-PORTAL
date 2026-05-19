@@ -587,18 +587,17 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
         <div style="overflow-x:auto">
           <table class="tbl" id="defTable">
             <thead>
-              <tr>
-                <th style="width:36px">#</th>
-                <th style="min-width:110px">Part Number</th>
-                <th style="min-width:110px">MFG Date</th>
-                <th style="min-width:130px">Serial Number</th>
-                <th style="min-width:130px">Lot & Batch #</th>
-                <th style="min-width:160px">Defect Description</th>
-                <th style="width:70px;text-align:center">OK</th>
-                <th style="width:70px;text-align:center">NOK</th>
-                <th style="width:36px"></th>
-              </tr>
-            </thead>
+ 	     <tr>
+		    <th style="width:36px">#</th>
+		    <th style="min-width:110px">Part Number</th>
+		    <th style="min-width:130px">Serial Number</th>
+		    <th style="min-width:130px">Lot & Batch #</th>
+		    <th style="min-width:160px">Defect Description</th>
+		    <th style="width:70px;text-align:center">OK</th>
+		    <th style="width:70px;text-align:center">NOK</th>
+		    <th style="width:36px"></th>
+ 		 </tr>
+	    </thead>
             <tbody id="defBody"></tbody>
             <tfoot>
               <tr class="tfoot-row">
@@ -2842,32 +2841,56 @@ function processEditFiles(files){
     reader.readAsDataURL(file);
   });
 }
-function editAddDefRow(d){
-  const body=document.getElementById('editDefBody');
-  const i=body.rows.length+1;
-  const tr=document.createElement('tr');
-  tr.innerHTML=`<td style="color:var(--mid);font-size:11px;font-weight:700">${String(i).padStart(2,'0')}</td>
-    <td><input type="text" value="${d?.serial||''}" placeholder="Serial #" style="width:100%"></td>
-    <td><input type="text" value="${d?.lot||''}" placeholder="Lot / Batch #" style="width:100%"></td>
-    <td><input type="text" value="${d?.desc&&d.desc!=='—'?d.desc:''}" placeholder="Defect description" style="width:100%"></td>
-    <td><input type="text" value="${d?.code&&d.code!=='—'?d.code:''}" placeholder="Code" style="width:100%"></td>
-    <td><input type="number" value="${d?.qty||0}" min="0" style="width:100%"></td>
-    <td><button class="btn-del" onclick="this.closest('tr').remove()">✕</button></td>`;
-  body.appendChild(tr);
+function editAddDefRow(defectData) {
+  const tbody = document.getElementById('editDefBody');
+  const rowCount = tbody.rows.length + 1;
+  const rowNum = String(rowCount).padStart(2, '0');
+
+  // If defectData is provided, use it; otherwise use empty defaults
+  const partNumber = defectData?.part_number || defectData?.partNumber || '';
+  const serial = defectData?.serial || '';
+  const lot = defectData?.lot || '';
+  const defectDescription = defectData?.defect_description || defectData?.defectDescription || '';
+  const ok = defectData?.ok || 0;
+  const nok = defectData?.nok || 0;
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="row-num" style="width:36px">${rowNum}</td>
+    <td><input type="text" value="${partNumber}" placeholder="Part #" style="width:100%;padding:8px;border:1px solid #444;border-radius:4px;background:#2a2a2a;color:#fff;" /></td>
+    <td><input type="text" value="${serial}" placeholder="e.g. SN-20240001" style="width:100%;padding:8px;border:1px solid #444;border-radius:4px;background:#2a2a2a;color:#fff;" /></td>
+    <td><input type="text" value="${lot}" placeholder="e.g. LOT-2024-B01" style="width:100%;padding:8px;border:1px solid #444;border-radius:4px;background:#2a2a2a;color:#fff;" /></td>
+    <td><input type="text" value="${defectDescription}" placeholder="e.g. Scratch, dent..." style="width:100%;padding:8px;border:1px solid #444;border-radius:4px;background:#2a2a2a;color:#fff;" /></td>
+    <td><input type="number" value="${ok}" min="0" style="width:100%;text-align:center;padding:8px;border:1px solid #444;border-radius:4px;background:#2a2a2a;color:#fff;" /></td>
+    <td><input type="number" value="${nok}" min="0" style="width:100%;text-align:center;padding:8px;border:1px solid #444;border-radius:4px;background:#2a2a2a;color:#fff;" /></td>
+    <td style="width:36px;text-align:center;"><button class="del-btn" onclick="this.closest('tr').remove(); renumberEditDefRows();" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:18px;">✕</button></td>
+  `;
+  tbody.appendChild(tr);
 }
-async function saveEditedReport(){
-  const subId=document.getElementById('editSubId')?.value;
-  if(!subId)return;
-  document.getElementById('editBtnTxt').style.display='none';
-  document.getElementById('editSpinner').style.display='block';
-  const defects=[];
-  document.querySelectorAll('#editDefBody tr').forEach(tr=>{
-    const ins=tr.querySelectorAll('input');
-    const serial=ins[0]?.value.trim()||'';const lot=ins[1]?.value.trim()||'';
-    const desc=ins[2]?.value.trim()||'';const code=ins[3]?.value.trim()||'';
-    const qty=parseFloat(ins[4]?.value)||0;
-    if(desc||serial||lot)defects.push({serial,lot,desc:desc||'—',code:code||'—',qty});
+function renumberEditDefRows() {
+  const rows = document.querySelectorAll('#editDefBody tr');
+  rows.forEach((row, i) => {
+    const numCell = row.querySelector('.row-num');
+    if (numCell) {
+      numCell.textContent = String(i + 1).padStart(2, '0');
+    }
   });
+}
+const editDefects = [];
+document.querySelectorAll('#editDefBody tr').forEach(row => {
+  const cells = row.querySelectorAll('input');
+  if (cells.length >= 7) {
+    editDefects.push({
+      partNumber:        cells[0].value,
+      serial:            cells[1].value,
+      lot:               cells[2].value,
+      defectDescription: cells[3].value,
+      code:              cells[4].value,
+      ok:                cells[5].value,
+      nok:               cells[6].value
+    });
+  }
+});
   const totalDefects=defects.reduce((a,d)=>a+(d.qty||0),0);
   const defectSummary=defects.map(d=>`${d.code}:${d.desc}(${d.qty})`).join('; ');
   // Compress ALL photos — handle both cached and uncached images
