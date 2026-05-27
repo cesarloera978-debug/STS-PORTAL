@@ -1241,9 +1241,10 @@ function getConfig(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}
 /* ══ SUPABASE HELPERS ══ */
 async function sbGetSubmissions(){
   try{
+    if(!currentUser) return [];
     let query=db.from('submissions').select('*').order('submit_date_iso',{ascending:false});
     // admin3 (Victor) only sees SLI — admin2 (Cesar) and admin see everything
-    if(currentUser?.role==='admin3'){
+    if(currentUser.role==='admin3'){
       query=query.ilike('customer_code','SLI%');
     }
     const {data,error}=await query;
@@ -1393,6 +1394,7 @@ const partBody=document.getElementById('partBody');
 if(partBody&&!partBody.rows.length){addPartBulkRows(1);}
   updateProgress();
   // Load submissions for admin AND operators (operators need theirs to edit)
+  if(!currentUser) return;
  [allSubmissions, allJobs]=await Promise.all([sbGetSubmissions(),sbGetJobs()]);
 populateJobSelectors();
    if(currentUser.role==='admin'||currentUser.role==='admin2'||currentUser.role==='admin3'){
