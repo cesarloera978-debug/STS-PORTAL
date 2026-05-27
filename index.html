@@ -1241,13 +1241,18 @@ function getConfig(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}
 /* ══ SUPABASE HELPERS ══ */
 async function sbGetSubmissions(){
   try{
-    let query=db.from('submissions').select('*').order('created_at',{ascending:false});
-    // admin3 (Victor) only sees SLI — admin2 (Cesar) and admin see everything
-    if(currentUser?.role==='admin3'){
-      query=query.ilike('customer_code','SLI%');
+    // Try ordering by created_at first; fall back to submit_date_iso if column missing (500)
+    const buildQuery=(orderCol)=>{
+      let q=db.from('submissions').select('*').order(orderCol,{ascending:false});
+      if(currentUser?.role==='admin3') q=q.ilike('customer_code','SLI%');
+      return q;
+    };
+    let {data,error}=await buildQuery('created_at');
+    if(error && (error.code==='42703'||error.message?.includes('created_at')||error.message?.includes('500')||error.details?.includes('created_at'))){
+      console.warn('created_at not found, falling back to submit_date_iso');
+      ({data,error}=await buildQuery('submit_date_iso'));
     }
-    const {data,error}=await query;
-    if(error)throw error;
+    if(error) throw error;
     return data||[];
   }catch(e){console.error('sbGetSubmissions:',e);return[]}
 }
@@ -1280,7 +1285,8 @@ async function sbGetApprovals(){
 
 async function sbGetJobs(){
   try{
-    const {data,error}=await db.from('jobs').select('*').order('created_at',{ascending:false});
+    let {data,error}=await db.from('jobs').select('*').order('created_at',{ascending:false});
+    if(error && error.code==='42703'){({data,error}=await db.from('jobs').select('*'));}
     if(error)throw error;return data||[];
   }catch(e){console.error('sbGetJobs:',e);return[];}
 }
@@ -3050,7 +3056,7 @@ async function loadMySubmissions(){
     <div style="background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--pure)">${s.customer_code||'—'} · PN: ${s.part_number||'—'}</div>
-        <div style="font-size:11px;color:var(--mid);margin-top:3px">${s.submit_date||''} · ${s.form_id||''} · <span style="color:var(--soft)">By: ${s.submitted_by||'—'}</span></div>
+        <div style="font-size:11px;color:var(--mid);margin-top:3px">${s.submit_date||''} · ${s.form_id||''}</div>
         <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
           <span class="pill pill-b">${s.inspected||0} inspected</span>
           <span class="pill pill-g">${s.approved||0} approved</span>
