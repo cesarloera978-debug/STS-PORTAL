@@ -1401,8 +1401,12 @@ populateJobSelectors();
   } else {
     // For operators, show their panel if they have submissions
     const myName=(currentUser.name||'').toLowerCase().trim();
-    const mine=allSubmissions.filter(s=>(s.submitted_by||'').toLowerCase().trim()===myName);
-    if(mine.length){
+    const STS_GROUP=['sebastian loera','alejandro loera'];
+    const inStsGroup=STS_GROUP.includes(myName);
+    const visible=inStsGroup
+      ?allSubmissions.filter(s=>STS_GROUP.includes((s.submitted_by||'').toLowerCase().trim()))
+      :allSubmissions.filter(s=>(s.submitted_by||'').toLowerCase().trim()===myName);
+    if(visible.length){
       document.getElementById('mySubsPanel').style.display='block';
       loadMySubmissions();
     }
@@ -1721,10 +1725,12 @@ function loadOverview(){
       const defRows=defects.length
         ?defects.map((d,di)=>`<tr style="background:${di%2===0?'rgba(255,255,255,0.02)':'transparent'}"><td style="color:var(--mid);font-size:11px">${d.serial||'—'}</td><td style="color:var(--mid);font-size:11px">${d.lot||'—'}</td><td>${d.desc||'—'}</td><td style="font-size:11px;color:var(--mid)">${d.code||'—'}</td><td style="color:var(--red);font-weight:700">${d.qty||0}</td></tr>`).join('')
         :`<tr><td colspan="5" style="color:var(--soft);font-size:11px;font-style:italic">No defects recorded.</td></tr>`;
-      const isAdmin=currentUser?.role==='admin';
+      const isAdmin=currentUser?.role==='admin'||currentUser?.role==='admin2'||currentUser?.role==='admin3';
       const myName=(currentUser?.name||'').toLowerCase().trim();
       const subBy=(s.submitted_by||'').toLowerCase().trim();
-      const canEdit=isAdmin||(currentUser?.role==='operator'&&myName===subBy);
+      const STS_GROUP_OV=['sebastian loera','alejandro loera'];
+      const inStsGroupOv=STS_GROUP_OV.includes(myName)&&STS_GROUP_OV.includes(subBy);
+      const canEdit=isAdmin||inStsGroupOv||(currentUser?.role==='operator'&&myName===subBy);
       const editBtns=canEdit?`<div style="display:flex;gap:6px;margin-left:8px">
         <button onclick="openEditModal('${s.id}')" style="background:transparent;border:1px solid rgba(59,130,246,.4);color:var(--blue);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">✏️ Edit</button>
         ${isAdmin?`<button onclick="deleteReport('${s.id}','${(s.form_id||'').replace(/'/g,'')}')" style="background:transparent;border:1px solid rgba(232,55,42,.3);color:var(--red);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;white-space:nowrap">🗑 Del</button>`:''}
@@ -3033,7 +3039,11 @@ async function deleteReport(subId,formId){
 async function loadMySubmissions(){
   if(currentUser.role!=='operator')return;
   const myName=(currentUser.name||'').toLowerCase().trim();
-  const mine=allSubmissions.filter(s=>(s.submitted_by||'').toLowerCase().trim()===myName);
+  const STS_GROUP=['sebastian loera','alejandro loera'];
+  const inStsGroup=STS_GROUP.includes(myName);
+  const mine=inStsGroup
+    ?allSubmissions.filter(s=>STS_GROUP.includes((s.submitted_by||'').toLowerCase().trim()))
+    :allSubmissions.filter(s=>(s.submitted_by||'').toLowerCase().trim()===myName);
   const el=document.getElementById('mySubsBody');
   if(!el)return;
   if(!mine.length){el.innerHTML='<div class="no-data" style="padding:20px"><div class="nd-ico" style="font-size:28px">📋</div>No submissions yet.</div>';return;}
@@ -3041,7 +3051,7 @@ async function loadMySubmissions(){
     <div style="background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div>
         <div style="font-size:12px;font-weight:700;color:var(--pure)">${s.customer_code||'—'} · PN: ${s.part_number||'—'}</div>
-        <div style="font-size:11px;color:var(--mid);margin-top:3px">${s.submit_date||''} · ${s.form_id||''}</div>
+        <div style="font-size:11px;color:var(--mid);margin-top:3px">${s.submit_date||''} · ${s.form_id||''} · <span style="color:var(--soft)">By: ${s.submitted_by||'—'}</span></div>
         <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
           <span class="pill pill-b">${s.inspected||0} inspected</span>
           <span class="pill pill-g">${s.approved||0} approved</span>
