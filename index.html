@@ -736,7 +736,15 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
 </div>
     <div class="admin-content" id="historyTab">
       <div class="card">
-        <div class="card-hd"><div class="card-ico">📋</div><div class="card-title">All Submissions</div></div>
+        <div class="card-hd" style="flex-wrap:wrap;gap:10px">
+          <div class="card-ico">📋</div>
+          <div class="card-title">Submissions</div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <label style="font-size:11px;color:var(--mid);font-weight:600">MONTH:</label>
+            <select id="subMonthFilter" onchange="changeSubMonth()" style="background:var(--card);border:1px solid var(--line);border-radius:7px;padding:5px 10px;color:var(--white);font-size:12px;cursor:pointer" title="Filter submissions by month"></select>
+            <button onclick="changeSubMonth('all')" id="subLoadAllBtn" style="background:transparent;border:1px solid var(--line);color:var(--mid);font-size:11px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer">📂 All Time</button>
+          </div>
+        </div>
         <div class="card-body" style="overflow-x:auto" id="historyBody"><div class="no-data"><div class="nd-ico">📭</div>No submissions yet.</div></div>
       </div>
     </div>
@@ -1239,10 +1247,23 @@ function showToast(msg,type=''){const t=document.getElementById('toast');t.textC
 function getConfig(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}catch(e){return{}}}
 
 /* ══ SUPABASE HELPERS ══ */
-async function sbGetSubmissions(){
+// Track which month is loaded: 'YYYY-MM' or 'all'
+let submissionsMonthFilter='current';
+
+async function sbGetSubmissions(monthFilter){
   try{
     if(!currentUser) return [];
-    let query=db.from('submissions').select('*').order('submit_date_iso',{ascending:false}).range(0,99);
+    const filter=monthFilter||submissionsMonthFilter;
+    let query=db.from('submissions').select('*').order('submit_date_iso',{ascending:false});
+    // Apply month filter at DB level — only load what we need
+    if(filter!=='all'){
+      const now=new Date();
+      const yr=filter==='current'?now.getFullYear():parseInt(filter.split('-')[0]);
+      const mo=filter==='current'?now.getMonth()+1:parseInt(filter.split('-')[1]);
+      const start=yr+'-'+String(mo).padStart(2,'0')+'-01T00:00:00.000Z';
+      const end=new Date(yr,mo,1).toISOString(); // first day of next month
+      query=query.gte('submit_date_iso',start).lt('submit_date_iso',end);
+    }
     if(currentUser.role==='admin3'){
       query=query.ilike('customer_code','SLI%');
     }
@@ -1402,6 +1423,7 @@ if(partBody&&!partBody.rows.length){addPartBulkRows(1);}
   updateProgress();
   // Load submissions for admin AND operators (operators need theirs to edit)
   if(!currentUser) return;
+ buildMonthOptions();
  [allSubmissions, allJobs]=await Promise.all([sbGetSubmissions(),sbGetJobs()]);
 populateJobSelectors();
    if(currentUser.role==='admin'||currentUser.role==='admin2'||currentUser.role==='admin3'){
@@ -1773,6 +1795,33 @@ function loadOverview(){
         </div>
       </div>`;
     }).join('');
+  }
+}
+
+async function changeSubMonth(force){
+  const sel=document.getElementById('subMonthFilter');
+  submissionsMonthFilter=force||sel?.value||'current';
+  // Update All Time button style
+  const allBtn=document.getElementById('subLoadAllBtn');
+  if(allBtn)allBtn.style.color=submissionsMonthFilter==='all'?'var(--red)':'var(--mid)';
+  allSubmissions=await sbGetSubmissions(submissionsMonthFilter);
+  loadOverview();renderDirectory();loadPayroll();
+}
+
+function buildMonthOptions(){
+  const sel=document.getElementById('subMonthFilter');
+  if(!sel)return;
+  const now=new Date();
+  sel.innerHTML='';
+  // Current month first
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const val=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const label=d.toLocaleString('default',{month:'long',year:'numeric'});
+    const opt=document.createElement('option');
+    opt.value=i===0?'current':val;
+    opt.textContent=i===0?'📅 '+label+' (current)':label;
+    sel.appendChild(opt);
   }
 }
 
