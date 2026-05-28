@@ -1242,7 +1242,9 @@ function getConfig(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}
 async function sbGetSubmissions(){
   try{
     if(!currentUser) return [];
-    let query=db.from('submissions').select('*').order('submit_date_iso',{ascending:false}).range(0,99);
+    // Select only lightweight columns — skip photos/personnel/defects/parts jsonb blobs
+    const cols='id,form_id,submit_date,submit_date_iso,customer_code,customer_name,service_start,service_end,part_number,part_description,mfg_date,serial_numbers,lot_numbers,inspected,approved,rejected,reworked,defect_summary,total_defects,num_people,total_hours,notes,submitted_by,created_at,job_id,company,part_defects';
+    let query=db.from('submissions').select(cols).order('submit_date_iso',{ascending:false}).range(0,99);
     // admin3 (Victor) only sees SLI — admin2 (Cesar) and admin see everything
     if(currentUser.role==='admin3'){
       query=query.ilike('customer_code','SLI%');
