@@ -3124,9 +3124,11 @@ function calSelectDay(key,subs){
       </div>
     </div>`).join('');
 }
-function calOpenReport(formId,dateKey){
+async function calOpenReport(formId,dateKey){
   const map=calBuildMap();const subs=map[dateKey]||[];
-  const s=subs.find(x=>x.form_id===formId)||subs[0];if(!s)return;
+  const slim=subs.find(x=>x.form_id===formId)||subs[0];if(!slim)return;
+  // Fetch full record so defects/personnel/photos are available
+  const s=await sbGetSubmissionFull(slim.id)||slim;
   document.getElementById('calReportHeading').textContent=(s.customer_name||s.customer_code||'—')+' — PN: '+(s.part_number||'—');
   document.getElementById('calReportFid').textContent=s.form_id||'—';
   const defects=s.defects||[];const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
