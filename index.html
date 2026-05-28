@@ -2661,8 +2661,9 @@ function editAddPartRow(){
   const num=tbody.querySelectorAll('tr').length+1;
   tbody.insertAdjacentHTML('beforeend',editPartRowHtml(num,'','',''));
 }
-function openEditModal(subId){
-  const s=allSubmissions.find(x=>x.id===subId);
+async function openEditModal(subId){
+  // Fetch full record (including photos/personnel/defects/parts) for editing
+  let s=await sbGetSubmissionFull(subId);
   if(!s){showToast('Report not found.','err');return;}
   // Role check: operators can only edit their own submissions
  const isAdmin=currentUser.role==='admin'||currentUser.role==='admin2'||currentUser.role==='admin3';
