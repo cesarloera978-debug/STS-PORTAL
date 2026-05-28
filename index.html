@@ -1242,10 +1242,7 @@ function getConfig(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}
 async function sbGetSubmissions(){
   try{
     if(!currentUser) return [];
-    // Select only lightweight columns — skip photos/personnel/defects/parts jsonb blobs
-    const cols='id,form_id,submit_date,submit_date_iso,customer_code,customer_name,service_start,service_end,part_number,part_description,mfg_date,serial_numbers,lot_numbers,inspected,approved,rejected,reworked,defect_summary,total_defects,num_people,total_hours,notes,submitted_by,created_at,job_id,company,part_defects';
-    let query=db.from('submissions').select(cols).order('submit_date_iso',{ascending:false}).range(0,99);
-    // admin3 (Victor) only sees SLI — admin2 (Cesar) and admin see everything
+    let query=db.from('submissions').select('*').order('submit_date_iso',{ascending:false}).range(0,99);
     if(currentUser.role==='admin3'){
       query=query.ilike('customer_code','SLI%');
     }
@@ -1253,6 +1250,14 @@ async function sbGetSubmissions(){
     if(error)throw error;
     return data||[];
   }catch(e){console.error('sbGetSubmissions:',e);return[]}
+}
+
+async function sbGetSubmissionFull(subId){
+  try{
+    const {data,error}=await db.from('submissions').select('*').eq('id',subId).single();
+    if(error)throw error;
+    return data;
+  }catch(e){console.error('sbGetSubmissionFull:',e);return null;}
 }
 
 async function sbSaveSubmission(d){
@@ -2661,9 +2666,8 @@ function editAddPartRow(){
   const num=tbody.querySelectorAll('tr').length+1;
   tbody.insertAdjacentHTML('beforeend',editPartRowHtml(num,'','',''));
 }
-async function openEditModal(subId){
-  // Fetch full record (including photos/personnel/defects/parts) for editing
-  let s=await sbGetSubmissionFull(subId);
+function openEditModal(subId){
+  const s=allSubmissions.find(x=>x.id===subId);
   if(!s){showToast('Report not found.','err');return;}
   // Role check: operators can only edit their own submissions
  const isAdmin=currentUser.role==='admin'||currentUser.role==='admin2'||currentUser.role==='admin3';
@@ -3124,11 +3128,9 @@ function calSelectDay(key,subs){
       </div>
     </div>`).join('');
 }
-async function calOpenReport(formId,dateKey){
+function calOpenReport(formId,dateKey){
   const map=calBuildMap();const subs=map[dateKey]||[];
-  const slim=subs.find(x=>x.form_id===formId)||subs[0];if(!slim)return;
-  // Fetch full record so defects/personnel/photos are available
-  const s=await sbGetSubmissionFull(slim.id)||slim;
+  const s=subs.find(x=>x.form_id===formId)||subs[0];if(!s)return;
   document.getElementById('calReportHeading').textContent=(s.customer_name||s.customer_code||'—')+' — PN: '+(s.part_number||'—');
   document.getElementById('calReportFid').textContent=s.form_id||'—';
   const defects=s.defects||[];const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
