@@ -2715,8 +2715,9 @@ function editAddPartRow(){
   const num=tbody.querySelectorAll('tr').length+1;
   tbody.insertAdjacentHTML('beforeend',editPartRowHtml(num,'','',''));
 }
-function openEditModal(subId){
-  const s=allSubmissions.find(x=>x.id===subId);
+async function openEditModal(subId){
+  // Always fetch full record fresh — guarantees defects/personnel/photos are populated
+  const s=await sbGetSubmissionFull(subId);
   if(!s){showToast('Report not found.','err');return;}
   // Role check: operators can only edit their own submissions
  const isAdmin=currentUser.role==='admin'||currentUser.role==='admin2'||currentUser.role==='admin3';
@@ -3177,9 +3178,11 @@ function calSelectDay(key,subs){
       </div>
     </div>`).join('');
 }
-function calOpenReport(formId,dateKey){
+async function calOpenReport(formId,dateKey){
   const map=calBuildMap();const subs=map[dateKey]||[];
-  const s=subs.find(x=>x.form_id===formId)||subs[0];if(!s)return;
+  const slim=subs.find(x=>x.form_id===formId)||subs[0];if(!slim)return;
+  // Always fetch full record so defects/personnel/photos are guaranteed
+  const s=await sbGetSubmissionFull(slim.id)||slim;
   document.getElementById('calReportHeading').textContent=(s.customer_name||s.customer_code||'—')+' — PN: '+(s.part_number||'—');
   document.getElementById('calReportFid').textContent=s.form_id||'—';
   const defects=s.defects||[];const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
