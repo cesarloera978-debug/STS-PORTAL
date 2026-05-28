@@ -2973,12 +2973,13 @@ function editAddDefRow(defectData) {
   const rowNum = String(rowCount).padStart(2, '0');
 
   // If defectData is provided, use it; otherwise use empty defaults
-  const partNumber = defectData?.part_number || defectData?.partNumber || '';
+  // Stored structure: {partNum, serial, lot, desc, code, qty, ok, nok}
+  const partNumber = defectData?.partNum || defectData?.part_number || defectData?.partNumber || '';
   const serial = defectData?.serial || '';
   const lot = defectData?.lot || '';
-  const defectDescription = defectData?.defect_description || defectData?.defectDescription || '';
+  const defectDescription = defectData?.desc || defectData?.defect_description || defectData?.defectDescription || '';
   const ok = defectData?.ok || 0;
-  const nok = defectData?.nok || 0;
+  const nok = defectData?.nok || defectData?.qty || 0;
 
   const tr = document.createElement('tr');
   tr.innerHTML = `
