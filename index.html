@@ -2716,9 +2716,11 @@ function editAddPartRow(){
   tbody.insertAdjacentHTML('beforeend',editPartRowHtml(num,'','',''));
 }
 async function openEditModal(subId){
-  // Always fetch full record fresh — guarantees defects/personnel/photos are populated
+  window._editModalLoaded=false;
+  showToast('⏳ Loading report...','');
   const s=await sbGetSubmissionFull(subId);
-  if(!s){showToast('Report not found.','err');return;}
+  if(!s){showToast('❌ Could not load report. Do NOT save.','err');return;}
+  window._editModalLoaded=true;
   // Role check: operators can only edit their own submissions
  const isAdmin=currentUser.role==='admin'||currentUser.role==='admin2'||currentUser.role==='admin3';
 const isAllowedOperator=currentUser.username==='sebastian.loera'||currentUser.username==='jesus.arevalo'||currentUser.username==='alejandro.loera';
@@ -3001,6 +3003,11 @@ function renumberEditDefRows() {
   });
 }
 async function saveEditedReport(){
+  // SAFETY GUARD: block save if edit modal data wasn't fully loaded
+  if(!window._editModalLoaded){
+    showToast('❌ Report data not loaded — saving blocked to protect your data. Close and reopen the edit modal.','err');
+    return;
+  }
   const subId=document.getElementById('editSubId').value;
   document.getElementById('editBtnTxt').style.display='none';
   document.getElementById('editSpinner').style.display='inline-block';
@@ -3178,11 +3185,9 @@ function calSelectDay(key,subs){
       </div>
     </div>`).join('');
 }
-async function calOpenReport(formId,dateKey){
+function calOpenReport(formId,dateKey){
   const map=calBuildMap();const subs=map[dateKey]||[];
-  const slim=subs.find(x=>x.form_id===formId)||subs[0];if(!slim)return;
-  // Always fetch full record so defects/personnel/photos are guaranteed
-  const s=await sbGetSubmissionFull(slim.id)||slim;
+  const s=subs.find(x=>x.form_id===formId)||subs[0];if(!s)return;
   document.getElementById('calReportHeading').textContent=(s.customer_name||s.customer_code||'—')+' — PN: '+(s.part_number||'—');
   document.getElementById('calReportFid').textContent=s.form_id||'—';
   const defects=s.defects||[];const defTotal=defects.reduce((a,d)=>a+(d.qty||0),0);
