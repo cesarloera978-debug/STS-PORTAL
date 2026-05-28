@@ -1242,7 +1242,7 @@ function getConfig(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}
 async function sbGetSubmissions(){
   try{
     if(!currentUser) return [];
-    let query=db.from('submissions').select('*').order('submit_date_iso',{ascending:false});
+    let query=db.from('submissions').select('*').order('submit_date_iso',{ascending:false}).range(0,99);
     // admin3 (Victor) only sees SLI — admin2 (Cesar) and admin see everything
     if(currentUser.role==='admin3'){
       query=query.ilike('customer_code','SLI%');
