@@ -1975,20 +1975,16 @@ async function loadClientPortal(clientCode){
   const area=document.getElementById('clientReportsArea');
   area.innerHTML='<div class="no-data"><div class="nd-ico">⏳</div>Cargando tus reportes…</div>';
   try{
-    const {data:approvals}=await db.from('client_approvals').select('*').eq('customer_code',clientCode).eq('released',true);
-    if(!approvals||approvals.length===0){
-      area.innerHTML=`<div style="text-align:center;padding:60px 20px">
-        <div style="font-size:56px;margin-bottom:16px">🔒</div>
-        <div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:800;color:var(--white);margin-bottom:10px">Reportes No Disponibles Aún</div>
-        <div style="font-size:14px;color:var(--mid);max-width:400px;margin:0 auto;line-height:1.7">Sus reportes de inspección están siendo revisados por nuestro equipo. Se le notificará una vez que hayan sido aprobados y publicados.</div>
-        <div style="margin-top:24px"><a href="https://www.stslaredo.com" target="_blank" style="color:var(--red);text-decoration:none;font-weight:600">www.stslaredo.com</a></div>
-      </div>`;
+    // Load all submissions for this client - NO approval gate
+    const {data:subs,error}=await db.from('submissions').select('*').eq('customer_code',clientCode).order('service_start',{ascending:false});
+    if(error){
+      console.error('Supabase error:',error);
+      area.innerHTML='<div class="no-data"><div class="nd-ico">⚠️</div>Error cargando reportes. Intenta más tarde.</div>';
       return;
     }
-    const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).order('service_start',{ascending:false});
-    if(!subs||!subs.length){
-      area.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No se encontraron reportes para su cuenta.</div>';
-      return;
+    // Show calendar even if no submissions - user can navigate months
+    if(!subs||subs.length===0){
+      subs=[];
     }
     // Generate all months for dropdown (past 12 months + next 12 months)
     const now=new Date();
