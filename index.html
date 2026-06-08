@@ -2225,6 +2225,11 @@ function clientOpenSubmissionDetail(subId){
   const sub=window._clientAllSubs.find(s=>s.id===subId);
   if(!sub)return;
   
+  // Parse JSON fields
+  const defects=typeof sub.defects==='string'?JSON.parse(sub.defects||'[]'):sub.defects||[];
+  const personnel=typeof sub.personnel==='string'?JSON.parse(sub.personnel||'[]'):sub.personnel||[];
+  const photos=typeof sub.photos==='string'?JSON.parse(sub.photos||'[]'):sub.photos||[];
+  
   // Create detail modal
   const modal=document.createElement('div');
   modal.style.position='fixed';
@@ -2237,6 +2242,7 @@ function clientOpenSubmissionDetail(subId){
   modal.style.alignItems='center';
   modal.style.justifyContent='center';
   modal.style.zIndex='9999';
+  modal.style.padding='20px';
   modal.onclick=(e)=>{if(e.target===modal)modal.remove();};
   
   const dateStr=sub.service_start||sub.submit_date_iso||sub.created_at;
@@ -2244,60 +2250,273 @@ function clientOpenSubmissionDetail(subId){
   const dateDisplay=!isNaN(d)?d.toLocaleDateString('es-MX'):'—';
   
   modal.innerHTML=`
-    <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:32px;max-width:600px;max-height:80vh;overflow-y:auto;width:90%">
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:32px;max-width:900px;max-height:90vh;overflow-y:auto;width:100%">
       <div style="display:flex;justify-content:space-between;align-items:start;gap:16px;margin-bottom:24px">
         <div>
-          <div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:800;color:var(--pure);margin-bottom:8px">${sub.customer_name||sub.customer_code||'—'}</div>
-          <div style="font-size:13px;color:var(--mid)">Formulario: ${sub.form_id?sub.form_id.substring(0,20):'—'}</div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:24px;font-weight:800;color:var(--pure);margin-bottom:8px">${sub.customer_name||sub.customer_code||'—'}</div>
+          <div style="font-size:13px;color:var(--mid)">Formulario: ${sub.form_id?sub.form_id:'—'}</div>
         </div>
-        <button onclick="this.closest('[style*=fixed]').remove()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--mid)">✕</button>
+        <div style="display:flex;gap:8px">
+          <button onclick="clientDownloadPDF('${subId}')" style="background:var(--blue);color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:all .2s" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">📥 Descargar PDF</button>
+          <button onclick="this.closest('[style*=fixed]').remove()" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:10px 14px;border-radius:8px;font-size:18px;cursor:pointer">✕</button>
+        </div>
       </div>
       
       <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
           <div>
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:6px;letter-spacing:1px">Fecha de Inspección</div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:6px;letter-spacing:1px">Fecha</div>
             <div style="font-size:14px;color:var(--pure)">${dateDisplay}</div>
           </div>
           <div>
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:6px;letter-spacing:1px">Parte</div>
-            <div style="font-size:14px;color:var(--pure)">${sub.part_number||'—'}</div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:6px;letter-spacing:1px">Parte</div>
+            <div style="font-size:13px;color:var(--pure)">${sub.part_number||'—'}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:6px;letter-spacing:1px">Inspeccionados</div>
+            <div style="font-size:18px;font-weight:700;color:rgb(34,197,94)">${sub.inspected||0}</div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:6px;letter-spacing:1px">Defectos</div>
+            <div style="font-size:18px;font-weight:700;color:${sub.rejected>0?'rgb(239,68,68)':'rgb(34,197,94)'}">${sub.rejected||0}</div>
           </div>
         </div>
       </div>
       
       ${sub.part_description?`
         <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:6px;letter-spacing:1px">Descripción</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:8px;letter-spacing:1px">Descripción</div>
           <div style="font-size:13px;color:var(--soft);line-height:1.6">${sub.part_description}</div>
         </div>
       `:''}
       
       <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:12px;letter-spacing:1px">Resultados</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-          <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:20px;font-weight:800;color:rgb(34,197,94)">${sub.inspected||0}</div>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:12px;letter-spacing:1px">Resultados</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
+          <div style="background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:18px;font-weight:800;color:rgb(34,197,94)">${sub.inspected||0}</div>
             <div style="font-size:11px;color:var(--mid);margin-top:4px">Inspeccionados</div>
           </div>
-          <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:20px;font-weight:800;color:rgb(34,197,94)">${sub.approved||0}</div>
+          <div style="background:rgba(34,197,94,.1);border:1.5px solid rgba(34,197,94,.3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:18px;font-weight:800;color:rgb(34,197,94)">${sub.approved||0}</div>
             <div style="font-size:11px;color:var(--mid);margin-top:4px">Aprobados</div>
           </div>
-          <div style="background:${sub.rejected?'rgba(239,68,68,.1)':'rgba(107,114,128,.1)'};border:1px solid ${sub.rejected?'rgba(239,68,68,.3)':'rgba(107,114,128,.3)'};border-radius:8px;padding:12px;text-align:center">
-            <div style="font-size:20px;font-weight:800;color:${sub.rejected?'rgb(239,68,68)':'var(--mid)'}">${sub.rejected||0}</div>
+          <div style="background:rgba(59,130,246,.1);border:1.5px solid rgba(59,130,246,.3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:18px;font-weight:800;color:rgb(59,130,246)">${sub.reworked||0}</div>
+            <div style="font-size:11px;color:var(--mid);margin-top:4px">Retrabajados</div>
+          </div>
+          <div style="background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:18px;font-weight:800;color:rgb(239,68,68)">${sub.rejected||0}</div>
             <div style="font-size:11px;color:var(--mid);margin-top:4px">Rechazados</div>
           </div>
         </div>
       </div>
       
+      ${Array.isArray(defects)&&defects.length>0?`
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:12px;letter-spacing:1px">Defectos Encontrados (${defects.length})</div>
+          <div style="max-height:300px;overflow-y:auto">
+            ${defects.map((d,i)=>`
+              <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:8px;border-left:4px solid rgb(239,68,68)">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+                  <div>
+                    <div style="font-size:9px;color:var(--mid);font-weight:700;text-transform:uppercase">Lote</div>
+                    <div style="font-size:12px;color:var(--pure);font-weight:600">${d.lot||'—'}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:9px;color:var(--mid);font-weight:700;text-transform:uppercase">Cantidad</div>
+                    <div style="font-size:12px;color:rgb(239,68,68);font-weight:700">${d.qty||0}</div>
+                  </div>
+                </div>
+                <div style="margin-bottom:6px">
+                  <div style="font-size:9px;color:var(--mid);font-weight:700;text-transform:uppercase">Código</div>
+                  <div style="font-size:12px;color:var(--pure)">${d.code||'—'}</div>
+                </div>
+                <div>
+                  <div style="font-size:9px;color:var(--mid);font-weight:700;text-transform:uppercase">Descripción</div>
+                  <div style="font-size:12px;color:var(--soft)">${d.desc||'—'}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `:''}
+      
+      ${Array.isArray(personnel)&&personnel.length>0?`
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:12px;letter-spacing:1px">Personal (${personnel.length})</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+            ${personnel.map(p=>`
+              <div style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px">
+                <div style="font-size:12px;font-weight:700;color:var(--pure)">${p.name||'—'}</div>
+                <div style="font-size:10px;color:var(--mid);margin-top:4px">${p.role||'—'}</div>
+                <div style="font-size:11px;color:var(--blue);font-weight:600;margin-top:4px">${p.hours||0}h</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `:''}
+      
       <div style="display:flex;gap:12px">
-        <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;background:transparent;border:1px solid var(--line);color:var(--pure);padding:12px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;transition:all .2s" onmouseover="this.style.borderColor='var(--line)';this.style.background='var(--card)'" onmouseout="this.style.borderColor='var(--line)';this.style.background='transparent'">Cerrar</button>
+        <button onclick="clientDownloadPDF('${subId}')" style="flex:1;background:var(--blue);color:white;border:none;padding:12px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;transition:all .2s" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">📥 Descargar PDF</button>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;background:transparent;border:1px solid var(--line);color:var(--pure);padding:12px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">Cerrar</button>
       </div>
     </div>
   `;
   
   document.body.appendChild(modal);
+}
+
+// PDF Download function
+function clientDownloadPDF(subId){
+  const sub=window._clientAllSubs.find(s=>s.id===subId);
+  if(!sub)return;
+  
+  const defects=typeof sub.defects==='string'?JSON.parse(sub.defects||'[]'):sub.defects||[];
+  const personnel=typeof sub.personnel==='string'?JSON.parse(sub.personnel||'[]'):sub.personnel||[];
+  
+  const dateStr=sub.service_start||sub.submit_date_iso||sub.created_at;
+  const d=new Date(dateStr);
+  const dateDisplay=!isNaN(d)?d.toLocaleDateString('es-MX'):'—';
+  
+  let html=`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Reporte de Inspección - ${sub.form_id}</title>
+      <style>
+        body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; margin: 20px; }
+        .header { border-bottom: 3px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #1f2937; }
+        .header p { margin: 5px 0; color: #666; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section-title { background: #f3f4f6; padding: 10px 12px; border-left: 4px solid #3b82f6; font-weight: bold; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f3f4f6; padding: 10px; text-align: left; border: 1px solid #e5e7eb; font-weight: bold; }
+        td { padding: 10px; border: 1px solid #e5e7eb; }
+        .stat-box { display: inline-block; margin-right: 15px; margin-bottom: 10px; padding: 15px; background: #f9fafb; border-left: 4px solid #3b82f6; border-radius: 4px; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #3b82f6; }
+        .stat-label { font-size: 12px; color: #666; text-transform: uppercase; margin-top: 5px; }
+        .defect-row { background: #fef2f2; border-left: 4px solid #ef4444; }
+        .text-success { color: #22c55e; }
+        .text-danger { color: #ef4444; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Reporte de Inspección de Calidad</h1>
+        <p><strong>Cliente:</strong> ${sub.customer_name||sub.customer_code||'—'}</p>
+        <p><strong>Formulario:</strong> ${sub.form_id||'—'}</p>
+        <p><strong>Fecha de Inspección:</strong> ${dateDisplay}</p>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">Información General</div>
+        <table>
+          <tr>
+            <td><strong>Número de Parte:</strong></td>
+            <td>${sub.part_number||'—'}</td>
+            <td><strong>Descripción:</strong></td>
+            <td>${sub.part_description||'—'}</td>
+          </tr>
+          <tr>
+            <td><strong>Fecha de Inicio:</strong></td>
+            <td>${sub.service_start||'—'}</td>
+            <td><strong>Fecha de Finalización:</strong></td>
+            <td>${sub.service_end||'—'}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">Resultados de Inspección</div>
+        <div class="stat-box">
+          <div class="stat-number text-success">${sub.inspected||0}</div>
+          <div class="stat-label">Inspeccionados</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number text-success">${sub.approved||0}</div>
+          <div class="stat-label">Aprobados</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" style="color: #3b82f6;">${sub.reworked||0}</div>
+          <div class="stat-label">Retrabajados</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number text-danger">${sub.rejected||0}</div>
+          <div class="stat-label">Rechazados</div>
+        </div>
+      </div>
+      
+      ${Array.isArray(defects)&&defects.length>0?`
+        <div class="section">
+          <div class="section-title">Defectos Encontrados (${defects.length})</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Lote</th>
+                <th>Cantidad</th>
+                <th>Código</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${defects.map(d=>`
+                <tr class="defect-row">
+                  <td>${d.lot||'—'}</td>
+                  <td>${d.qty||0}</td>
+                  <td>${d.code||'—'}</td>
+                  <td>${d.desc||'—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `:''}
+      
+      ${Array.isArray(personnel)&&personnel.length>0?`
+        <div class="section">
+          <div class="section-title">Personal Involucrado (${personnel.length})</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Rol</th>
+                <th>Horas</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${personnel.map(p=>`
+                <tr>
+                  <td>${p.name||'—'}</td>
+                  <td>${p.role||'—'}</td>
+                  <td>${p.hours||0}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `:''}
+      
+      <div class="section" style="margin-top: 40px; color: #999; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+        <p>Generado: ${new Date().toLocaleString('es-MX')}</p>
+        <p>STS Services - Quality Control Portal</p>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`Reporte_${sub.form_id}_${dateStr}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('📥 PDF descargado','info');
 }
 
 
