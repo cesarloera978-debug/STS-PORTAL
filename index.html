@@ -6,6 +6,7 @@
 <title>STS Services · QC Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -2367,7 +2368,7 @@ function clientOpenSubmissionDetail(subId){
   document.body.appendChild(modal);
 }
 
-// PDF Download function
+// PDF Download function - generates actual PDF
 function clientDownloadPDF(subId){
   const sub=window._clientAllSubs.find(s=>s.id===subId);
   if(!sub)return;
@@ -2379,119 +2380,95 @@ function clientDownloadPDF(subId){
   const d=new Date(dateStr);
   const dateDisplay=!isNaN(d)?d.toLocaleDateString('es-MX'):'—';
   
-  let html=`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Reporte de Inspección - ${sub.form_id}</title>
-      <style>
-        body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; margin: 20px; }
-        .header { border-bottom: 3px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px; }
-        .header h1 { margin: 0; color: #1f2937; }
-        .header p { margin: 5px 0; color: #666; }
-        .section { margin-bottom: 20px; page-break-inside: avoid; }
-        .section-title { background: #f3f4f6; padding: 10px 12px; border-left: 4px solid #3b82f6; font-weight: bold; margin-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #f3f4f6; padding: 10px; text-align: left; border: 1px solid #e5e7eb; font-weight: bold; }
-        td { padding: 10px; border: 1px solid #e5e7eb; }
-        .stat-box { display: inline-block; margin-right: 15px; margin-bottom: 10px; padding: 15px; background: #f9fafb; border-left: 4px solid #3b82f6; border-radius: 4px; }
-        .stat-number { font-size: 24px; font-weight: bold; color: #3b82f6; }
-        .stat-label { font-size: 12px; color: #666; text-transform: uppercase; margin-top: 5px; }
-        .defect-row { background: #fef2f2; border-left: 4px solid #ef4444; }
-        .text-success { color: #22c55e; }
-        .text-danger { color: #ef4444; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h1>Reporte de Inspección de Calidad</h1>
-        <p><strong>Cliente:</strong> ${sub.customer_name||sub.customer_code||'—'}</p>
-        <p><strong>Formulario:</strong> ${sub.form_id||'—'}</p>
-        <p><strong>Fecha de Inspección:</strong> ${dateDisplay}</p>
+  // Create HTML content for PDF
+  const htmlContent=`
+    <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; padding: 20px;">
+      <div style="border-bottom: 3px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px;">
+        <h1 style="margin: 0 0 10px 0; color: #1f2937; font-size: 28px;">📋 Reporte de Inspección de Calidad</h1>
+        <p style="margin: 5px 0; color: #666;"><strong>Cliente:</strong> ${sub.customer_name||sub.customer_code||'—'}</p>
+        <p style="margin: 5px 0; color: #666;"><strong>Formulario:</strong> ${sub.form_id||'—'}</p>
+        <p style="margin: 5px 0; color: #666;"><strong>Fecha de Inspección:</strong> ${dateDisplay}</p>
       </div>
       
-      <div class="section">
-        <div class="section-title">Información General</div>
-        <table>
+      <div style="margin-bottom: 25px;">
+        <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Información General</div>
+        <table style="width: 100%; border-collapse: collapse;">
           <tr>
-            <td><strong>Número de Parte:</strong></td>
-            <td>${sub.part_number||'—'}</td>
-            <td><strong>Descripción:</strong></td>
-            <td>${sub.part_description||'—'}</td>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>Número de Parte:</strong><br>${sub.part_number||'—'}</td>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>Descripción:</strong><br>${sub.part_description||'—'}</td>
           </tr>
           <tr>
-            <td><strong>Fecha de Inicio:</strong></td>
-            <td>${sub.service_start||'—'}</td>
-            <td><strong>Fecha de Finalización:</strong></td>
-            <td>${sub.service_end||'—'}</td>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>Inicio:</strong><br>${sub.service_start||'—'}</td>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>Fin:</strong><br>${sub.service_end||'—'}</td>
           </tr>
         </table>
       </div>
       
-      <div class="section">
-        <div class="section-title">Resultados de Inspección</div>
-        <div class="stat-box">
-          <div class="stat-number text-success">${sub.inspected||0}</div>
-          <div class="stat-label">Inspeccionados</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-number text-success">${sub.approved||0}</div>
-          <div class="stat-label">Aprobados</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-number" style="color: #3b82f6;">${sub.reworked||0}</div>
-          <div class="stat-label">Retrabajados</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-number text-danger">${sub.rejected||0}</div>
-          <div class="stat-label">Rechazados</div>
+      <div style="margin-bottom: 25px;">
+        <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Resultados Resumidos</div>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+          <div style="padding: 18px; background: #f9fafb; border-left: 5px solid #22c55e; border-radius: 4px; min-width: 140px;">
+            <div style="font-size: 32px; font-weight: bold; color: #22c55e;">${sub.inspected||0}</div>
+            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.5px;">Inspeccionados</div>
+          </div>
+          <div style="padding: 18px; background: #f9fafb; border-left: 5px solid #22c55e; border-radius: 4px; min-width: 140px;">
+            <div style="font-size: 32px; font-weight: bold; color: #22c55e;">${sub.approved||0}</div>
+            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.5px;">Aprobados</div>
+          </div>
+          <div style="padding: 18px; background: #f9fafb; border-left: 5px solid #3b82f6; border-radius: 4px; min-width: 140px;">
+            <div style="font-size: 32px; font-weight: bold; color: #3b82f6;">${sub.reworked||0}</div>
+            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.5px;">Retrabajados</div>
+          </div>
+          <div style="padding: 18px; background: #f9fafb; border-left: 5px solid #ef4444; border-radius: 4px; min-width: 140px;">
+            <div style="font-size: 32px; font-weight: bold; color: #ef4444;">${sub.rejected||0}</div>
+            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.5px;">Rechazados</div>
+          </div>
         </div>
       </div>
       
       ${Array.isArray(defects)&&defects.length>0?`
-        <div class="section">
-          <div class="section-title">Defectos Encontrados (${defects.length})</div>
-          <table>
+        <div style="margin-bottom: 25px;">
+          <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Defectos Encontrados (${defects.length})</div>
+          <table style="width: 100%; border-collapse: collapse;">
             <thead>
               <tr>
-                <th>Lote</th>
-                <th>Cantidad</th>
-                <th>Código</th>
-                <th>Descripción</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Lote</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Cantidad</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Código</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Descripción</th>
               </tr>
             </thead>
             <tbody>
               ${defects.map(d=>`
-                <tr class="defect-row">
-                  <td>${d.lot||'—'}</td>
-                  <td>${d.qty||0}</td>
-                  <td>${d.code||'—'}</td>
-                  <td>${d.desc||'—'}</td>
+                <tr style="background: #fef2f2;">
+                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${d.lot||'—'}</td>
+                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>${d.qty||0}</strong></td>
+                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${d.code||'—'}</td>
+                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${d.desc||'—'}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
         </div>
-      `:''}
+      `:'<div style="margin-bottom: 25px;"><div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Defectos</div><p style="color: #22c55e; font-weight: bold;">✓ No se encontraron defectos</p></div>'}
       
       ${Array.isArray(personnel)&&personnel.length>0?`
-        <div class="section">
-          <div class="section-title">Personal Involucrado (${personnel.length})</div>
-          <table>
+        <div style="margin-bottom: 25px;">
+          <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Personal Involucrado (${personnel.length})</div>
+          <table style="width: 100%; border-collapse: collapse;">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Rol</th>
-                <th>Horas</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Nombre</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Rol</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Horas</th>
               </tr>
             </thead>
             <tbody>
               ${personnel.map(p=>`
                 <tr>
-                  <td>${p.name||'—'}</td>
-                  <td>${p.role||'—'}</td>
-                  <td>${p.hours||0}</td>
+                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${p.name||'—'}</td>
+                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${p.role||'—'}</td>
+                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${p.hours||0}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -2499,24 +2476,25 @@ function clientDownloadPDF(subId){
         </div>
       `:''}
       
-      <div class="section" style="margin-top: 40px; color: #999; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
-        <p>Generado: ${new Date().toLocaleString('es-MX')}</p>
-        <p>STS Services - Quality Control Portal</p>
+      <div style="margin-top: 50px; color: #999; font-size: 11px; border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
+        <p><strong>STS Services - Portal de Control de Calidad</strong></p>
+        <p>Reporte generado: ${new Date().toLocaleString('es-MX')}</p>
       </div>
-    </body>
-    </html>
+    </div>
   `;
   
-  const blob=new Blob([html],{type:'text/html'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=`Reporte_${sub.form_id}_${dateStr}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('📥 PDF descargado','info');
+  // PDF options
+  const options={
+    margin:10,
+    filename:`Reporte_${sub.form_id}_${dateStr}.pdf`,
+    image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2},
+    jsPDF:{orientation:'portrait',unit:'mm',format:'a4'}
+  };
+  
+  // Generate PDF
+  html2pdf().set(options).from(htmlContent).save();
+  showToast('✅ PDF descargado correctamente','info');
 }
 
 
