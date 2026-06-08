@@ -1990,17 +1990,16 @@ async function loadClientPortal(clientCode){
       area.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No se encontraron reportes para su cuenta.</div>';
       return;
     }
-    const monthSet=new Set();
-    subs.forEach(s=>{
-      const dateStr=s.service_start||s.submit_date_iso||s.created_at;
-      const d=new Date(dateStr);
-      if(!isNaN(d)){
-        const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-        monthSet.add(key);
-      }
-    });
-    const months=Array.from(monthSet).sort().reverse();
-    const currentMonth=months[0];
+    // Generate all months for dropdown (past 12 months + next 12 months)
+    const now=new Date();
+    const months=[];
+    for(let i=-12;i<=12;i++){
+      const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+      const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      months.push(key);
+    }
+    // Default to current month
+    const currentMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
     area.innerHTML=`
       <div id="clientCalendarContainer">
         <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -2010,7 +2009,7 @@ async function loadClientPortal(clientCode){
           </div>
           <select id="clientMonthFilter" style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--pure);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer">
             <option value="all">Todos los meses</option>
-            ${months.map(m=>{const [yr,mo]=m.split('-');const monthName=new Date(yr,parseInt(mo)-1).toLocaleDateString('es-MX',{month:'long',year:'numeric'});return `<option value="${m}">${monthName}</option>`;}).join('')}
+            ${months.sort().reverse().map(m=>{const [yr,mo]=m.split('-');const monthName=new Date(yr,parseInt(mo)-1).toLocaleDateString('es-MX',{month:'long',year:'numeric'});return `<option value="${m}">${monthName}</option>`;}).join('')}
           </select>
         </div>
         <div id="clientCalendarView" style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px">
@@ -2022,6 +2021,11 @@ async function loadClientPortal(clientCode){
     window._clientAllSubs=subs;
     window._clientCalendarMonths=months;
     window._clientCurrentSelectedMonth=currentMonth;
+    // Set dropdown to the first month with data
+    setTimeout(()=>{
+      const dropdown=document.getElementById('clientMonthFilter');
+      if(dropdown){dropdown.value=currentMonth;}
+    },100);
     document.getElementById('clientMonthFilter').addEventListener('change',(e)=>{
       window._clientCurrentSelectedMonth=e.target.value==='all'?null:e.target.value;
       clientRenderCalendarAndSubmissions(subs);
