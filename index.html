@@ -2405,7 +2405,17 @@ function clientDownloadPDF(subId){
       </div>
       
       <div style="margin-bottom: 25px;">
-        <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Resultados Resumidos</div>
+        <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Información de Parte</div>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>PN:</strong> ${sub.part_number||'—'}</td>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>Descripción:</strong> ${sub.part_description||'—'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;" colspan="2"><strong>Defecto Registrado:</strong> ${sub.part_defects||'Sin defecto registrado en parte'}</td>
+          </tr>
+        </table>
+      </div>
         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
           <div style="padding: 18px; background: #f9fafb; border-left: 5px solid #22c55e; border-radius: 4px; min-width: 140px;">
             <div style="font-size: 32px; font-weight: bold; color: #22c55e;">${sub.inspected||0}</div>
@@ -2428,27 +2438,30 @@ function clientDownloadPDF(subId){
       
       ${Array.isArray(defects)&&defects.length>0?`
         <div style="margin-bottom: 25px;">
-          <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Defectos Encontrados (${defects.length})</div>
+          <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Desglose de Defectos / Números de Serie y Lote</div>
           <table style="width: 100%; border-collapse: collapse;">
             <thead>
               <tr>
-                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Lote</th>
-                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Cantidad</th>
-                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Código</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Lote / Batch</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Código Defecto</th>
                 <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Descripción</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Cantidad</th>
               </tr>
             </thead>
             <tbody>
               ${defects.map(d=>`
                 <tr style="background: #fef2f2;">
-                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${d.lot||'—'}</td>
-                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>${d.qty||0}</strong></td>
+                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>${d.lot||'—'}</strong></td>
                   <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${d.code||'—'}</td>
                   <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${d.desc||'—'}</td>
+                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px; text-align: center; color: #ef4444; font-weight: bold;">${d.qty||0}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
+          <div style="margin-top: 8px; font-size: 12px; color: #666; padding: 12px; background: #f9fafb; border-radius: 4px;">
+            <strong>TOTAL DEFECTOS: ${defects.length > 0 ? defects.reduce((sum, d) => sum + (d.qty||0), 0) : 0}</strong>
+          </div>
         </div>
       `:'<div style="margin-bottom: 25px;"><div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Defectos</div><p style="color: #22c55e; font-weight: bold;">✓ No se encontraron defectos</p></div>'}
       
@@ -2460,7 +2473,7 @@ function clientDownloadPDF(subId){
               <tr>
                 <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Nombre</th>
                 <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Rol</th>
-                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Horas</th>
+                <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Horas</th>
               </tr>
             </thead>
             <tbody>
@@ -2468,11 +2481,14 @@ function clientDownloadPDF(subId){
                 <tr>
                   <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${p.name||'—'}</td>
                   <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${p.role||'—'}</td>
-                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${p.hours||0}</td>
+                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px; text-align: center;"><strong>${p.hours||0}</strong></td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
+          <div style="margin-top: 8px; font-size: 12px; color: #666; padding: 12px; background: #f9fafb; border-radius: 4px;">
+            <strong>TOTAL HORAS: ${(() => {let total = 0; personnel.forEach(p => total += (p.hours||0)); return total;})()}</strong>
+          </div>
         </div>
       `:''}
       
