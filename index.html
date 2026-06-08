@@ -1944,6 +1944,33 @@ function closeClientDetail(){
 }
 
 /* ══ CLIENT PORTAL ══ */
+
+/* ══ CLIENT PORTAL WITH CALENDAR - UPDATED ══ */
+// Helper to convert service_start date to ISO date key
+function clientCalIsoDate(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Build a map of dates → submissions for client calendar
+function clientCalBuildMap(submissions) {
+  const map = {};
+  submissions.forEach(s => {
+    const dateStr = s.service_start || s.submit_date_iso || s.created_at;
+    const k = clientCalIsoDate(dateStr);
+    if (!k) return;
+    if (!map[k]) map[k] = [];
+    map[k].push(s);
+  });
+  return map;
+}
+
+// UPDATED loadClientPortal function
 async function loadClientPortal(clientCode){
   const area=document.getElementById('clientReportsArea');
   area.innerHTML='<div class="no-data"><div class="nd-ico">⏳</div>Cargando tus reportes…</div>';
@@ -1958,70 +1985,247 @@ async function loadClientPortal(clientCode){
       </div>`;
       return;
     }
-    const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).order('submit_date_iso',{ascending:false});
+    const {data:subs}=await db.from('submissions').select('*').eq('customer_code',clientCode).order('service_start',{ascending:false});
     if(!subs||!subs.length){
       area.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No se encontraron reportes para su cuenta.</div>';
       return;
     }
-
-    // ── GROUP: by month → by job_id ──
-    // Build month map: { 'April 2026': { jobId: [...subs] } }
-    const monthMap={};
+    const monthSet=new Set();
     subs.forEach(s=>{
-      // Use service_start date for folder grouping, fall back to submit date
-      const dateStr=s.service_start||s.submit_date_iso||s.created_at||Date.now();
-      // Parse date-only strings as local noon to avoid UTC timezone shift
-      const d=typeof dateStr==='string'&&dateStr.length===10
-        ?new Date(dateStr+'T12:00:00')
-        :new Date(dateStr);
-      const monthKey=d.toLocaleDateString('es-MX',{month:'long',year:'numeric'});
-      const monthKeyEN=d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
-      const mk=monthKeyEN; // use English for sorting
-      if(!monthMap[mk])monthMap[mk]={label:monthKey,date:d,jobs:{}};
-      const jid=s.job_id||'SIN-COTIZACIÓN';
-      if(!monthMap[mk].jobs[jid])monthMap[mk].jobs[jid]=[];
-      monthMap[mk].jobs[jid].push(s);
+      const dateStr=s.service_start||s.submit_date_iso||s.created_at;
+      const d=new Date(dateStr);
+      if(!isNaN(d)){
+        const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+        monthSet.add(key);
+      }
     });
-
-    // Sort months newest first
-    const sortedMonths=Object.entries(monthMap).sort((a,b)=>b[1].date-a[1].date);
-
-    // Render month level (default view)
+    const months=Array.from(monthSet).sort().reverse();
+    const currentMonth=months[0];
     area.innerHTML=`
-      <div id="clientLevel0">
-        <div style="margin-bottom:20px">
-          <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:4px">Seleccione un mes</div>
-          <div style="font-size:13px;color:var(--soft)">${subs.length} reporte${subs.length!==1?'s':''} en total</div>
+      <div id="clientCalendarContainer">
+        <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:4px">Filtrar por Mes</div>
+            <div style="font-size:13px;color:var(--soft)">${subs.length} reporte${subs.length!==1?'s':''} en total</div>
+          </div>
+          <select id="clientMonthFilter" style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--pure);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer">
+            <option value="all">Todos los meses</option>
+            ${months.map(m=>{const [yr,mo]=m.split('-');const monthName=new Date(yr,parseInt(mo)-1).toLocaleDateString('es-MX',{month:'long',year:'numeric'});return `<option value="${m}">${monthName}</option>`;}).join('')}
+          </select>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
-          ${sortedMonths.map(([mk,mv])=>{
-            const totalSubs=Object.values(mv.jobs).flat().length;
-            const totalJobs=Object.keys(mv.jobs).length;
-            const totalI=Object.values(mv.jobs).flat().reduce((a,s)=>a+(s.inspected||0),0);
-            const totalR=Object.values(mv.jobs).flat().reduce((a,s)=>a+(s.rejected||0),0);
-            return`<div onclick="clientShowMonth('${mk}')" style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.background='rgba(59,130,246,.06)'" onmouseout="this.style.borderColor='var(--line)';this.style.background='var(--card)'">
-              <div style="font-size:24px;margin-bottom:10px">📅</div>
-              <div style="font-family:'Montserrat',sans-serif;font-size:15px;font-weight:800;color:var(--pure);text-transform:capitalize;margin-bottom:6px">${mv.label}</div>
-              <div style="font-size:12px;color:var(--mid);margin-bottom:10px">${totalJobs} cotización${totalJobs!==1?'es':''} · ${totalSubs} reporte${totalSubs!==1?'s':''}</div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <span class="pill pill-b">${totalI} inspeccionados</span>
-                ${totalR?`<span class="pill pill-r">${totalR} rechazados</span>`:''}
-              </div>
-            </div>`;
-          }).join('')}
+        <div id="clientCalendarView" style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px" id="clientCalGrid"></div>
         </div>
+        <div id="clientSubmissionsList"></div>
       </div>
-      <div id="clientLevel1" style="display:none"></div>
-      <div id="clientLevel2" style="display:none"></div>`;
-
-    // Store data globally for drill-down
-    window._clientMonthMap=monthMap;
-    window._clientSubs=subs;
-
+    `;
+    window._clientAllSubs=subs;
+    window._clientCalendarMonths=months;
+    window._clientCurrentSelectedMonth=currentMonth;
+    document.getElementById('clientMonthFilter').addEventListener('change',(e)=>{
+      window._clientCurrentSelectedMonth=e.target.value==='all'?null:e.target.value;
+      clientRenderCalendarAndSubmissions(subs);
+    });
+    clientRenderCalendarAndSubmissions(subs);
   }catch(e){
     area.innerHTML=`<div class="no-data"><div class="nd-ico">❌</div>Error: ${e.message}</div>`;
   }
 }
+
+function clientRenderCalendarAndSubmissions(allSubs){
+  const selectedMonth=window._clientCurrentSelectedMonth;
+  let displaySubs=allSubs;
+  if(selectedMonth){
+    const [filterYr,filterMo]=selectedMonth.split('-');
+    displaySubs=allSubs.filter(s=>{
+      const dateStr=s.service_start||s.submit_date_iso||s.created_at;
+      const d=new Date(dateStr);
+      if(isNaN(d))return false;
+      const subYr=d.getFullYear();
+      const subMo=String(d.getMonth()+1).padStart(2,'0');
+      return subYr===parseInt(filterYr)&&subMo===filterMo;
+    });
+  }
+  const calMap=clientCalBuildMap(displaySubs);
+  let dispYear,dispMonth;
+  if(selectedMonth){
+    [dispYear,dispMonth]=selectedMonth.split('-');
+    dispYear=parseInt(dispYear);
+    dispMonth=parseInt(dispMonth)-1;
+  }else{
+    const now=new Date();
+    dispYear=now.getFullYear();
+    dispMonth=now.getMonth();
+  }
+  const calGrid=document.getElementById('clientCalGrid');
+  if(!calGrid)return;
+  const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dayNames=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  calGrid.innerHTML='';
+  const headerDiv=document.createElement('div');
+  headerDiv.style.gridColumn='1 / -1';
+  headerDiv.style.display='flex';
+  headerDiv.style.alignItems='center';
+  headerDiv.style.justifyContent='space-between';
+  headerDiv.style.marginBottom='12px';
+  headerDiv.style.paddingBottom='12px';
+  headerDiv.style.borderBottom='1px solid var(--line)';
+  headerDiv.innerHTML=`
+    <div style="font-family:'Montserrat',sans-serif;font-size:16px;font-weight:800;color:var(--pure)">${monthNames[dispMonth]} ${dispYear}</div>
+    <div style="display:flex;gap:8px">
+      <button onclick="clientCalPrevMonth()" style="background:transparent;border:1px solid var(--line);color:var(--mid);font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'">← Prev</button>
+      <button onclick="clientCalNextMonth()" style="background:transparent;border:1px solid var(--line);color:var(--mid);font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'">Next →</button>
+    </div>
+  `;
+  calGrid.appendChild(headerDiv);
+  dayNames.forEach(day=>{
+    const dayEl=document.createElement('div');
+    dayEl.style.fontSize='10px';
+    dayEl.style.fontWeight='700';
+    dayEl.style.letterSpacing='1px';
+    dayEl.style.textTransform='uppercase';
+    dayEl.style.color='var(--mid)';
+    dayEl.style.textAlign='center';
+    dayEl.style.padding='8px 4px';
+    dayEl.textContent=day;
+    calGrid.appendChild(dayEl);
+  });
+  const firstDay=new Date(dispYear,dispMonth,1).getDay();
+  for(let i=0;i<firstDay;i++){
+    const emptyEl=document.createElement('div');
+    emptyEl.style.background='transparent';
+    emptyEl.style.borderRadius='8px';
+    calGrid.appendChild(emptyEl);
+  }
+  const daysInMonth=new Date(dispYear,dispMonth+1,0).getDate();
+  for(let d=1;d<=daysInMonth;d++){
+    const dateKey=dispYear+'-'+String(dispMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const daySubmissions=calMap[dateKey]||[];
+    const dayEl=document.createElement('div');
+    dayEl.style.background='var(--card)';
+    dayEl.style.border='1px solid var(--line)';
+    dayEl.style.borderRadius='8px';
+    dayEl.style.padding='6px 4px';
+    dayEl.style.minHeight='52px';
+    dayEl.style.display='flex';
+    dayEl.style.flexDirection='column';
+    dayEl.style.cursor=daySubmissions.length?'pointer':'default';
+    dayEl.style.transition='all .15s';
+    dayEl.style.position='relative';
+    if(daySubmissions.length){
+      dayEl.style.borderColor='var(--blue)';
+      dayEl.style.borderWidth='1.5px';
+      dayEl.style.background='var(--bluebg)';
+      dayEl.onclick=()=>clientShowDaySubmissions(dateKey,daySubmissions);
+      dayEl.onmouseover=function(){this.style.background='rgba(59,130,246,.12)';};
+      dayEl.onmouseout=function(){this.style.background='var(--bluebg)';};
+    }
+    const dayNum=document.createElement('div');
+    dayNum.style.fontSize='11px';
+    dayNum.style.fontWeight='700';
+    dayNum.style.color=daySubmissions.length?'var(--blue)':'var(--mid)';
+    dayNum.style.textAlign='right';
+    dayNum.style.marginBottom='4px';
+    dayNum.textContent=d;
+    dayEl.appendChild(dayNum);
+    if(daySubmissions.length){
+      const badge=document.createElement('div');
+      badge.style.fontSize='9px';
+      badge.style.color='var(--blue)';
+      badge.style.fontWeight='700';
+      badge.style.textAlign='center';
+      badge.style.marginTop='auto';
+      badge.textContent=daySubmissions.length+' form'+(daySubmissions.length>1?'s':'');
+      dayEl.appendChild(badge);
+    }
+    calGrid.appendChild(dayEl);
+  }
+  const listDiv=document.getElementById('clientSubmissionsList');
+  if(displaySubs.length===0){
+    listDiv.innerHTML='<div class="no-data"><div class="nd-ico">📭</div>No se encontraron reportes para el mes seleccionado.</div>';
+  }else{
+    listDiv.innerHTML=`
+      <div style="margin-top:20px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Reportes (${displaySubs.length})</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${displaySubs.map(s=>{const dateStr=s.service_start||s.submit_date_iso||s.created_at;const d=new Date(dateStr);const dateDisplay=!isNaN(d)?d.toLocaleDateString('es-MX'):'—';const tI=s.inspected||0;const tA=s.approved||0;const tR=s.rejected||0;return `
+            <div onclick="clientOpenSubmissionDetail('${s.id}')" style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.background='rgba(59,130,246,.06)'" onmouseout="this.style.borderColor='var(--line)';this.style.background='var(--card)'">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+                <div>
+                  <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure)">${s.customer_name||s.customer_code||'—'}</div>
+                  <div style="font-size:11px;color:var(--mid);margin-top:2px">📅 ${dateDisplay}</div>
+                </div>
+                <span style="font-size:10px;background:var(--bluebg);color:var(--blue);font-weight:700;padding:4px 10px;border-radius:20px">Form ${s.form_id?s.form_id.substring(0,10):'—'}</span>
+              </div>
+              <div style="font-size:11px;color:var(--mid);margin-bottom:8px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''}</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <span class="pill pill-b">${tI} inspeccionados</span>
+                <span class="pill pill-g">${tA} aprobados</span>
+                ${tR?`<span class="pill pill-r">${tR} rechazados</span>`:''}
+              </div>
+            </div>
+          `;}
+).join('')}
+        </div>
+      </div>
+    `;
+  }
+}
+
+function clientCalPrevMonth(){
+  const [yr,mo]=(window._clientCurrentSelectedMonth||new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')).split('-');
+  let month=parseInt(mo)-1;
+  let year=parseInt(yr);
+  if(month<1){month=12;year--;}
+  window._clientCurrentSelectedMonth=year+'-'+String(month).padStart(2,'0');
+  clientRenderCalendarAndSubmissions(window._clientAllSubs);
+}
+
+function clientCalNextMonth(){
+  const [yr,mo]=(window._clientCurrentSelectedMonth||new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')).split('-');
+  let month=parseInt(mo)+1;
+  let year=parseInt(yr);
+  if(month>12){month=1;year++;}
+  window._clientCurrentSelectedMonth=year+'-'+String(month).padStart(2,'0');
+  clientRenderCalendarAndSubmissions(window._clientAllSubs);
+}
+
+function clientShowDaySubmissions(dateKey,submissions){
+  const [yr,mo,dy]=dateKey.split('-');
+  const dayName=new Date(yr,parseInt(mo)-1,dy).toLocaleDateString('es-MX',{weekday:'long',month:'long',day:'numeric'});
+  const listDiv=document.getElementById('clientSubmissionsList');
+  listDiv.innerHTML=`
+    <div style="margin-top:20px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <button onclick="clientRenderCalendarAndSubmissions(window._clientAllSubs)" style="background:transparent;border:1px solid var(--line);color:var(--mid);padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--mid)'">← Ver todos</button>
+        <div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:16px;font-weight:800;color:var(--pure);text-transform:capitalize">${dayName}</div>
+          <div style="font-size:11px;color:var(--mid)">${submissions.length} reporte${submissions.length!==1?'s':''}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${submissions.map(s=>`
+          <div onclick="clientOpenSubmissionDetail('${s.id}')" style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.background='rgba(59,130,246,.06)'" onmouseout="this.style.borderColor='var(--line)';this.style.background='var(--card)'">
+            <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure);margin-bottom:6px">${s.customer_name||s.customer_code||'—'}</div>
+            <div style="font-size:11px;color:var(--mid);margin-bottom:8px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="pill pill-b">${s.inspected||0} inspeccionados</span>
+              <span class="pill pill-g">${s.approved||0} aprobados</span>
+              ${s.rejected?`<span class="pill pill-r">${s.rejected} rechazados</span>`:''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function clientOpenSubmissionDetail(subId){
+  const sub=window._clientAllSubs.find(s=>s.id===subId);
+  if(!sub)return;
+  showToast('📄 Detail view coming soon','info');
+}
+
 
 function clientShowMonth(monthKey){
   const mv=window._clientMonthMap[monthKey];
