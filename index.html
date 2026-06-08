@@ -2224,7 +2224,80 @@ function clientShowDaySubmissions(dateKey,submissions){
 function clientOpenSubmissionDetail(subId){
   const sub=window._clientAllSubs.find(s=>s.id===subId);
   if(!sub)return;
-  showToast('📄 Detail view coming soon','info');
+  
+  // Create detail modal
+  const modal=document.createElement('div');
+  modal.style.position='fixed';
+  modal.style.top='0';
+  modal.style.left='0';
+  modal.style.right='0';
+  modal.style.bottom='0';
+  modal.style.background='rgba(0,0,0,.7)';
+  modal.style.display='flex';
+  modal.style.alignItems='center';
+  modal.style.justifyContent='center';
+  modal.style.zIndex='9999';
+  modal.onclick=(e)=>{if(e.target===modal)modal.remove();};
+  
+  const dateStr=sub.service_start||sub.submit_date_iso||sub.created_at;
+  const d=new Date(dateStr);
+  const dateDisplay=!isNaN(d)?d.toLocaleDateString('es-MX'):'—';
+  
+  modal.innerHTML=`
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:32px;max-width:600px;max-height:80vh;overflow-y:auto;width:90%">
+      <div style="display:flex;justify-content:space-between;align-items:start;gap:16px;margin-bottom:24px">
+        <div>
+          <div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:800;color:var(--pure);margin-bottom:8px">${sub.customer_name||sub.customer_code||'—'}</div>
+          <div style="font-size:13px;color:var(--mid)">Formulario: ${sub.form_id?sub.form_id.substring(0,20):'—'}</div>
+        </div>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="background:transparent;border:none;font-size:24px;cursor:pointer;color:var(--mid)">✕</button>
+      </div>
+      
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:6px;letter-spacing:1px">Fecha de Inspección</div>
+            <div style="font-size:14px;color:var(--pure)">${dateDisplay}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:6px;letter-spacing:1px">Parte</div>
+            <div style="font-size:14px;color:var(--pure)">${sub.part_number||'—'}</div>
+          </div>
+        </div>
+      </div>
+      
+      ${sub.part_description?`
+        <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:6px;letter-spacing:1px">Descripción</div>
+          <div style="font-size:13px;color:var(--soft);line-height:1.6">${sub.part_description}</div>
+        </div>
+      `:''}
+      
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--mid);margin-bottom:12px;letter-spacing:1px">Resultados</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:20px;font-weight:800;color:rgb(34,197,94)">${sub.inspected||0}</div>
+            <div style="font-size:11px;color:var(--mid);margin-top:4px">Inspeccionados</div>
+          </div>
+          <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:20px;font-weight:800;color:rgb(34,197,94)">${sub.approved||0}</div>
+            <div style="font-size:11px;color:var(--mid);margin-top:4px">Aprobados</div>
+          </div>
+          <div style="background:${sub.rejected?'rgba(239,68,68,.1)':'rgba(107,114,128,.1)'};border:1px solid ${sub.rejected?'rgba(239,68,68,.3)':'rgba(107,114,128,.3)'};border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:20px;font-weight:800;color:${sub.rejected?'rgb(239,68,68)':'var(--mid)'}">${sub.rejected||0}</div>
+            <div style="font-size:11px;color:var(--mid);margin-top:4px">Rechazados</div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display:flex;gap:12px">
+        <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;background:transparent;border:1px solid var(--line);color:var(--pure);padding:12px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;transition:all .2s" onmouseover="this.style.borderColor='var(--line)';this.style.background='var(--card)'" onmouseout="this.style.borderColor='var(--line)';this.style.background='transparent'">Cerrar</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
 }
 
 
