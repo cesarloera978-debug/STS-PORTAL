@@ -2424,32 +2424,40 @@ function clientDownloadPDF(subId){
         
         ${Array.isArray(defects)&&defects.length>0?`
           <div style="margin-bottom: 16px;">
-            <strong style="font-size: 12px; display: block; margin-bottom: 8px;">Desglose de Defectos / Números de Serie y Lote</strong>
-            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <strong style="font-size: 12px; display: block; margin-bottom: 8px;">Defect Breakdown & Serial / Lot Numbers</strong>
+            <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
               <thead>
                 <tr style="background: #f3f4f6;">
-                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">SERIE #</th>
-                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">LOTE/BATCH</th>
-                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">DEFECTO</th>
-                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">CODIGO</th>
-                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: center; font-weight: bold;">CANT.</th>
+                  <th style="padding: 6px; border: 1px solid #d1d5db; text-align: left; font-weight: bold; font-size: 10px;">#</th>
+                  <th style="padding: 6px; border: 1px solid #d1d5db; text-align: left; font-weight: bold; font-size: 10px;">PART NUMBER</th>
+                  <th style="padding: 6px; border: 1px solid #d1d5db; text-align: left; font-weight: bold; font-size: 10px;">MFG DATE</th>
+                  <th style="padding: 6px; border: 1px solid #d1d5db; text-align: left; font-weight: bold; font-size: 10px;">SERIAL NUMBER</th>
+                  <th style="padding: 6px; border: 1px solid #d1d5db; text-align: left; font-weight: bold; font-size: 10px;">LOT & BATCH #</th>
+                  <th style="padding: 6px; border: 1px solid #d1d5db; text-align: left; font-weight: bold; font-size: 10px;">DEFECT DESCRIPTION</th>
+                  <th style="padding: 6px; border: 1px solid #d1d5db; text-align: center; font-weight: bold; font-size: 10px;">OK</th>
+                  <th style="padding: 6px; border: 1px solid #d1d5db; text-align: center; font-weight: bold; font-size: 10px;">NOK</th>
                 </tr>
               </thead>
               <tbody>
-                ${defects.map(df=>`
+                ${defects.map((df,idx)=>`
                   <tr style="background: #fef2f2;">
-                    <td style="padding: 8px; border: 1px solid #d1d5db;">—</td>
-                    <td style="padding: 8px; border: 1px solid #d1d5db;"><strong>${df.lot||'—'}</strong></td>
-                    <td style="padding: 8px; border: 1px solid #d1d5db;">—</td>
-                    <td style="padding: 8px; border: 1px solid #d1d5db;">${df.code||'—'}</td>
-                    <td style="padding: 8px; border: 1px solid #d1d5db; text-align: center; color: #ef4444; font-weight: bold;">${df.qty||0}</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; font-weight: bold;">${idx+1}</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; font-size: 9px;">${df.part_number||submission.part_number||'—'}</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; font-size: 9px;">${df.mfg_date||'—'}</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; font-size: 9px;">${df.serial_number||'—'}</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; font-size: 9px;"><strong>${df.lot||'—'}</strong></td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; font-size: 9px;">${df.desc||df.description||'—'}</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; text-align: center; color: #22c55e; font-weight: bold;">${df.ok||0}</td>
+                    <td style="padding: 6px; border: 1px solid #d1d5db; text-align: center; color: #ef4444; font-weight: bold;">${df.qty||df.nok||0}</td>
                   </tr>
                 `).join('')}
+                <tr style="background: #f3f4f6; font-weight: bold;">
+                  <td colspan="6" style="padding: 8px; border: 1px solid #d1d5db; text-align: right;">TOTALS</td>
+                  <td style="padding: 8px; border: 1px solid #d1d5db; text-align: center; color: #22c55e; font-weight: bold;">${defects.reduce((sum,d)=>sum+(d.ok||0),0)}</td>
+                  <td style="padding: 8px; border: 1px solid #d1d5db; text-align: center; color: #ef4444; font-weight: bold;">${defects.reduce((sum,d)=>sum+(d.qty||d.nok||0),0)}</td>
+                </tr>
               </tbody>
             </table>
-            <div style="margin-top: 8px; font-size: 11px; color: #666;">
-              <strong>TOTAL DEFECTOS: ${defects.reduce((sum,d)=>sum+(d.qty||0),0)}</strong>
-            </div>
           </div>
         `:'<div style="margin-bottom: 16px; color: #22c55e; font-weight: bold; font-size: 12px;">Sin defectos registrados.</div>'}
         
