@@ -2373,128 +2373,141 @@ function clientDownloadPDF(subId){
   const sub=window._clientAllSubs.find(s=>s.id===subId);
   if(!sub)return;
   
-  const defects=typeof sub.defects==='string'?JSON.parse(sub.defects||'[]'):sub.defects||[];
-  const personnel=typeof sub.personnel==='string'?JSON.parse(sub.personnel||'[]'):sub.personnel||[];
+  // Get all submissions for this quote/job
+  const jobId=sub.job_id;
+  const quoteSubmissions=jobId?window._clientAllSubs.filter(s=>s.job_id===jobId):[sub];
   
-  const dateStr=sub.service_start||sub.submit_date_iso||sub.created_at;
-  const d=new Date(dateStr);
-  const dateDisplay=!isNaN(d)?d.toLocaleDateString('es-MX'):'—';
+  // Calculate quote totals
+  const quoteTotals={
+    inspected: quoteSubmissions.reduce((sum,s)=>sum+(s.inspected||0),0),
+    approved: quoteSubmissions.reduce((sum,s)=>sum+(s.approved||0),0),
+    rejected: quoteSubmissions.reduce((sum,s)=>sum+(s.rejected||0),0),
+    reworked: quoteSubmissions.reduce((sum,s)=>sum+(s.reworked||0),0),
+    hours: quoteSubmissions.reduce((sum,s)=>{
+      const personnel=typeof s.personnel==='string'?JSON.parse(s.personnel||'[]'):s.personnel||[];
+      return sum+personnel.reduce((ph,p)=>ph+(p.hours||0),0);
+    },0)
+  };
   
-  // Create HTML content for PDF
+  // Build HTML for all submissions
+  const submissionsHTML=quoteSubmissions.map((submission,idx)=>{
+    const defects=typeof submission.defects==='string'?JSON.parse(submission.defects||'[]'):submission.defects||[];
+    const personnel=typeof submission.personnel==='string'?JSON.parse(submission.personnel||'[]'):submission.personnel||[];
+    const dateStr=submission.service_start||submission.submit_date_iso||submission.created_at;
+    const d=new Date(dateStr);
+    const dateDisplay=!isNaN(d)?d.toLocaleDateString('es-MX'):'—';
+    
+    const totalHours=personnel.reduce((sum,p)=>sum+(p.hours||0),0);
+    
+    return `
+      <div style="page-break-inside: avoid; margin-bottom: 30px; padding: 20px; border: 1px solid #d1d5db; border-radius: 8px; background: #fafafa;">
+        <div style="background: #3b82f6; color: white; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+          <strong>Reporte #${idx+1} - ${dateDisplay}</strong> | PN: ${submission.part_number||'—'} | ID: ${submission.form_id||'—'}
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <strong style="font-size: 13px;">Información de Parte:</strong><br>
+          <span style="font-size: 12px; color: #666;">PN: ${submission.part_number||'—'} | ${submission.part_description||'—'} | Defecto: ${submission.part_defects||'Sin defecto registrado en parte'}</span>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background: #f3f4f6;">
+              <td style="padding: 8px; border: 1px solid #d1d5db; font-size: 12px;"><strong>Inspeccionados:</strong> ${submission.inspected||0}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db; font-size: 12px;"><strong>Aprobados:</strong> ${submission.approved||0}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db; font-size: 12px;"><strong>Retrabajados:</strong> ${submission.reworked||0}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db; font-size: 12px;"><strong>Rechazados:</strong> ${submission.rejected||0}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db; font-size: 12px;"><strong>Horas:</strong> ${totalHours}</td>
+            </tr>
+          </table>
+        </div>
+        
+        ${Array.isArray(defects)&&defects.length>0?`
+          <div style="margin-bottom: 16px;">
+            <strong style="font-size: 12px; display: block; margin-bottom: 8px;">Desglose de Defectos / Números de Serie y Lote</strong>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+              <thead>
+                <tr style="background: #f3f4f6;">
+                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">SERIE #</th>
+                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">LOTE/BATCH</th>
+                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">DEFECTO</th>
+                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">CODIGO</th>
+                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: center; font-weight: bold;">CANT.</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${defects.map(df=>`
+                  <tr style="background: #fef2f2;">
+                    <td style="padding: 8px; border: 1px solid #d1d5db;">—</td>
+                    <td style="padding: 8px; border: 1px solid #d1d5db;"><strong>${df.lot||'—'}</strong></td>
+                    <td style="padding: 8px; border: 1px solid #d1d5db;">—</td>
+                    <td style="padding: 8px; border: 1px solid #d1d5db;">${df.code||'—'}</td>
+                    <td style="padding: 8px; border: 1px solid #d1d5db; text-align: center; color: #ef4444; font-weight: bold;">${df.qty||0}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <div style="margin-top: 8px; font-size: 11px; color: #666;">
+              <strong>TOTAL DEFECTOS: ${defects.reduce((sum,d)=>sum+(d.qty||0),0)}</strong>
+            </div>
+          </div>
+        `:'<div style="margin-bottom: 16px; color: #22c55e; font-weight: bold; font-size: 12px;">Sin defectos registrados.</div>'}
+        
+        ${Array.isArray(personnel)&&personnel.length>0?`
+          <div>
+            <strong style="font-size: 12px; display: block; margin-bottom: 8px;">Personal Involucrado</strong>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+              <thead>
+                <tr style="background: #f3f4f6;">
+                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">NOMBRE</th>
+                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: left; font-weight: bold;">ROL</th>
+                  <th style="padding: 8px; border: 1px solid #d1d5db; text-align: center; font-weight: bold;">HORAS</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${personnel.map(p=>`
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #d1d5db;">${p.name||'—'}</td>
+                    <td style="padding: 8px; border: 1px solid #d1d5db;">${p.role||'—'}</td>
+                    <td style="padding: 8px; border: 1px solid #d1d5db; text-align: center;"><strong>${p.hours||0}</strong></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `:''}
+      </div>
+    `;
+  }).join('');
+  
+  // Create complete PDF HTML
   const htmlContent=`
     <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; padding: 20px;">
       <div style="border-bottom: 3px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px;">
-        <h1 style="margin: 0 0 10px 0; color: #1f2937; font-size: 28px;">📋 Reporte de Inspección de Calidad</h1>
+        <h1 style="margin: 0 0 10px 0; color: #1f2937; font-size: 28px;">📋 STS SERVICES - REPORTE DE INSPECCIÓN</h1>
         <p style="margin: 5px 0; color: #666;"><strong>Cliente:</strong> ${sub.customer_name||sub.customer_code||'—'}</p>
-        <p style="margin: 5px 0; color: #666;"><strong>Formulario:</strong> ${sub.form_id||'—'}</p>
-        <p style="margin: 5px 0; color: #666;"><strong>Fecha de Inspección:</strong> ${dateDisplay}</p>
+        <p style="margin: 5px 0; color: #666;"><strong>Quote/Job:</strong> ${jobId||'—'}</p>
+        <p style="margin: 5px 0; color: #666;"><strong>Total Reportes:</strong> ${quoteSubmissions.length}</p>
       </div>
       
-      <div style="margin-bottom: 25px;">
-        <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Información General</div>
+      <div style="margin-bottom: 20px;">
+        <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">TOTALES DE COTIZACIÓN - ${quoteSubmissions.length} REPORTES</div>
         <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>Número de Parte:</strong><br>${sub.part_number||'—'}</td>
-            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>Descripción:</strong><br>${sub.part_description||'—'}</td>
-          </tr>
-          <tr>
-            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>Inicio:</strong><br>${sub.service_start||'—'}</td>
-            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>Fin:</strong><br>${sub.service_end||'—'}</td>
+          <tr style="background: #f3f4f6;">
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>INSPECCIONADOS:</strong> ${quoteTotals.inspected}</td>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>APROBADOS:</strong> ${quoteTotals.approved}</td>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>RECHAZADOS:</strong> ${quoteTotals.rejected}</td>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>RETRABAJADOS:</strong> ${quoteTotals.reworked}</td>
+            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>HORAS TOTALES:</strong> ${quoteTotals.hours}</td>
           </tr>
         </table>
       </div>
       
-      <div style="margin-bottom: 25px;">
-        <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Información de Parte</div>
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>PN:</strong> ${sub.part_number||'—'}</td>
-            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>Descripción:</strong> ${sub.part_description||'—'}</td>
-          </tr>
-          <tr>
-            <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;" colspan="2"><strong>Defecto Registrado:</strong> ${sub.part_defects||'Sin defecto registrado en parte'}</td>
-          </tr>
-        </table>
-      </div>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-          <div style="padding: 18px; background: #f9fafb; border-left: 5px solid #22c55e; border-radius: 4px; min-width: 140px;">
-            <div style="font-size: 32px; font-weight: bold; color: #22c55e;">${sub.inspected||0}</div>
-            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.5px;">Inspeccionados</div>
-          </div>
-          <div style="padding: 18px; background: #f9fafb; border-left: 5px solid #22c55e; border-radius: 4px; min-width: 140px;">
-            <div style="font-size: 32px; font-weight: bold; color: #22c55e;">${sub.approved||0}</div>
-            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.5px;">Aprobados</div>
-          </div>
-          <div style="padding: 18px; background: #f9fafb; border-left: 5px solid #3b82f6; border-radius: 4px; min-width: 140px;">
-            <div style="font-size: 32px; font-weight: bold; color: #3b82f6;">${sub.reworked||0}</div>
-            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.5px;">Retrabajados</div>
-          </div>
-          <div style="padding: 18px; background: #f9fafb; border-left: 5px solid #ef4444; border-radius: 4px; min-width: 140px;">
-            <div style="font-size: 32px; font-weight: bold; color: #ef4444;">${sub.rejected||0}</div>
-            <div style="font-size: 11px; color: #666; text-transform: uppercase; margin-top: 8px; letter-spacing: 0.5px;">Rechazados</div>
-          </div>
-        </div>
-      </div>
+      ${submissionsHTML}
       
-      ${Array.isArray(defects)&&defects.length>0?`
-        <div style="margin-bottom: 25px;">
-          <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Desglose de Defectos / Números de Serie y Lote</div>
-          <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-              <tr>
-                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Lote / Batch</th>
-                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Código Defecto</th>
-                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Descripción</th>
-                <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Cantidad</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${defects.map(d=>`
-                <tr style="background: #fef2f2;">
-                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;"><strong>${d.lot||'—'}</strong></td>
-                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${d.code||'—'}</td>
-                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${d.desc||'—'}</td>
-                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px; text-align: center; color: #ef4444; font-weight: bold;">${d.qty||0}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div style="margin-top: 8px; font-size: 12px; color: #666; padding: 12px; background: #f9fafb; border-radius: 4px;">
-            <strong>TOTAL DEFECTOS: ${defects.length > 0 ? defects.reduce((sum, d) => sum + (d.qty||0), 0) : 0}</strong>
-          </div>
-        </div>
-      `:'<div style="margin-bottom: 25px;"><div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Defectos</div><p style="color: #22c55e; font-weight: bold;">✓ No se encontraron defectos</p></div>'}
-      
-      ${Array.isArray(personnel)&&personnel.length>0?`
-        <div style="margin-bottom: 25px;">
-          <div style="background: #f3f4f6; padding: 12px 16px; border-left: 4px solid #3b82f6; font-weight: bold; font-size: 14px; margin-bottom: 12px;">Personal Involucrado (${personnel.length})</div>
-          <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-              <tr>
-                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Nombre</th>
-                <th style="background: #f3f4f6; padding: 12px; text-align: left; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Rol</th>
-                <th style="background: #f3f4f6; padding: 12px; text-align: center; border: 1px solid #d1d5db; font-weight: bold; font-size: 13px;">Horas</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${personnel.map(p=>`
-                <tr>
-                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${p.name||'—'}</td>
-                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px;">${p.role||'—'}</td>
-                  <td style="padding: 12px; border: 1px solid #d1d5db; font-size: 13px; text-align: center;"><strong>${p.hours||0}</strong></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div style="margin-top: 8px; font-size: 12px; color: #666; padding: 12px; background: #f9fafb; border-radius: 4px;">
-            <strong>TOTAL HORAS: ${(() => {let total = 0; personnel.forEach(p => total += (p.hours||0)); return total;})()}</strong>
-          </div>
-        </div>
-      `:''}
-      
-      <div style="margin-top: 50px; color: #999; font-size: 11px; border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center;">
-        <p><strong>STS Services - Portal de Control de Calidad</strong></p>
-        <p>Reporte generado: ${new Date().toLocaleString('es-MX')}</p>
+      <div style="margin-top: 30px; color: #666; font-size: 11px; border-top: 1px solid #d1d5db; padding-top: 15px; text-align: center;">
+        <p><strong>STS Services - www.stslaredo.com</strong></p>
+        <p>Reporte Confidencial - Generado el ${new Date().toLocaleDateString('es-MX')}</p>
       </div>
     </div>
   `;
@@ -2502,7 +2515,7 @@ function clientDownloadPDF(subId){
   // PDF options
   const options={
     margin:10,
-    filename:`Reporte_${sub.form_id}_${dateStr}.pdf`,
+    filename:`Reporte_${jobId||sub.form_id}_${new Date().toISOString().split('T')[0]}.pdf`,
     image:{type:'jpeg',quality:0.98},
     html2canvas:{scale:2},
     jsPDF:{orientation:'portrait',unit:'mm',format:'a4'}
@@ -2510,7 +2523,7 @@ function clientDownloadPDF(subId){
   
   // Generate PDF
   html2pdf().set(options).from(htmlContent).save();
-  showToast('✅ PDF descargado correctamente','info');
+  showToast('✅ PDF con todos los reportes descargado correctamente','info');
 }
 
 
