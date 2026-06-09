@@ -1978,7 +1978,7 @@ async function loadClientPortal(clientCode){
   try{
     // Load all submissions for this client - NO approval gate
     // Select only needed columns to avoid timeout on large table
-    const {data:subs,error}=await db.from('submissions').select('id,customer_code,service_start,submit_date_iso,created_at,part_number,part_description,inspected,approved,rejected,customer_name,form_id').eq('customer_code',clientCode).order('service_start',{ascending:false});
+    const {data:subs,error}=await db.from('submissions').select('id,form_id,customer_code,customer_name,service_start,service_end,submit_date_iso,created_at,part_number,part_description,part_defects,mfg_date,inspected,approved,rejected,reworked,total_hours,defects,personnel,job_id').eq('customer_code',clientCode).order('service_start',{ascending:false});
     if(error){
       console.error('Supabase error:',error);
       area.innerHTML='<div class="no-data"><div class="nd-ico">⚠️</div>Error cargando reportes. Intenta más tarde.</div>';
