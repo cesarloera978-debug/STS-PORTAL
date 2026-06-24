@@ -730,6 +730,11 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
       <div class="card-hd"><div class="card-ico">⚠️</div><div class="card-title">Defect Totals</div></div>
       <div class="card-body" id="defectSummaryBody"><div class="no-data"><div class="nd-ico">📭</div>No submissions yet.</div></div>
     </div>
+    <div class="card">
+      <div class="card-hd"><div class="card-ico">📅</div><div class="card-title">Daily Breakdown</div></div>
+      <div class="card-body" id="dailyBreakdownBody"><div class="no-data"><div class="nd-ico">📅</div>No submissions yet.</div></div>
+    </div>
+
     <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
 
     </div>
@@ -1627,7 +1632,7 @@ function updateProgress(){
 function collect(){
   const slRows=[];// legacy
     const defects=[];
-  document.querySelectorAll('#editDefBody tr').forEach(row=>{
+  document.querySelectorAll('#defBody tr').forEach(row=>{
     const cells=row.querySelectorAll('input');
     if(cells.length>=6){
       const partNum=cells[0].value.trim();
@@ -3546,16 +3551,15 @@ async function saveEditedReport(){
   document.getElementById('editBtnTxt').style.display='none';
   document.getElementById('editSpinner').style.display='inline-block';
   const defects=[];
-  document.querySelectorAll('#editDefBody tr').forEach(row=>{
+    document.querySelectorAll('#editDefBody tr').forEach(row=>{
     const cells=row.querySelectorAll('input');
-    if(cells.length>=7){
+    if(cells.length>=6){
       const partNum=cells[0].value.trim();
       const serial=cells[1].value.trim();
       const lot=cells[2].value.trim();
       const desc=cells[3].value.trim();
-      const ok=parseFloat(cells[5].value)||0;
-      const nok=parseFloat(cells[6].value)||0;
-      if(desc||serial||lot||partNum)defects.push({partNum,serial,lot,desc:desc||'—',code:'—',qty:nok,ok,nok});
+      const ok=parseFloat(cells[4].value)||0;
+      const nok=parseFloat(cells[5].value)||0;
     }
   });
   const totalDefects=defects.reduce((a,d)=>a+(d.qty||0),0);
@@ -4129,6 +4133,7 @@ function openOvJobDetail(jobId){
   document.getElementById('stApprovedPct').textContent=tI?((tA/tI)*100).toFixed(1)+'% pass rate':'—';
   document.getElementById('stRejectedPct').textContent=tI?((tR/tI)*100).toFixed(1)+'% reject rate':'—';
   document.getElementById('stPeople').textContent=tP?tP+' person-days':'—';
+  document.getElementById('dailyBreakdownBody').innerHTML=renderJobDailyBreakdown(subs);
   const defBody=document.getElementById('defectSummaryBody');
   const defEntries=Object.entries(defMap).sort((a,b)=>b[1]-a[1]);
   if(!defEntries.length){defBody.innerHTML='<div class="no-data"><div class="nd-ico">✅</div>No defects recorded.</div>';}
@@ -4160,6 +4165,43 @@ async function deleteJob(id,jobId){
     showToast('🗑 Quote '+jobId+' deleted.','info');
   }catch(e){showToast('❌ '+e.message,'err');}
 }  
+function renderJobDailyBreakdown(subs){
+  const dayMap={};
+  subs.forEach(s=>{
+    const dateSrc=s.submit_date_iso||s.service_start;
+    const d=new Date(dateSrc);
+    if(isNaN(d))return;
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    if(!dayMap[key])dayMap[key]={date:key,parts:{}};
+    const pn=s.part_number||'—';
+    if(!dayMap[key].parts[pn])dayMap[key].parts[pn]={pn,inspected:0,approved:0,rejected:0,reworked:0};
+    dayMap[key].parts[pn].inspected+=s.inspected||0;
+    dayMap[key].parts[pn].approved+=s.approved||0;
+    dayMap[key].parts[pn].rejected+=s.rejected||0;
+    dayMap[key].parts[pn].reworked+=s.reworked||0;
+  });
+  const days=Object.values(dayMap).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!days.length)return '<div class="no-data"><div class="nd-ico">📅</div>No data.</div>';
+  return days.map(day=>{
+    const dObj=new Date(day.date+'T12:00:00');
+    const label=dObj.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',year:'numeric'});
+    const parts=Object.values(day.parts);
+    const rows=parts.map(p=>`<tr>
+      <td>${p.pn}</td>
+      <td style="color:var(--blue);font-weight:700">${p.inspected}</td>
+      <td style="color:var(--green);font-weight:700">${p.approved}</td>
+      <td style="color:var(--red);font-weight:700">${p.rejected}</td>
+      <td style="color:var(--purple);font-weight:700">${p.reworked}</td>
+    </tr>`).join('');
+    return `<div style="background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden">
+      <div style="background:var(--panel);padding:10px 14px;border-bottom:1px solid var(--line);font-family:'Montserrat',sans-serif;font-weight:800;font-size:13px;color:var(--pure)">📅 ${label}</div>
+      <table class="tbl" style="margin:0">
+        <thead><tr><th>Part Number</th><th>Inspected</th><th>Approved</th><th>Rejected</th><th>Reworked</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+}
   
 window.onload=()=>document.getElementById('loginScreen').classList.add('active');
 </script>
