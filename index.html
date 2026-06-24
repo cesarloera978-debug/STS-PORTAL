@@ -741,9 +741,12 @@ pre.script{background:var(--dark);border:1px solid var(--line);color:#86efac;pad
           <div class="card-ico">📋</div>
           <div class="card-title">Submissions</div>
           <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <label style="font-size:11px;color:var(--mid);font-weight:600">MONTH:</label>
+                        <label style="font-size:11px;color:var(--mid);font-weight:600">MONTH:</label>
             <select id="subMonthFilter" onchange="changeSubMonth()" style="background:var(--card);border:1px solid var(--line);border-radius:7px;padding:5px 10px;color:var(--white);font-size:12px;cursor:pointer" title="Filter submissions by month"></select>
             <button onclick="changeSubMonth('all')" id="subLoadAllBtn" style="background:transparent;border:1px solid var(--line);color:var(--mid);font-size:11px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer">📂 All Time</button>
+            <label style="font-size:11px;color:var(--mid);font-weight:600">DAY:</label>
+            <input type="date" id="subDayFilter" onchange="loadOverview()" style="background:var(--card);border:1px solid var(--line);border-radius:7px;padding:5px 10px;color:var(--white);font-size:12px;cursor:pointer" title="Show only this day's submissions">
+            <button onclick="document.getElementById('subDayFilter').value='';loadOverview()" style="background:transparent;border:1px solid var(--line);color:var(--mid);font-size:11px;font-weight:700;padding:5px 12px;border-radius:7px;cursor:pointer">✕ Clear Day</button>
           </div>
         </div>
         <div class="card-body" style="overflow-x:auto" id="historyBody"><div class="no-data"><div class="nd-ico">📭</div>No submissions yet.</div></div>
@@ -1623,17 +1626,18 @@ function updateProgress(){
 /* ══ COLLECT ══ */
 function collect(){
   const slRows=[];// legacy
-  const defects=[];
-  document.querySelectorAll('#defBody tr').forEach(tr=>{
-    const ins=tr.querySelectorAll('input');
-    const partNum=ins[0]?.value.trim()||'';
-    const mfgDate=ins[1]?.value.trim()||'';
-    const serial=ins[2]?.value.trim()||'';
-    const lot=ins[3]?.value.trim()||'';
-    const desc=ins[4]?.value.trim()||'';
-    const ok=parseFloat(ins[5]?.value)||0;
-    const nok=parseFloat(ins[6]?.value)||0;
-    if(desc||serial||lot||partNum)defects.push({partNum,mfgDate,serial,lot,desc:desc||'—',code:'—',qty:nok,ok,nok});
+    const defects=[];
+  document.querySelectorAll('#editDefBody tr').forEach(row=>{
+    const cells=row.querySelectorAll('input');
+    if(cells.length>=6){
+      const partNum=cells[0].value.trim();
+      const serial=cells[1].value.trim();
+      const lot=cells[2].value.trim();
+      const desc=cells[3].value.trim();
+      const ok=parseFloat(cells[4].value)||0;
+      const nok=parseFloat(cells[5].value)||0;
+      if(desc||serial||lot||partNum)defects.push({partNum,serial,lot,desc:desc||'—',code:'—',qty:nok,ok,nok});
+    }
   });
   const personnel=[];
   document.querySelectorAll('#pBody tr').forEach((tr,i)=>{
@@ -1722,7 +1726,18 @@ function loadOverview(){
   renderOvJobGrid();
   // also refresh history tab if visible
   const selJob='all';
-  const subs=selJob==='all'?allSubmissions:allSubmissions.filter(s=>s.job_id===selJob);
+  let subs=selJob==='all'?allSubmissions:allSubmissions.filter(s=>s.job_id===selJob);
+  const dayFilter=document.getElementById('subDayFilter')?.value;
+  if(dayFilter){
+    subs=subs.filter(s=>{
+      const iso=s.submit_date_iso||s.service_start;
+      if(!iso)return false;
+      const d=new Date(iso);
+      if(isNaN(d))return false;
+      const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      return key===dayFilter;
+    });
+  }
   const chip=document.getElementById('overviewJobChip');
   if(chip){
   if(selJob==='all'){chip.textContent='';}
@@ -2157,7 +2172,10 @@ function clientRenderCalendarAndSubmissions(allSubs){
                   <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure)">${s.customer_name||s.customer_code||'—'}</div>
                   <div style="font-size:11px;color:var(--mid);margin-top:2px">📅 ${dateDisplay}</div>
                 </div>
-                <span style="font-size:10px;background:var(--bluebg);color:var(--blue);font-weight:700;padding:4px 10px;border-radius:20px">Form ${s.form_id?s.form_id.substring(0,10):'—'}</span>
+                 <span style="font-size:10px;background:var(--bluebg);color:var(--blue);font-weight:700;padding:4px 10px;border-radius:20px">Form ${s.form_id?s.form_id.substring(0,10):'—'}</span>
+              </div>
+              <div style="margin-bottom:6px">
+                <span style="font-size:10px;background:var(--tealbg);color:var(--teal);font-weight:800;padding:4px 10px;border-radius:20px">🗂 Quote: ${s.job_id||'—'}</span>
               </div>
               <div style="font-size:11px;color:var(--mid);margin-bottom:8px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''}</div>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -2206,9 +2224,12 @@ function clientShowDaySubmissions(dateKey,submissions){
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        ${submissions.map(s=>`
+                ${submissions.map(s=>`
           <div onclick="clientOpenSubmissionDetail('${s.id}')" style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--blue)';this.style.background='rgba(59,130,246,.06)'" onmouseout="this.style.borderColor='var(--line)';this.style.background='var(--card)'">
-            <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure);margin-bottom:6px">${s.customer_name||s.customer_code||'—'}</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+              <div style="font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--pure)">${s.customer_name||s.customer_code||'—'}</div>
+              <span style="font-size:10px;background:var(--tealbg);color:var(--teal);font-weight:800;padding:4px 10px;border-radius:20px">🗂 Quote: ${s.job_id||'—'}</span>
+            </div>
             <div style="font-size:11px;color:var(--mid);margin-bottom:8px">PN: ${s.part_number||'—'}${s.part_description?' — '+s.part_description:''}</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <span class="pill pill-b">${s.inspected||0} inspeccionados</span>
